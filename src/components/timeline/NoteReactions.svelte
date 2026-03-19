@@ -34,8 +34,9 @@
 
   // カスタム絵文字URL取得
   function getEmojiUrl(reaction: string): string | null {
-    const name = getCustomEmojiName(reaction);
-    return emojis[name] ?? emojis[reaction] ?? null;
+    const name = getCustomEmojiName(reaction);   // 'neko' (サーバー名strip)
+    const fullName = reaction.slice(1, -1);       // 'neko@misskey.io' (コロンなし・サーバー名つき)
+    return emojis[name] ?? emojis[fullName] ?? emojis[reaction] ?? null;
   }
 
   function handleClick(reaction: string) {

@@ -59,9 +59,15 @@
   const hasReactions = $derived(Object.keys(reactions).length > 0 && !config.noteDisplay.reactionsHidden);
   const myReaction = $derived(displayNote.myReaction ?? null);
 
+  // ノート絵文字マップ: ローカル + ノート付属の絵文字 (リモートサーバーの絵文字を含む)
+  const noteEmojis = $derived({
+    ...emojis,
+    ...(displayNote.emojis as Record<string, string> | undefined ?? {}),
+  });
+
   // リアクション絵文字マップ: note.reactionEmojis (APIから取得)
   const reactionEmojis = $derived({
-    ...emojis,
+    ...noteEmojis,
     ...(displayNote as entities.Note & { reactionEmojis?: Record<string, string> }).reactionEmojis,
   });
 
@@ -155,7 +161,7 @@
     </div>
 
     <!-- 本文 -->
-    <NoteBody note={displayNote} {config} {emojis} />
+    <NoteBody note={displayNote} {config} emojis={noteEmojis} />
 
     <!-- 引用Renote -->
     {#if isQuote && note.renote && depth < maxDepth}

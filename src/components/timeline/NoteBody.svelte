@@ -17,6 +17,16 @@
   // コンテンツ折り畳み状態
   let contentExpanded = $state(false);
 
+  // コンテンツがcollapseHeightを超えているか
+  let contentDiv = $state<HTMLElement | undefined>(undefined);
+  let isOverflowing = $state(false);
+
+  $effect(() => {
+    if (contentDiv && config.noteDisplay.collapseEnabled) {
+      isOverflowing = contentDiv.scrollHeight > config.noteDisplay.collapseHeight;
+    }
+  });
+
   // CW有無
   const hasCw = $derived(!!note.cw);
   const cwText = $derived(note.cw ?? '');
@@ -113,8 +123,9 @@
     {#if bodyText}
       <div class="body-text relative">
         <div
+          bind:this={contentDiv}
           class="whitespace-pre-wrap break-words text-xs text-base-content/90 overflow-hidden"
-          style={config.noteDisplay.collapseEnabled && !contentExpanded
+          style={config.noteDisplay.collapseEnabled && !contentExpanded && isOverflowing
             ? `max-height: ${config.noteDisplay.collapseHeight}px;`
             : ''}
         >
@@ -122,7 +133,7 @@
         </div>
 
         <!-- 折り畳みグラデーション + 展開ボタン (高さ超過時のみ表示) -->
-        {#if config.noteDisplay.collapseEnabled && !contentExpanded}
+        {#if config.noteDisplay.collapseEnabled && !contentExpanded && isOverflowing}
           <div class="collapse-fade absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-base-100 to-transparent pointer-events-none"></div>
           <button
             class="mt-0.5 text-[0.6rem] text-primary/70 hover:text-primary transition-colors"
@@ -130,7 +141,7 @@
           >
             続きを読む
           </button>
-        {:else if config.noteDisplay.collapseEnabled && contentExpanded && bodyText.length > 200}
+        {:else if config.noteDisplay.collapseEnabled && contentExpanded && isOverflowing}
           <button
             class="mt-0.5 text-[0.6rem] text-base-content/40 hover:text-base-content/60 transition-colors"
             onclick={toggleContent}
