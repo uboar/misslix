@@ -67,7 +67,7 @@
     <ColumnContainer onadd={() => addColumnOpen = true} {runtimes} />
   {/if}
 
-  <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} />
+  <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} {runtimes} />
   <SettingsModal open={settingsOpen} onclose={() => settingsOpen = false} />
   <PostModal open={postModalOpen} onclose={() => postModalOpen = false} {runtimes} />
   <ToastContainer />

@@ -1,15 +1,17 @@
 <script lang="ts">
-  import type { ChannelType, ColumnConfig } from '$lib/types';
+  import type { ChannelType, ColumnConfig, AccountRuntime } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import { timelineStore } from '$lib/stores/timelines.svelte';
+  import { showApiError } from '$lib/utils/error';
   import Modal from '../common/Modal.svelte';
 
   type Props = {
     open: boolean;
     onclose: () => void;
+    runtimes: Map<number, AccountRuntime>;
   };
 
-  let { open, onclose }: Props = $props();
+  let { open, onclose, runtimes }: Props = $props();
 
   // ステップ: 1=アカウント選択, 2=チャンネル種別選択, 3=追加パラメータ入力
   let step = $state<1 | 2 | 3>(1);
@@ -17,6 +19,14 @@
   let selectedChannel = $state<ChannelType | null>(null);
   let channelId = $state('');
   let channelName = $state('');
+
+  // リスト選択モード
+  type InputMode = 'direct' | 'list';
+  let inputMode = $state<InputMode>('list');
+  type ListItem = { id: string; name: string };
+  let listItems = $state<ListItem[]>([]);
+  let listLoading = $state(false);
+  let listError = $state<string | null>(null);
 
   const CHANNEL_LABELS: Record<ChannelType, string> = {
     homeTimeline: 'ホーム',
@@ -69,6 +79,10 @@
     channelId = '';
     channelName = '';
     selectedColor = ACCENT_COLORS[0];
+    inputMode = 'list';
+    listItems = [];
+    listLoading = false;
+    listError = null;
   }
 
   function handleClose() {
@@ -86,7 +100,52 @@
     channelName = CHANNEL_LABELS[ch];
     if (CHANNEL_NEEDS_ID.includes(ch)) {
       step = 3;
+      fetchList();
     }
+  }
+
+  async function fetchList() {
+    if (selectedAccountId === null || selectedChannel === null) return;
+    const runtime = runtimes.get(selectedAccountId);
+    if (!runtime) {
+      listError = 'アカウントのランタイムが見つかりません';
+      return;
+    }
+
+    listLoading = true;
+    listError = null;
+    listItems = [];
+
+    try {
+      const cli = runtime.cli;
+      let items: ListItem[] = [];
+
+      if (selectedChannel === 'channel') {
+        const res = await cli.request('channels/my-favorites', {});
+        items = (res as any[]).map((ch: any) => ({ id: ch.id, name: ch.name }));
+      } else if (selectedChannel === 'antenna') {
+        const res = await cli.request('antennas/list', {});
+        items = (res as any[]).map((a: any) => ({ id: a.id, name: a.name }));
+      } else if (selectedChannel === 'userList') {
+        const res = await cli.request('users/lists/list', {});
+        items = (res as any[]).map((l: any) => ({ id: l.id, name: l.name }));
+      } else if (selectedChannel === 'roleTimeline') {
+        const res = await cli.request('roles/list', {});
+        items = (res as any[]).map((r: any) => ({ id: r.id, name: r.name }));
+      }
+
+      listItems = items;
+    } catch (e) {
+      listError = 'リストの取得に失敗しました';
+      showApiError(e, 'リスト取得');
+    } finally {
+      listLoading = false;
+    }
+  }
+
+  function selectListItem(item: ListItem) {
+    channelId = item.id;
+    channelName = item.name;
   }
 
   function handleAdd() {
@@ -110,8 +169,13 @@
   }
 
   function goBack() {
-    if (step === 3) step = 2;
-    else if (step === 2) step = 1;
+    if (step === 3) {
+      step = 2;
+      listItems = [];
+      listError = null;
+    } else if (step === 2) {
+      step = 1;
+    }
   }
 </script>
 
@@ -228,60 +292,143 @@
         {selectedChannel ? CHANNEL_LABELS[selectedChannel] : ''}の詳細を入力してください
       </p>
 
-      <div class="space-y-3">
-        <div class="form-control">
-          <label class="label py-1" for="channel-id-input">
-            <span class="label-text text-xs">
-              {#if selectedChannel === 'channel'}チャンネルID
-              {:else if selectedChannel === 'antenna'}アンテナID
-              {:else if selectedChannel === 'userList'}リストID
-              {:else if selectedChannel === 'roleTimeline'}ロールID
-              {:else}ID
-              {/if}
-            </span>
-          </label>
-          <input
-            id="channel-id-input"
-            type="text"
-            class="input input-bordered input-sm w-full"
-            placeholder="IDを入力..."
-            bind:value={channelId}
-          />
-          <p class="text-xs text-base-content/40 mt-1">
-            MisskeyのURLやAPIレスポンスから確認できます
-          </p>
+      <!-- 入力モード切替タブ -->
+      <div role="tablist" class="tabs tabs-box tabs-sm mb-4">
+        <button
+          role="tab"
+          class="tab"
+          class:tab-active={inputMode === 'list'}
+          onclick={() => inputMode = 'list'}
+        >リストから選択</button>
+        <button
+          role="tab"
+          class="tab"
+          class:tab-active={inputMode === 'direct'}
+          onclick={() => inputMode = 'direct'}
+        >ID直接入力</button>
+      </div>
+
+      {#if inputMode === 'list'}
+        <!-- リスト選択モード -->
+        <div class="space-y-2">
+          {#if listLoading}
+            <div class="flex items-center justify-center py-6">
+              <span class="loading loading-spinner loading-sm text-primary"></span>
+              <span class="text-xs text-base-content/50 ml-2">読み込み中...</span>
+            </div>
+          {:else if listError}
+            <div class="text-center py-4">
+              <p class="text-xs text-error">{listError}</p>
+              <button class="btn btn-ghost btn-xs mt-2" onclick={fetchList}>再試行</button>
+            </div>
+          {:else if listItems.length === 0}
+            <div class="text-center py-4">
+              <p class="text-xs text-base-content/50">
+                {#if selectedChannel === 'channel'}お気に入りチャンネルがありません
+                {:else if selectedChannel === 'antenna'}アンテナがありません
+                {:else if selectedChannel === 'userList'}リストがありません
+                {:else if selectedChannel === 'roleTimeline'}ロールがありません
+                {/if}
+              </p>
+              <p class="text-xs text-base-content/40 mt-1">ID直接入力タブから追加できます</p>
+            </div>
+          {:else}
+            <div class="max-h-48 overflow-y-auto space-y-1">
+              {#each listItems as item (item.id)}
+                <button
+                  class="w-full flex items-center gap-2 p-2 rounded-lg border transition-colors text-left text-sm"
+                  class:border-primary={channelId === item.id}
+                  class:bg-base-200={channelId === item.id}
+                  class:border-base-300={channelId !== item.id}
+                  class:hover:border-primary={channelId !== item.id}
+                  class:hover:bg-base-200={channelId !== item.id}
+                  onclick={() => selectListItem(item)}
+                >
+                  <span class="flex-1 truncate">{item.name}</span>
+                  <span class="text-xs text-base-content/30 font-mono shrink-0">{item.id.slice(0, 8)}</span>
+                  {#if channelId === item.id}
+                    <svg class="w-4 h-4 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  {/if}
+                </button>
+              {/each}
+            </div>
+          {/if}
         </div>
 
-        <div class="form-control">
-          <label class="label py-1" for="channel-name-input">
-            <span class="label-text text-xs">表示名</span>
-          </label>
-          <input
-            id="channel-name-input"
-            type="text"
-            class="input input-bordered input-sm w-full"
-            placeholder="カラムの表示名..."
-            bind:value={channelName}
-          />
-        </div>
+        <!-- 選択済み表示名編集 -->
+        {#if channelId}
+          <div class="form-control mt-3">
+            <label class="label py-1" for="channel-name-input-list">
+              <span class="label-text text-xs">表示名</span>
+            </label>
+            <input
+              id="channel-name-input-list"
+              type="text"
+              class="input input-bordered input-sm w-full"
+              placeholder="カラムの表示名..."
+              bind:value={channelName}
+            />
+          </div>
+        {/if}
+      {:else}
+        <!-- ID直接入力モード -->
+        <div class="space-y-3">
+          <div class="form-control">
+            <label class="label py-1" for="channel-id-input">
+              <span class="label-text text-xs">
+                {#if selectedChannel === 'channel'}チャンネルID
+                {:else if selectedChannel === 'antenna'}アンテナID
+                {:else if selectedChannel === 'userList'}リストID
+                {:else if selectedChannel === 'roleTimeline'}ロールID
+                {:else}ID
+                {/if}
+              </span>
+            </label>
+            <input
+              id="channel-id-input"
+              type="text"
+              class="input input-bordered input-sm w-full"
+              placeholder="IDを入力..."
+              bind:value={channelId}
+            />
+            <p class="text-xs text-base-content/40 mt-1">
+              MisskeyのURLやAPIレスポンスから確認できます
+            </p>
+          </div>
 
-        <!-- アクセントカラー -->
-        <div class="form-control">
-          <div class="label py-1">
-            <span class="label-text text-xs">アクセントカラー</span>
+          <div class="form-control">
+            <label class="label py-1" for="channel-name-input-direct">
+              <span class="label-text text-xs">表示名</span>
+            </label>
+            <input
+              id="channel-name-input-direct"
+              type="text"
+              class="input input-bordered input-sm w-full"
+              placeholder="カラムの表示名..."
+              bind:value={channelName}
+            />
           </div>
-          <div class="flex flex-wrap gap-2">
-            {#each ACCENT_COLORS as color}
-              <button
-                class="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110"
-                class:border-base-content={selectedColor === color}
-                class:border-transparent={selectedColor !== color}
-                style="background-color: {color};"
-                onclick={() => selectedColor = color}
-                aria-label="カラー {color}"
-              ></button>
-            {/each}
-          </div>
+        </div>
+      {/if}
+
+      <!-- アクセントカラー -->
+      <div class="form-control mt-3">
+        <div class="label py-1">
+          <span class="label-text text-xs">アクセントカラー</span>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          {#each ACCENT_COLORS as color}
+            <button
+              class="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110"
+              class:border-base-content={selectedColor === color}
+              class:border-transparent={selectedColor !== color}
+              style="background-color: {color};"
+              onclick={() => selectedColor = color}
+              aria-label="カラー {color}"
+            ></button>
+          {/each}
         </div>
       </div>
 
