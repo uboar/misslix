@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* スクロールバースタイル */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.5 0 0 / 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0 0 / 0.5);
+}
+
+.column-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}

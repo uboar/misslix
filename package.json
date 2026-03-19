@@ -1,0 +1,39 @@
+{
+  "name": "misslix",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+    "test": "vitest run",
+    "test:unit": "vitest run --config vitest.config.ts",
+    "test:unit:watch": "vitest --config vitest.config.ts",
+    "test:unit:coverage": "vitest run --config vitest.config.ts --coverage",
+    "test:component": "vitest run --config vitest.config.ts --include 'src/components/**/*.test.ts'",
+    "test:e2e": "bash scripts/test-e2e.sh",
+    "test:e2e:run": "vitest run --config vitest.e2e.config.ts"
+  },
+  "dependencies": {
+    "misskey-js": "latest",
+    "dayjs": "latest"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^24.12.0",
+    "daisyui": "^5.0.0",
+    "svelte": "^5.53.12",
+    "svelte-check": "^4.4.5",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.1",
+    "vitest": "latest",
+    "@testing-library/svelte": "latest",
+    "@testing-library/jest-dom": "latest",
+    "jsdom": "latest"
+  }
+}
