@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { entities } from 'misskey-js';
   import type { ColumnConfig } from '$lib/types';
+  import { checkMute } from '$lib/utils/mute';
+  import { formatShortTime } from '$lib/utils/date';
   import NoteCard from './NoteCard.svelte';
   import NoteUser from './NoteUser.svelte';
   import NoteBody from './NoteBody.svelte';
@@ -14,7 +16,7 @@
     hostUrl?: string;
     muteUsers?: string[];
     muteWords?: string[];
-    depth?: number;       // 再帰深度 (Renote/リプライ)
+    depth?: number;
   };
 
   let {
@@ -41,32 +43,9 @@
   // 引用Renote: テキストあり + renoteあり
   const isQuote = $derived(!!note.renote && (!!note.text || !!note.cw));
 
-  // ミュート判定 (シンプル実装。後でmute.tsに置き換え)
-  const isMuted = $derived((() => {
-    const author = displayNote.user;
-    const handle = author.host
-      ? `${author.username}@${author.host}`
-      : author.username;
-
-    // ユーザーミュート
-    if (muteUsers.some(m => m === handle || m === author.username)) {
-      return true;
-    }
-
-    // ワードミュート
-    const text = (displayNote.text ?? '') + (displayNote.cw ?? '');
-    if (muteWords.some(w => {
-      try {
-        return new RegExp(w).test(text);
-      } catch {
-        return text.includes(w);
-      }
-    })) {
-      return true;
-    }
-
-    return false;
-  })());
+  // ミュート判定
+  const muteReason = $derived(checkMute(displayNote, muteUsers, muteWords));
+  const isMuted = $derived(!!muteReason);
 
   // ミュート折り畳み状態
   let muteExpanded = $state(false);
@@ -89,26 +68,7 @@
   // リプライ表示
   const hasReply = $derived(!!displayNote.reply && depth < maxDepth);
 
-  // 日付フォーマット (シンプル実装。後でdate.tsに置き換え)
-  function formatDate(dateStr: string): string {
-    try {
-      const date = new Date(dateStr);
-      const now = new Date();
-      const diff = now.getTime() - date.getTime();
-      const mins = Math.floor(diff / 60000);
-      if (mins < 1) return '今';
-      if (mins < 60) return `${mins}分`;
-      const hours = Math.floor(mins / 60);
-      if (hours < 24) return `${hours}時間`;
-      const days = Math.floor(hours / 24);
-      if (days < 7) return `${days}日`;
-      return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
-    } catch {
-      return '';
-    }
-  }
-
-  const createdAt = $derived(formatDate(displayNote.createdAt));
+  const createdAt = $derived(formatShortTime(displayNote.createdAt));
 
   // リアクションハンドラ
   function handleReact(reaction: string) {
@@ -138,7 +98,7 @@
         <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" stroke-linecap="round" stroke-linejoin="round"/>
         <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
       </svg>
-      <span class="text-[0.6rem]">ミュート中のノート</span>
+      <span class="text-[0.6rem]">{muteReason ?? 'ミュート中のノート'}</span>
       <button
         class="text-[0.6rem] text-base-content/30 hover:text-base-content/50 underline transition-colors ml-auto"
         onclick={() => { muteExpanded = true; }}
@@ -178,21 +138,10 @@
       </div>
     {/if}
 
-    <!-- メインコンテンツ -->
-    <div class="flex gap-2 min-w-0">
-      <!-- アバター -->
-      <div class="shrink-0">
-        <NoteUser user={displayNote.user} {hostUrl} compact={depth > 0} />
-      </div>
-
-      <!-- 右側コンテンツ -->
-      <!-- (NoteUserが横並びなのでここは縦レイアウトを別div で) -->
-    </div>
-
     <!-- ユーザー + タイムスタンプ行 -->
     <div class="flex items-start gap-2 min-w-0 mb-1">
       <div class="flex-1 min-w-0">
-        <NoteUser user={displayNote.user} {hostUrl} compact={depth > 0} />
+        <NoteUser user={displayNote.user} {hostUrl} compact={depth > 0} {emojis} />
       </div>
 
       <!-- タイムスタンプ -->

@@ -2,6 +2,7 @@
   import type { entities } from 'misskey-js';
   import type { AccountRuntime, ColumnConfig } from '$lib/types';
   import { CHANNEL_ENDPOINTS } from '$lib/api/endpoints';
+  import { settingsStore } from '$lib/stores/settings.svelte';
   import NoteCard from './NoteCard.svelte';
   import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
 
@@ -11,6 +12,10 @@
   };
 
   let { account, config }: Props = $props();
+
+  // ミュート設定
+  const muteUsers = $derived(settingsStore.settings.muteUsers);
+  const muteWords = $derived(settingsStore.settings.muteWords);
 
   // ノートリスト
   let notes = $state<entities.Note[]>([]);
@@ -178,7 +183,8 @@
         {note}
         {config}
         emojis={emojiMap}
-        hostUrl={undefined}
+        {muteUsers}
+        {muteWords}
       />
     {/each}
 

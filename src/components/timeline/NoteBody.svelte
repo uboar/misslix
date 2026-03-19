@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { entities } from 'misskey-js';
   import type { ColumnConfig } from '$lib/types';
+  import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
 
   type Props = {
     note: entities.Note;
@@ -79,8 +80,7 @@
       <div class="flex items-center gap-1.5">
         <span class="text-[0.6rem] px-1 py-0.5 rounded bg-warning/20 text-warning font-semibold uppercase tracking-wide">CW</span>
         <span class="text-xs text-base-content/70 flex-1">
-          <!-- MFMRenderer integration point: replace with <MfmRenderer text={cwText} {emojis} /> -->
-          {cwText}
+          <MfmRenderer text={cwText} {emojis} isInline />
         </span>
         <button
           class="btn btn-xs btn-ghost px-1.5 py-0.5 h-auto min-h-0 text-[0.6rem] text-base-content/50 hover:text-base-content border border-base-300/50"
@@ -101,8 +101,7 @@
               class="whitespace-pre-wrap break-words text-xs text-base-content/85"
               class:line-clamp-none={contentExpanded}
             >
-              <!-- MFMRenderer integration point: replace with <MfmRenderer text={bodyText} {emojis} /> -->
-              {bodyText}
+              <MfmRenderer text={bodyText} {emojis} />
             </div>
           {/if}
         </div>
@@ -119,8 +118,7 @@
             ? `max-height: ${config.noteDisplay.collapseHeight}px;`
             : ''}
         >
-          <!-- MFMRenderer integration point: replace with <MfmRenderer text={bodyText} {emojis} /> -->
-          {bodyText}
+          <MfmRenderer text={bodyText} {emojis} />
         </div>
 
         <!-- 折り畳みグラデーション + 展開ボタン (高さ超過時のみ表示) -->

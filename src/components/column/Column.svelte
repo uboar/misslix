@@ -1,15 +1,22 @@
 <script lang="ts">
-  import type { ColumnConfig } from '$lib/types';
+  import type { ColumnConfig, AccountRuntime } from '$lib/types';
   import { COLUMN_WIDTH_MAP } from '$lib/types';
   import { timelineStore } from '$lib/stores/timelines.svelte';
+  import { connectTimeline } from '$lib/api/streaming';
+  import type { NoteUpdatedData } from '$lib/api/streaming';
   import ColumnHeader from './ColumnHeader.svelte';
   import ColumnFooter from './ColumnFooter.svelte';
+  import NoteList from '../timeline/NoteList.svelte';
 
   type Props = {
     config: ColumnConfig;
+    runtime?: AccountRuntime;
   };
 
-  let { config }: Props = $props();
+  let { config, runtime }: Props = $props();
+
+  // NoteList コンポーネント参照
+  let noteList = $state<ReturnType<typeof NoteList> | null>(null);
 
   // 折り畳み状態 (configと同期)
   let collapsed = $derived(config.collapsed);
@@ -28,6 +35,37 @@
   function handleRemove() {
     timelineStore.removeColumn(config.id);
   }
+
+  // ストリーミング接続
+  import type { TimelineConnection } from '$lib/api/streaming';
+  let connection = $state<TimelineConnection | null>(null);
+
+  $effect(() => {
+    if (!runtime || collapsed) {
+      connection?.disconnect();
+      connection = null;
+      return;
+    }
+
+    const conn = connectTimeline(runtime, config, {
+      onNote(note) {
+        noteList?.addNote(note);
+      },
+      onNoteUpdated(data) {
+        if (data.type === 'deleted') {
+          noteList?.removeNote(data.id);
+        } else if (data.type === 'reacted' || data.type === 'unreacted') {
+          // リアクション更新は body から reactions を更新
+          // 簡易実装: NoteList側で全体を再取得はしない
+        }
+      },
+    });
+    connection = conn;
+
+    return () => {
+      conn.disconnect();
+    };
+  });
 </script>
 
 <div
@@ -87,25 +125,14 @@
     <!-- 通常表示 -->
     <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} />
 
-    <!-- メインエリア (Phase 4でNoteListに置換) -->
-    <div class="flex-1 overflow-y-auto overflow-x-hidden p-3">
-      <div class="flex flex-col items-center justify-center h-full min-h-32 gap-3 opacity-40">
-        <svg
-          class="w-8 h-8 text-base-content/30"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          aria-hidden="true"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18M3 6h18M3 18h18" />
-        </svg>
-        <p class="text-xs text-base-content/50 text-center select-none leading-relaxed">
-          ノートがここに表示されます<br />
-          <span class="text-base-content/30">(Phase 4で実装)</span>
-        </p>
+    <!-- メインエリア -->
+    {#if runtime}
+      <NoteList bind:this={noteList} account={runtime} {config} />
+    {:else}
+      <div class="flex-1 flex items-center justify-center">
+        <span class="loading loading-spinner loading-sm text-base-content/30"></span>
       </div>
-    </div>
+    {/if}
 
     <ColumnFooter {config} />
   {/if}

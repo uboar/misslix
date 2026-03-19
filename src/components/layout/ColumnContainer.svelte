@@ -1,12 +1,14 @@
 <script lang="ts">
+  import type { AccountRuntime } from '$lib/types';
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import Column from '../column/Column.svelte';
 
   type Props = {
     onadd?: () => void;
+    runtimes?: Map<number, AccountRuntime>;
   };
 
-  let { onadd }: Props = $props();
+  let { onadd, runtimes = new Map() }: Props = $props();
 
   let columns = $derived(timelineStore.columns);
 </script>
@@ -42,7 +44,7 @@
   {:else}
     <!-- カラム一覧 -->
     {#each columns as config (config.id)}
-      <Column {config} />
+      <Column {config} runtime={runtimes.get(config.accountId)} />
     {/each}
   {/if}
 </div>

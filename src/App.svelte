@@ -51,7 +51,7 @@
       <span class="loading loading-spinner loading-lg text-primary"></span>
     </main>
   {:else}
-    <ColumnContainer onadd={() => addColumnOpen = true} />
+    <ColumnContainer onadd={() => addColumnOpen = true} {runtimes} />
   {/if}
 
   <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} />

@@ -1,14 +1,16 @@
 <script lang="ts">
   import type { entities } from 'misskey-js';
   import Avatar from '$components/common/Avatar.svelte';
+  import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
 
   type Props = {
     user: entities.UserLite;
     hostUrl?: string;
     compact?: boolean;
+    emojis?: Record<string, string>;
   };
 
-  let { user, hostUrl, compact = false }: Props = $props();
+  let { user, hostUrl, compact = false, emojis = {} }: Props = $props();
 
   // ユーザーの表示名
   const displayName = $derived(user.name || user.username);
@@ -38,8 +40,7 @@
       class="text-xs font-semibold text-base-content truncate"
       title={displayName}
     >
-      <!-- MFMRenderer integration point: replace span content with <MfmRenderer text={displayName} {emojis} /> -->
-      {displayName}
+      <MfmRenderer text={displayName} {emojis} isInline />
     </span>
 
     <!-- ハンドル -->
