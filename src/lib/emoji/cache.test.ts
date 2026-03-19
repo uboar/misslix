@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { entities } from 'misskey-js';
-import { getEmojiMap, getCachedEmojiMap } from './cache';
+import { getEmojiMap, getCachedEmojiMap, clearCachedEmojiMap, clearAllCachedEmojiMaps } from './cache';
 
 type EmojiDetailed = entities.EmojiDetailed;
 
@@ -179,5 +179,114 @@ describe('getCachedEmojiMap', () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(mockCache.put).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ new_emoji: 'https://example.com/new.png' });
+  });
+});
+
+describe('clearCachedEmojiMap', () => {
+  let originalCaches: typeof globalThis.caches;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    originalCaches = globalThis.caches;
+  });
+
+  afterEach(() => {
+    if (originalCaches !== undefined) {
+      globalThis.caches = originalCaches;
+    } else {
+      // @ts-ignore
+      delete globalThis.caches;
+    }
+  });
+
+  it('Cache API 非対応環境では false を返す', async () => {
+    // @ts-ignore
+    delete globalThis.caches;
+
+    const result = await clearCachedEmojiMap('https://example.com');
+    expect(result).toBe(false);
+  });
+
+  it('Cache API が存在する場合、caches.delete を呼び出す', async () => {
+    const mockCaches = {
+      delete: vi.fn().mockResolvedValue(true),
+    };
+    // @ts-ignore
+    globalThis.caches = mockCaches;
+
+    const result = await clearCachedEmojiMap('https://example.com');
+    expect(mockCaches.delete).toHaveBeenCalledTimes(1);
+    expect(mockCaches.delete).toHaveBeenCalledWith('misslix-emoji-https://example.com');
+    expect(result).toBe(true);
+  });
+
+  it('キャッシュが存在しない場合、false を返す', async () => {
+    const mockCaches = {
+      delete: vi.fn().mockResolvedValue(false),
+    };
+    // @ts-ignore
+    globalThis.caches = mockCaches;
+
+    const result = await clearCachedEmojiMap('https://example.com');
+    expect(result).toBe(false);
+  });
+});
+
+describe('clearAllCachedEmojiMaps', () => {
+  let originalCaches: typeof globalThis.caches;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    originalCaches = globalThis.caches;
+  });
+
+  afterEach(() => {
+    if (originalCaches !== undefined) {
+      globalThis.caches = originalCaches;
+    } else {
+      // @ts-ignore
+      delete globalThis.caches;
+    }
+  });
+
+  it('Cache API 非対応環境では何もしない', async () => {
+    // @ts-ignore
+    delete globalThis.caches;
+
+    // throw せずに完了する
+    await expect(clearAllCachedEmojiMaps()).resolves.toBeUndefined();
+  });
+
+  it('misslix-emoji- プレフィックスを持つキャッシュのみ削除する', async () => {
+    const mockCaches = {
+      keys: vi.fn().mockResolvedValue([
+        'misslix-emoji-https://example.com',
+        'misslix-emoji-https://other.example',
+        'other-cache',
+      ]),
+      delete: vi.fn().mockResolvedValue(true),
+    };
+    // @ts-ignore
+    globalThis.caches = mockCaches;
+
+    await clearAllCachedEmojiMaps();
+
+    expect(mockCaches.delete).toHaveBeenCalledTimes(2);
+    expect(mockCaches.delete).toHaveBeenCalledWith('misslix-emoji-https://example.com');
+    expect(mockCaches.delete).toHaveBeenCalledWith('misslix-emoji-https://other.example');
+    expect(mockCaches.delete).not.toHaveBeenCalledWith('other-cache');
+  });
+
+  it('misslix-emoji- プレフィックスのキャッシュが存在しない場合は delete を呼ばない', async () => {
+    const mockCaches = {
+      keys: vi.fn().mockResolvedValue(['other-cache', 'another-cache']),
+      delete: vi.fn().mockResolvedValue(true),
+    };
+    // @ts-ignore
+    globalThis.caches = mockCaches;
+
+    await clearAllCachedEmojiMaps();
+
+    expect(mockCaches.delete).not.toHaveBeenCalled();
   });
 });
