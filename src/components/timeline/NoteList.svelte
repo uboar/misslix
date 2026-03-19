@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { entities } from 'misskey-js';
   import type { AccountRuntime, ColumnConfig } from '$lib/types';
   import { CHANNEL_ENDPOINTS } from '$lib/api/endpoints';
@@ -131,7 +132,7 @@
   }
 
   // 初期化
-  $effect(() => {
+  onMount(() => {
     fetchInitial();
   });
 </script>
