@@ -49,6 +49,7 @@ function makeRuntime(cli: APIClient): AccountRuntime {
     hasUnread: false,
     emojis: [],
     busy: false,
+    userId: 'test-user-id',
   };
 }
 

@@ -50,13 +50,18 @@
     const conn = connectTimeline(runtime, config, {
       onNote(note) {
         noteList?.addNote(note);
+        // 新規ノートのリアクション更新を購読
+        conn.subNote(note.id);
       },
       onNoteUpdated(data) {
         if (data.type === 'deleted') {
           noteList?.removeNote(data.id);
-        } else if (data.type === 'reacted' || data.type === 'unreacted') {
-          // リアクション更新は body から reactions を更新
-          // 簡易実装: NoteList側で全体を再取得はしない
+        } else if (data.type === 'reacted') {
+          const body = data.body as { reaction: string; emoji?: { name: string; url: string }; userId: string };
+          noteList?.applyReaction(data.id, body.reaction, body.emoji, body.userId);
+        } else if (data.type === 'unreacted') {
+          const body = data.body as { reaction: string; userId: string };
+          noteList?.applyUnreaction(data.id, body.reaction, body.userId);
         }
       },
     });
@@ -127,7 +132,17 @@
 
     <!-- メインエリア -->
     {#if runtime}
-      <NoteList bind:this={noteList} account={runtime} {config} />
+      <NoteList
+        bind:this={noteList}
+        account={runtime}
+        {config}
+        onnotesloaded={(noteIds) => {
+          // 初期ノートのリアクション更新を購読
+          for (const id of noteIds) {
+            connection?.subNote(id);
+          }
+        }}
+      />
     {:else}
       <div class="flex-1 flex items-center justify-center">
         <span class="loading loading-spinner loading-sm text-base-content/30"></span>

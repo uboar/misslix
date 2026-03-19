@@ -1,13 +1,16 @@
 <script lang="ts">
   import type { entities } from 'misskey-js';
-  import type { ColumnConfig } from '$lib/types';
+  import type { ColumnConfig, AccountRuntime } from '$lib/types';
   import { checkMute } from '$lib/utils/mute';
   import { formatShortTime } from '$lib/utils/date';
+  import { addReactionHistory } from '$lib/utils/reactionHistory';
   import NoteCard from './NoteCard.svelte';
   import NoteUser from './NoteUser.svelte';
   import NoteBody from './NoteBody.svelte';
   import NoteMedia from './NoteMedia.svelte';
   import NoteReactions from './NoteReactions.svelte';
+  import ReactionButton from '$components/reaction/ReactionButton.svelte';
+  import UserDetailModal from '$components/user/UserDetailModal.svelte';
 
   type Props = {
     note: entities.Note;
@@ -17,6 +20,7 @@
     muteUsers?: string[];
     muteWords?: string[];
     depth?: number;
+    runtime?: AccountRuntime;
   };
 
   let {
@@ -27,6 +31,7 @@
     muteUsers = [],
     muteWords = [],
     depth = 0,
+    runtime,
   }: Props = $props();
 
   const maxDepth = 2;  // 再帰上限
@@ -76,9 +81,38 @@
 
   const createdAt = $derived(formatShortTime(displayNote.createdAt));
 
-  // リアクションハンドラ
+  // 既存リアクションバッジクリック → トグル
   function handleReact(reaction: string) {
-    // Phase 5で接続
+    if (!runtime) return;
+
+    if (myReaction === reaction) {
+      // 自分のリアクションを解除
+      runtime.cli.request('notes/reactions/delete', { noteId: displayNote.id }).catch((err) => {
+        console.error('[NoteCard] リアクション削除失敗:', err);
+      });
+    } else if (!myReaction) {
+      // 新規リアクション追加
+      runtime.cli.request('notes/reactions/create', { noteId: displayNote.id, reaction }).catch((err) => {
+        console.error('[NoteCard] リアクション追加失敗:', err);
+      });
+      addReactionHistory(reaction);
+    }
+  }
+
+  // ReactionButton経由のリアクション完了コールバック
+  function handleReacted(reaction: string | null) {
+    if (reaction) {
+      addReactionHistory(reaction);
+    }
+  }
+
+  // ユーザー詳細モーダル
+  let userModalOpen = $state(false);
+  let userModalTarget = $state<entities.UserLite | null>(null);
+
+  function handleUserClick(user: entities.UserLite) {
+    userModalTarget = user;
+    userModalOpen = true;
   }
 </script>
 
@@ -140,6 +174,7 @@
           {muteUsers}
           {muteWords}
           depth={depth + 1}
+          {runtime}
         />
       </div>
     {/if}
@@ -147,7 +182,7 @@
     <!-- ユーザー + タイムスタンプ行 -->
     <div class="flex items-start gap-2 min-w-0 mb-1">
       <div class="flex-1 min-w-0">
-        <NoteUser user={displayNote.user} {hostUrl} compact={depth > 0} {emojis} />
+        <NoteUser user={displayNote.user} {hostUrl} compact={depth > 0} {emojis} onclick={handleUserClick} />
       </div>
 
       <!-- タイムスタンプ -->
@@ -174,6 +209,7 @@
           {muteUsers}
           {muteWords}
           depth={depth + 1}
+          {runtime}
         />
       </div>
     {/if}
@@ -183,7 +219,7 @@
       <NoteMedia files={mediaFiles} {config} />
     {/if}
 
-    <!-- リアクション -->
+    <!-- リアクション表示 -->
     {#if hasReactions}
       <NoteReactions
         {reactions}
@@ -194,6 +230,34 @@
       />
     {/if}
 
+    <!-- タブバー (depth=0のみ) -->
+    {#if depth === 0 && runtime}
+      <div class="note-tabs flex items-center gap-1 mt-1.5 pt-1 border-t border-base-300/30">
+        <!-- リアクションボタン -->
+        <ReactionButton
+          noteId={displayNote.id}
+          {myReaction}
+          {runtime}
+          reactionDeck={config.reactionDeck}
+          emojis={reactionEmojis}
+          onreacted={handleReacted}
+        />
+
+        <!-- 将来の拡張用スペース -->
+      </div>
+    {/if}
+
+  {/if}
+
+  <!-- ユーザー詳細モーダル -->
+  {#if userModalTarget}
+    <UserDetailModal
+      open={userModalOpen}
+      onclose={() => { userModalOpen = false; }}
+      user={userModalTarget}
+      {runtime}
+      emojis={noteEmojis}
+    />
   {/if}
 </article>
 

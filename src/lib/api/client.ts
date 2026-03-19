@@ -42,6 +42,15 @@ export async function initAccountRuntime(account: Account): Promise<AccountRunti
     emojis = [];
   }
 
+  // 自分のユーザーIDを取得
+  let userId = '';
+  try {
+    const me = await cli.request('i', {});
+    userId = me.id;
+  } catch {
+    // ユーザーID取得失敗は無視
+  }
+
   const runtime: AccountRuntime = {
     stream,
     cli,
@@ -50,6 +59,7 @@ export async function initAccountRuntime(account: Account): Promise<AccountRunti
     hasUnread: false,
     emojis,
     busy: false,
+    userId,
   };
 
   // mainチャンネルの通知リスナー (アカウントごとに1回のみ)

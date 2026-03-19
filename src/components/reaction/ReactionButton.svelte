@@ -29,50 +29,42 @@
   // API呼び出し中フラグ
   let busy = $state(false);
 
-  // ボタン要素の参照 (デッキの位置計算用)
-  let buttonEl = $state<HTMLButtonElement | null>(null);
-
-  // デッキのスタイル (ボタン下に表示)
+  // デッキのスタイル (マウス位置に表示)
   let deckStyle = $state('');
 
-  function computeDeckPosition() {
-    if (!buttonEl) {
-      deckStyle = 'bottom: 2rem; left: 0;';
-      return;
-    }
-    const rect = buttonEl.getBoundingClientRect();
+  function computeDeckPosition(mouseX: number, mouseY: number) {
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
 
-    // ボタン下に十分スペースがあるか確認 (デッキ高さ約220px)
-    const spaceBelow = viewportHeight - rect.bottom;
-    const spaceAbove = rect.top;
+    // マウス位置の下に十分スペースがあるか確認 (デッキ高さ約220px)
+    const spaceBelow = viewportHeight - mouseY;
+    const spaceAbove = mouseY;
 
     let top: string;
     let left: string;
 
     if (spaceBelow >= 220 || spaceBelow >= spaceAbove) {
-      top = `${rect.bottom + 4}px`;
+      top = `${mouseY + 4}px`;
     } else {
-      top = `${rect.top - 224}px`;
+      top = `${mouseY - 224}px`;
     }
 
     // 右端にはみ出さないように調整
-    const leftPx = Math.min(rect.left, viewportWidth - 330);
+    const leftPx = Math.min(mouseX, viewportWidth - 330);
     left = `${Math.max(0, leftPx)}px`;
 
     deckStyle = `top: ${top}; left: ${left};`;
   }
 
-  function handleButtonClick() {
+  function handleButtonClick(e: MouseEvent) {
     if (busy) return;
 
     if (myReaction) {
       // 既にリアクション済み → 削除
       deleteReaction();
     } else {
-      // デッキを表示
-      computeDeckPosition();
+      // デッキをマウス位置に表示
+      computeDeckPosition(e.clientX, e.clientY);
       deckVisible = true;
     }
   }
@@ -128,7 +120,6 @@
 
 <!-- リアクション追加ボタン -->
 <button
-  bind:this={buttonEl}
   class="reaction-add-btn inline-flex items-center justify-center w-6 h-6 rounded
     text-base-content/30 hover:text-base-content/60 hover:bg-base-200
     transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed
@@ -184,24 +175,18 @@
 
 <!-- リアクションデッキ (ポップアップ) -->
 {#if deckVisible}
-  <div class="reaction-deck-wrapper" style={deckStyle}>
-    <ReactionDeck
-      deck={reactionDeck}
-      {emojis}
-      accountEmojis={runtime.emojis}
-      onselect={handleDeckSelect}
-      onclose={handleDeckClose}
-    />
-  </div>
+  <ReactionDeck
+    deck={reactionDeck}
+    {emojis}
+    accountEmojis={runtime.emojis}
+    positionStyle={deckStyle}
+    onselect={handleDeckSelect}
+    onclose={handleDeckClose}
+  />
 {/if}
 
 <style>
   .reaction-add-btn {
     transition: transform 150ms ease, color 150ms ease, background-color 150ms ease;
-  }
-
-  .reaction-deck-wrapper {
-    position: fixed;
-    z-index: 50;
   }
 </style>

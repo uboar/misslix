@@ -50,6 +50,7 @@ function makeRuntime(mockStream: ReturnType<typeof makeStreamMock>['mockStream']
     hasUnread: false,
     emojis: [],
     busy: false,
+    userId: 'test-user-id',
   };
 }
 
