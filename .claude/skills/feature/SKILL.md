@@ -40,13 +40,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent
 - UIコンポーネントの追加・変更
 - テストファイル一覧
 
-### Step 2: ブランチ作成
-
-```bash
-git checkout -b feature/<機能名の英語slug>
-```
-
-### Step 3: 実装
+### Step 2: 実装
 
 以下の順序で実装する:
 
