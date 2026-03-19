@@ -1,7 +1,8 @@
 import { Stream, api } from 'misskey-js';
-import type { ChannelConnection } from 'misskey-js';
+import type { ChannelConnection, entities } from 'misskey-js';
 import type { Account, AccountRuntime } from '$lib/types';
 import { showApiError } from '$lib/utils/error';
+import { settingsStore } from '$lib/stores/settings.svelte';
 
 const { APIClient } = api;
 
@@ -50,6 +51,13 @@ export async function initAccountRuntime(account: Account): Promise<AccountRunti
     emojis,
     busy: false,
   };
+
+  // mainチャンネルの通知リスナー (アカウントごとに1回のみ)
+  (mainConnection as any).on('notification', (notification: entities.Notification) => {
+    const buffer = settingsStore.settings.notificationBuffer;
+    runtime.notifications = [notification, ...runtime.notifications].slice(0, buffer);
+    runtime.hasUnread = true;
+  });
 
   // ストリーム切断時のエラーハンドリング
   stream.on('_disconnected_', () => {

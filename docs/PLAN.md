@@ -208,22 +208,22 @@ mfm-js @discordapp/twemoji
 **目標**: 残り機能の実装とポリッシュ
 
 ### タスク
-- [ ] `components/notification/NotificationPanel.svelte` — 通知パネル
+- [x] `components/notification/NotificationPanel.svelte` — 通知パネル
   - フォロー、メンション、リプライ、Renote、リアクション表示
   - 未読インジケータ
-- [ ] `components/column/ColumnSettings.svelte` — カラム個別設定パネル
+- [x] `components/column/ColumnSettings.svelte` — カラム個別設定パネル
   - 幅、色、表示件数、ノート表示オプション、リアクションデッキ
-- [ ] `components/settings/GeneralSettings.svelte` — 一般設定
+- [x] `components/settings/GeneralSettings.svelte` — 一般設定
   - テーマ選択、絵文字スペース、バーチャルスクロール、自動取得
-- [ ] `components/settings/MuteSettings.svelte` — ミュート設定
+- [x] `components/settings/MuteSettings.svelte` — ミュート設定
   - ユーザーミュート (user@host) 追加/削除
   - 正規表現ワードミュート 追加/削除
-- [ ] `components/settings/AccountSettings.svelte` — アカウント設定
+- [x] `components/settings/AccountSettings.svelte` — アカウント設定
   - 絵文字キャッシュ管理
-- [ ] クイックリンクパネル — Misskeyインスタンスへのリンク集
-- [ ] レート制限対応 (Misskey.io検出 + クールダウン)
-- [ ] エラーハンドリング全般
-- [ ] ビルド最適化・デプロイ設定
+- [x] クイックリンクパネル — Misskeyインスタンスへのリンク集
+- [x] レート制限対応 (Misskey.io検出 + クールダウン)
+- [x] エラーハンドリング全般
+- [x] ビルド最適化・デプロイ設定
 
 ### 成果物
 - 全機能が動作する完成版

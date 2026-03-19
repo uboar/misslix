@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { ColumnConfig, AccountRuntime } from '$lib/types';
-  import { settingsStore } from '$lib/stores/settings.svelte';
   import NotificationPanel from '$components/notification/NotificationPanel.svelte';
 
   type Props = {
@@ -15,35 +14,6 @@
 
   // 通知パネルを囲む要素 (パネル外クリック検出用)
   let wrapperEl = $state<HTMLDivElement | null>(null);
-
-  // 通知リスナーのセットアップ
-  $effect(() => {
-    if (!runtime) return;
-
-    const conn = runtime.mainConnection;
-    if (!conn) return;
-
-    // misskey-js の ChannelConnection は EventEmitter 相当
-    // 'notification' イベントをリッスンする
-    function onNotification(notification: unknown) {
-      if (!runtime) return;
-      const buffer = settingsStore.settings.notificationBuffer;
-      // 先頭に追加してバッファサイズ制御
-      runtime.notifications = [
-        notification as import('misskey-js').entities.Notification,
-        ...runtime.notifications,
-      ].slice(0, buffer);
-      runtime.hasUnread = true;
-    }
-
-    // @ts-expect-error ChannelConnection の型定義が on() を持たない場合のフォールバック
-    conn.on('notification', onNotification);
-
-    return () => {
-      // @ts-expect-error
-      conn.off('notification', onNotification);
-    };
-  });
 
   // パネルを開く: 未読フラグをクリア
   function openPanel() {
