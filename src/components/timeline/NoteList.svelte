@@ -10,9 +10,10 @@
   type Props = {
     account: AccountRuntime;
     config: ColumnConfig;
+    onnotesloaded?: (noteIds: string[]) => void;
   };
 
-  let { account, config }: Props = $props();
+  let { account, config, onnotesloaded }: Props = $props();
 
   // ミュート設定
   const muteUsers = $derived(settingsStore.settings.muteUsers);
@@ -68,6 +69,8 @@
       );
       notes = (res as unknown as entities.Note[]).slice(0, config.maxNotes);
       hasMore = notes.length >= 20;
+      // ストリーミングでリアクション更新を受信するためsubNote購読
+      onnotesloaded?.(notes.map(n => n.id));
     } catch (e) {
       error = e instanceof Error ? e.message : 'ノートの取得に失敗しました';
     } finally {
@@ -120,6 +123,81 @@
    */
   export function removeNote(noteId: string) {
     notes = notes.filter(n => n.id !== noteId);
+  }
+
+  /**
+   * ストリーミング統合用: リアクション追加を反映する
+   */
+  export function applyReaction(
+    noteId: string,
+    reaction: string,
+    emoji: { name: string; url: string } | undefined,
+    userId: string,
+  ) {
+    notes = notes.map(n => {
+      // 対象ノートまたはrenote先を探す
+      const target = n.id === noteId ? n : (n.renote && n.renote.id === noteId ? n : null);
+      if (!target) return n;
+
+      const actualNote = n.id === noteId ? n : n.renote!;
+      const updatedReactions = { ...(actualNote.reactions ?? {}) };
+      updatedReactions[reaction] = (updatedReactions[reaction] ?? 0) + 1;
+
+      // reactionEmojis にカスタム絵文字URLを追加
+      const reactionEmojis = { ...((actualNote as any).reactionEmojis ?? {}) };
+      if (emoji?.url) {
+        reactionEmojis[emoji.name] = emoji.url;
+      }
+
+      // 自分のリアクションかどうか判定
+      const isSelf = isCurrentUser(userId);
+      const myReaction = isSelf ? reaction : actualNote.myReaction;
+
+      if (n.id === noteId) {
+        return { ...n, reactions: updatedReactions, reactionEmojis, myReaction };
+      } else {
+        return { ...n, renote: { ...actualNote, reactions: updatedReactions, reactionEmojis, myReaction } };
+      }
+    });
+  }
+
+  /**
+   * ストリーミング統合用: リアクション削除を反映する
+   */
+  export function applyUnreaction(
+    noteId: string,
+    reaction: string,
+    userId: string,
+  ) {
+    notes = notes.map(n => {
+      const target = n.id === noteId ? n : (n.renote && n.renote.id === noteId ? n : null);
+      if (!target) return n;
+
+      const actualNote = n.id === noteId ? n : n.renote!;
+      const updatedReactions = { ...(actualNote.reactions ?? {}) };
+      const newCount = (updatedReactions[reaction] ?? 1) - 1;
+      if (newCount <= 0) {
+        delete updatedReactions[reaction];
+      } else {
+        updatedReactions[reaction] = newCount;
+      }
+
+      const isSelf = isCurrentUser(userId);
+      const myReaction = isSelf ? null : actualNote.myReaction;
+
+      if (n.id === noteId) {
+        return { ...n, reactions: updatedReactions, myReaction };
+      } else {
+        return { ...n, renote: { ...actualNote, reactions: updatedReactions, myReaction } };
+      }
+    });
+  }
+
+  /**
+   * 現在のアカウントのユーザーIDか判定する
+   */
+  function isCurrentUser(userId: string): boolean {
+    return account.userId === userId;
   }
 
   // スクロールイベント処理 (無限スクロール)
@@ -186,6 +264,7 @@
         emojis={emojiMap}
         {muteUsers}
         {muteWords}
+        runtime={account}
       />
     {/each}
 
