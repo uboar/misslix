@@ -17,23 +17,25 @@
     "test:e2e:run": "vitest run --config vitest.e2e.config.ts"
   },
   "dependencies": {
-    "misskey-js": "latest",
-    "dayjs": "latest"
+    "@discordapp/twemoji": "^16.0.1",
+    "dayjs": "latest",
+    "mfm-js": "^0.25.0",
+    "misskey-js": "latest"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@tailwindcss/vite": "^4.0.0",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/svelte": "latest",
     "@tsconfig/svelte": "^5.0.8",
     "@types/node": "^24.12.0",
     "daisyui": "^5.0.0",
+    "jsdom": "latest",
     "svelte": "^5.53.12",
     "svelte-check": "^4.4.5",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.9.3",
     "vite": "^8.0.1",
-    "vitest": "latest",
-    "@testing-library/svelte": "latest",
-    "@testing-library/jest-dom": "latest",
-    "jsdom": "latest"
+    "vitest": "latest"
   }
 }
