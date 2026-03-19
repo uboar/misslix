@@ -16,5 +16,13 @@ export default defineConfig({
   },
   build: {
     target: 'es2023',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/misskey-js')) return 'misskey';
+          if (id.includes('node_modules/mfm-js')) return 'mfm';
+        },
+      },
+    },
   },
 })

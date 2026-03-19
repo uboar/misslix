@@ -7,6 +7,7 @@
 
 import type { api } from 'misskey-js';
 import type { Account, AccountRuntime, Visibility } from '$lib/types';
+import { getRemainingCooldown, recordPost, isMisskeyIo } from '$lib/utils/rateLimit';
 
 type APIClient = api.APIClient;
 
@@ -108,19 +109,35 @@ export async function postNote(cli: APIClient, params: PostParams): Promise<unkn
 /**
  * 複数アカウントに同時投稿する。
  * Promise.allSettled で全アカウントの結果を返す。
+ * レート制限対象アカウントはクールダウン後に投稿する。
  */
 export async function postToMultipleAccounts(
   runtimes: Map<number, AccountRuntime>,
   selectedIds: Set<number>,
   params: PostParams,
+  accounts?: Account[],
 ): Promise<PromiseSettledResult<unknown>[]> {
   const promises: Promise<unknown>[] = [];
 
   for (const id of selectedIds) {
     const runtime = runtimes.get(id);
-    if (runtime) {
-      promises.push(postNote(runtime.cli, params));
-    }
+    if (!runtime) continue;
+
+    // レート制限チェック
+    const account = accounts?.find((a) => a.id === id);
+    const needsCooldown = account && isMisskeyIo(account.hostUrl);
+    const remaining = needsCooldown ? getRemainingCooldown(id) : 0;
+
+    const doPost = async () => {
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining));
+      }
+      const result = await postNote(runtime.cli, params);
+      recordPost(id);
+      return result;
+    };
+
+    promises.push(doPost());
   }
 
   return Promise.allSettled(promises);

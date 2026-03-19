@@ -1,6 +1,7 @@
 import { Stream, api } from 'misskey-js';
 import type { ChannelConnection } from 'misskey-js';
 import type { Account, AccountRuntime } from '$lib/types';
+import { showApiError } from '$lib/utils/error';
 
 const { APIClient } = api;
 
@@ -49,6 +50,14 @@ export async function initAccountRuntime(account: Account): Promise<AccountRunti
     emojis,
     busy: false,
   };
+
+  // ストリーム切断時のエラーハンドリング
+  stream.on('_disconnected_', () => {
+    showApiError(
+      new Error('WebSocket接続が切断されました'),
+      `@${account.userName}`,
+    );
+  });
 
   return runtime;
 }
