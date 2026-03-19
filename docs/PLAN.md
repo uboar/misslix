@@ -19,14 +19,14 @@ Phase 6: 通知・設定・仕上げ           ← 残機能・ポリッシュ
 **目標**: ビルド・開発環境の構築
 
 ### タスク
-- [ ] Svelte 5 + Vite 6 + TypeScript プロジェクト作成 (`npx sv create`)
-- [ ] Tailwind CSS 4 + DaisyUI 5 導入
-- [ ] tsconfig.json 設定 (strict mode, path aliases)
-- [ ] vite.config.ts 設定 (HTTPS開発サーバー, base path設定可能)
-- [ ] ディレクトリ構造作成
-- [ ] index.html (lang="ja", viewport設定)
-- [ ] app.css (Tailwind directives, スクロールバースタイル)
-- [ ] 空のApp.svelte + main.ts
+- [x] Svelte 5 + Vite 6 + TypeScript プロジェクト作成 (`npx sv create`)
+- [x] Tailwind CSS 4 + DaisyUI 5 導入
+- [x] tsconfig.json 設定 (strict mode, path aliases)
+- [x] vite.config.ts 設定 (HTTPS開発サーバー, base path設定可能)
+- [x] ディレクトリ構造作成
+- [x] index.html (lang="ja", viewport設定)
+- [x] app.css (Tailwind directives, スクロールバースタイル)
+- [x] 空のApp.svelte + main.ts
 
 ### 成果物
 - `pnpm run dev` で空のSvelteアプリが起動
@@ -42,19 +42,19 @@ Phase 6: 通知・設定・仕上げ           ← 残機能・ポリッシュ
 型とストアは **使う直前に定義** する。Phase 1では認証・カラム管理に必要な部分のみ実装し、ノート表示やMFM関連の型はPhase 4で追加する。
 
 ### タスク
-- [ ] `lib/types.ts` — Phase 2-3で必要な型のみ
+- [x] `lib/types.ts` — Phase 2-3で必要な型のみ
   - Account, ColumnConfig, SettingsType
   - ColumnWidth, ChannelType, Visibility 等のユニオン型
-- [ ] `lib/stores/settings.svelte.ts` — アプリ設定ストア
+- [x] `lib/stores/settings.svelte.ts` — アプリ設定ストア
   - テーマ設定、localStorage永続化 (save/restore)
-- [ ] `lib/stores/accounts.svelte.ts` — アカウントストア
+- [x] `lib/stores/accounts.svelte.ts` — アカウントストア
   - Account[] 管理、追加/削除/復元、localStorage永続化
   - ※ AccountRuntime (stream, cli) はPhase 2で認証実装時に追加
-- [ ] `lib/stores/timelines.svelte.ts` — タイムラインストア
+- [x] `lib/stores/timelines.svelte.ts` — タイムラインストア
   - ColumnConfig[] 管理、追加/削除/並替、localStorage永続化
-- [ ] `lib/api/client.ts` — APIClient生成ヘルパー（基本構造のみ）
-- [ ] `lib/api/endpoints.ts` — APIエンドポイント定義マップ
-- [ ] `lib/utils/storage.ts` — localStorage読書き
+- [x] `lib/api/client.ts` — APIClient生成ヘルパー（基本構造のみ）
+- [x] `lib/api/endpoints.ts` — APIエンドポイント定義マップ
+- [x] `lib/utils/storage.ts` — localStorage読書き
 
 ### 依存パッケージ
 ```

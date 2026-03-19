@@ -1,0 +1,72 @@
+import { type ColumnConfig, DEFAULT_NOTE_DISPLAY } from '$lib/types';
+import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
+
+const STORAGE_KEY = 'timelines';
+
+class TimelineStore {
+  columns = $state<ColumnConfig[]>([]);
+
+  constructor() {
+    this.restore();
+  }
+
+  restore() {
+    this.columns = loadFromStorage<ColumnConfig[]>(STORAGE_KEY, []);
+  }
+
+  persist() {
+    saveToStorage(STORAGE_KEY, this.columns);
+  }
+
+  addColumn(column: ColumnConfig) {
+    this.columns.push(column);
+    this.persist();
+  }
+
+  removeColumn(id: number) {
+    this.columns = this.columns.filter((c) => c.id !== id);
+    this.persist();
+  }
+
+  updateColumn(id: number, partial: Partial<ColumnConfig>) {
+    const idx = this.columns.findIndex((c) => c.id === id);
+    if (idx !== -1) {
+      this.columns[idx] = { ...this.columns[idx], ...partial };
+      this.persist();
+    }
+  }
+
+  moveColumn(fromIndex: number, toIndex: number) {
+    if (fromIndex < 0 || toIndex < 0) return;
+    if (fromIndex >= this.columns.length || toIndex >= this.columns.length) return;
+    const [moved] = this.columns.splice(fromIndex, 1);
+    this.columns.splice(toIndex, 0, moved);
+    this.persist();
+  }
+
+  createDefaultColumn(
+    accountId: number,
+    channel: ColumnConfig['channel'],
+    channelName: string,
+    opts?: Partial<ColumnConfig>,
+  ): ColumnConfig {
+    return {
+      id: Date.now(),
+      accountId,
+      channel,
+      channelName,
+      color: '#86b300',
+      width: 'md',
+      maxNotes: 100,
+      bufferSize: 250,
+      collapsed: false,
+      autoCollapse: false,
+      lowRate: false,
+      reactionDeck: [],
+      noteDisplay: { ...DEFAULT_NOTE_DISPLAY },
+      ...opts,
+    };
+  }
+}
+
+export const timelineStore = new TimelineStore();
