@@ -53,7 +53,9 @@
   }
 
   function handleBackdropClick(e: MouseEvent) {
-    if (e.target === dialogEl) {
+    // 画像やボタン以外（オーバーレイ部分）をクリックしたら閉じる
+    const target = e.target as HTMLElement;
+    if (target === dialogEl || target.closest('.modal-backdrop-area')) {
       onclose();
     }
   }
@@ -89,11 +91,13 @@
   onkeydown={handleKeydown}
   onclick={handleBackdropClick}
 >
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="relative flex items-center justify-center w-screen h-screen p-4"
+    class="modal-backdrop-area relative flex items-center justify-center w-screen h-screen p-4"
     ontouchstart={handleTouchStart}
     ontouchmove={handleTouchMove}
     ontouchend={handleTouchEnd}
+    onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}
     role="presentation"
   >
     <!-- 閉じるボタン -->
