@@ -73,15 +73,15 @@ misskey-js dayjs
 **目標**: ログイン・アカウント追加/削除が動作
 
 ### タスク
-- [ ] `components/common/Modal.svelte` — 汎用モーダル
-- [ ] `components/settings/SettingsModal.svelte` — 設定モーダル (タブUI)
-- [ ] `components/settings/AuthSettings.svelte` — 認証UI
+- [x] `components/common/Modal.svelte` — 汎用モーダル
+- [x] `components/settings/SettingsModal.svelte` — 設定モーダル (タブUI)
+- [x] `components/settings/AuthSettings.svelte` — 認証UI
   - MiAuth認証フロー (リダイレクト→コールバック→トークン取得)
   - 直接トークン入力フォーム
   - アカウント一覧・削除
-- [ ] `lib/api/client.ts` に認証完了後のStream/APIClient初期化を実装
-- [ ] `lib/types.ts` に AccountRuntime 追加
-- [ ] `App.svelte` に起動時アカウント復元処理を実装
+- [x] `lib/api/client.ts` に認証完了後のStream/APIClient初期化を実装
+- [x] `lib/types.ts` に AccountRuntime 追加
+- [x] `App.svelte` に起動時アカウント復元処理を実装
 
 ### 成果物
 - MiAuth/直接トークンでアカウント追加可能
@@ -95,14 +95,14 @@ misskey-js dayjs
 **目標**: カラムの追加・表示・横スクロールが動作
 
 ### タスク
-- [ ] `components/layout/Navbar.svelte` — 上部バー (投稿/カラム追加/設定ボタン)
-- [ ] `components/layout/ColumnContainer.svelte` — カラム横並びコンテナ
+- [x] `components/layout/Navbar.svelte` — 上部バー (投稿/カラム追加/設定ボタン)
+- [x] `components/layout/ColumnContainer.svelte` — カラム横並びコンテナ
   - flex-row + overflow-x-auto レイアウト
-- [ ] `components/column/Column.svelte` — カラム本体
+- [x] `components/column/Column.svelte` — カラム本体
   - 固定幅、縦スクロール、折り畳み/展開
-- [ ] `components/column/ColumnHeader.svelte` — タイムライン名・カラーバー・操作ボタン
-- [ ] `components/column/ColumnFooter.svelte` — ボタンスロット（中身は後のPhaseで接続）
-- [ ] カラム追加モーダル
+- [x] `components/column/ColumnHeader.svelte` — タイムライン名・カラーバー・操作ボタン
+- [x] `components/column/ColumnFooter.svelte` — ボタンスロット（中身は後のPhaseで接続）
+- [x] カラム追加モーダル
   - アカウント選択 → チャンネル種別選択 → チャンネル/アンテナ/リスト/ロール選択
   - 動的にAPIで選択肢取得
 
@@ -124,44 +124,44 @@ misskey-js dayjs
 ### タスク
 
 #### 型・ユーティリティ追加
-- [ ] `lib/types.ts` に NoteWrapper, PostNote 等のノート関連型を追加
-- [ ] `lib/utils/date.ts` — dayjs日付フォーマット
-- [ ] `lib/utils/mute.ts` — ミュート判定 (ユーザー/ワード)
+- [x] `lib/types.ts` に NoteWrapper, PostNote 等のノート関連型を追加
+- [x] `lib/utils/date.ts` — dayjs日付フォーマット
+- [x] `lib/utils/mute.ts` — ミュート判定 (ユーザー/ワード)
 
 #### MFM・絵文字レンダリング
-- [ ] `lib/mfm/MfmRenderer.svelte` — MFMレンダラー (Svelteコンポーネント)
+- [x] `lib/mfm/MfmRenderer.svelte` — MFMレンダラー (Svelteコンポーネント)
   - mfm-jsでパース → Svelteで描画
   - 対応: center, bold, italic, strike, small, code, codeBlock, quote,
     mention, hashtag, url, link, emojiCode, unicodeEmoji, search, fn
-- [ ] `lib/mfm/parser.ts` — パース補助ユーティリティ
-- [ ] `lib/emoji/EmojiRenderer.svelte` — 絵文字表示コンポーネント
+- [x] `lib/mfm/parser.ts` — パース補助ユーティリティ
+- [x] `lib/emoji/EmojiRenderer.svelte` — 絵文字表示コンポーネント
   - カスタム絵文字: img要素、サーバー固有URL
   - Unicode絵文字: twemojiで変換
-- [ ] `lib/emoji/cache.ts` — Cache APIでサーバー絵文字取得・保存
+- [x] `lib/emoji/cache.ts` — Cache APIでサーバー絵文字取得・保存
 
 #### ノート表示
-- [ ] `components/timeline/NoteList.svelte` — ノートリスト
+- [x] `components/timeline/NoteList.svelte` — ノートリスト
   - 初期ノート取得 (REST API)
   - 無限スクロール (untilIdページネーション)
   - バーチャルスクロール対応
-- [ ] `components/timeline/NoteCard.svelte` — ノートカード
+- [x] `components/timeline/NoteCard.svelte` — ノートカード
   - ミュート判定・折り畳み
   - Renote/リプライの再帰表示
-- [ ] `components/timeline/NoteBody.svelte` — ノート本文
+- [x] `components/timeline/NoteBody.svelte` — ノート本文
   - CW表示/非表示トグル
   - 可視性アイコン
-- [ ] `components/timeline/NoteUser.svelte` — ユーザー表示
+- [x] `components/timeline/NoteUser.svelte` — ユーザー表示
   - アバター、ユーザー名(MFM)
-- [ ] `components/timeline/NoteMedia.svelte` — メディア
+- [x] `components/timeline/NoteMedia.svelte` — メディア
   - 画像カルーセル、動画、音声、ファイル
   - NSFWぼかし
-- [ ] `components/timeline/NoteReactions.svelte` — リアクション表示
+- [x] `components/timeline/NoteReactions.svelte` — リアクション表示
   - 絵文字バッジ + カウント
-- [ ] `components/common/Avatar.svelte` — アバター表示
-- [ ] `components/common/LoadingSpinner.svelte` — ローディング
+- [x] `components/common/Avatar.svelte` — アバター表示
+- [x] `components/common/LoadingSpinner.svelte` — ローディング
 
 #### ストリーミング
-- [ ] `lib/api/streaming.ts` — WebSocketストリーミング管理
+- [x] `lib/api/streaming.ts` — WebSocketストリーミング管理
   - チャンネル接続 → `note` イベントでリアルタイム追加
   - `subNote` / `noteUpdated` でリアクション・削除同期
 
@@ -182,17 +182,17 @@ mfm-js @discordapp/twemoji
 **目標**: ノート投稿とリアクション操作が動作
 
 ### タスク
-- [ ] `components/composer/PostModal.svelte` — 投稿モーダル
+- [x] `components/composer/PostModal.svelte` — 投稿モーダル
   - マルチアカウント選択 (複数選択 → 同時投稿)
   - テキスト、CW、公開範囲、ローカル限定
   - プレビュー (MfmRenderer利用)
   - 絵文字ピッカー
-- [ ] `components/composer/InlineComposer.svelte` — インライン投稿
+- [x] `components/composer/InlineComposer.svelte` — インライン投稿
   - リプライ/Renote対応
   - CW、公開範囲
-- [ ] `components/reaction/ReactionButton.svelte` — リアクションボタン
+- [x] `components/reaction/ReactionButton.svelte` — リアクションボタン
   - クリックで追加/削除 (API呼出)
-- [ ] `components/reaction/ReactionDeck.svelte` — リアクション選択UI
+- [x] `components/reaction/ReactionDeck.svelte` — リアクション選択UI
   - カラム設定のリアクションデッキ表示
   - 絵文字検索・サジェスト
 

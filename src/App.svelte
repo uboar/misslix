@@ -6,10 +6,12 @@
   import ColumnContainer from './components/layout/ColumnContainer.svelte';
   import AddColumnModal from './components/column/AddColumnModal.svelte';
   import SettingsModal from './components/settings/SettingsModal.svelte';
+  import PostModal from './components/composer/PostModal.svelte';
 
   // ── モーダル状態 ──
   let addColumnOpen = $state(false);
   let settingsOpen = $state(false);
+  let postModalOpen = $state(false);
 
   // ── ランタイム管理 ──
   let runtimes = $state<Map<number, AccountRuntime>>(new Map());
@@ -41,7 +43,7 @@
 
 <div class="h-full flex flex-col bg-base-100 text-base-content">
   <Navbar
-    onpost={() => {/* Phase 5で接続 */}}
+    onpost={() => postModalOpen = true}
     onadd={() => addColumnOpen = true}
     onsettings={() => settingsOpen = true}
   />
@@ -56,4 +58,5 @@
 
   <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} />
   <SettingsModal open={settingsOpen} onclose={() => settingsOpen = false} />
+  <PostModal open={postModalOpen} onclose={() => postModalOpen = false} {runtimes} />
 </div>
