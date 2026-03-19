@@ -10,6 +10,7 @@
   import NoteMedia from './NoteMedia.svelte';
   import NoteReactions from './NoteReactions.svelte';
   import ReactionButton from '$components/reaction/ReactionButton.svelte';
+  import UserDetailModal from '$components/user/UserDetailModal.svelte';
 
   type Props = {
     note: entities.Note;
@@ -104,6 +105,15 @@
       addReactionHistory(reaction);
     }
   }
+
+  // ユーザー詳細モーダル
+  let userModalOpen = $state(false);
+  let userModalTarget = $state<entities.UserLite | null>(null);
+
+  function handleUserClick(user: entities.UserLite) {
+    userModalTarget = user;
+    userModalOpen = true;
+  }
 </script>
 
 <article
@@ -172,7 +182,7 @@
     <!-- ユーザー + タイムスタンプ行 -->
     <div class="flex items-start gap-2 min-w-0 mb-1">
       <div class="flex-1 min-w-0">
-        <NoteUser user={displayNote.user} {hostUrl} compact={depth > 0} {emojis} />
+        <NoteUser user={displayNote.user} {hostUrl} compact={depth > 0} {emojis} onclick={handleUserClick} />
       </div>
 
       <!-- タイムスタンプ -->
@@ -237,6 +247,17 @@
       </div>
     {/if}
 
+  {/if}
+
+  <!-- ユーザー詳細モーダル -->
+  {#if userModalTarget}
+    <UserDetailModal
+      open={userModalOpen}
+      onclose={() => { userModalOpen = false; }}
+      user={userModalTarget}
+      {runtime}
+      emojis={noteEmojis}
+    />
   {/if}
 </article>
 

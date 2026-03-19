@@ -8,9 +8,10 @@
     hostUrl?: string;
     compact?: boolean;
     emojis?: Record<string, string>;
+    onclick?: (user: entities.UserLite) => void;
   };
 
-  let { user, hostUrl, compact = false, emojis = {} }: Props = $props();
+  let { user, hostUrl, compact = false, emojis = {}, onclick }: Props = $props();
 
   // ユーザーの表示名
   const displayName = $derived(user.name || user.username);
@@ -22,9 +23,24 @@
 
   // アバターURL
   const avatarUrl = $derived(user.avatarUrl ?? null);
+
+  // ユーザー固有の絵文字をマージ (リモートユーザーのカスタム絵文字を含む)
+  const mergedEmojis = $derived({
+    ...emojis,
+    ...(user.emojis as Record<string, string> | undefined ?? {}),
+  });
+
+  function handleClick() {
+    if (onclick) onclick(user);
+  }
 </script>
 
-<div class="note-user flex items-center gap-1.5 min-w-0">
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  class="note-user flex items-center gap-1.5 min-w-0 {onclick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}"
+  onclick={handleClick}
+>
   <!-- アバター -->
   <Avatar
     url={avatarUrl}
@@ -40,7 +56,7 @@
       class="text-xs font-semibold text-base-content truncate"
       title={displayName}
     >
-      <MfmRenderer text={displayName} {emojis} isInline />
+      <MfmRenderer text={displayName} emojis={mergedEmojis} isInline />
     </span>
 
     <!-- ハンドル -->
