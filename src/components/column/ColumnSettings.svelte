@@ -10,6 +10,7 @@
   let { config, onclose }: Props = $props();
 
   // ローカル編集用コピー
+  let customName = $state(config.customName ?? '');
   let width = $state<ColumnWidth>(config.width);
   let color = $state(config.color);
   let maxNotes = $state(config.maxNotes);
@@ -54,6 +55,7 @@
     };
 
     timelineStore.updateColumn(config.id, {
+      customName: customName.trim() || undefined,
       width,
       color,
       maxNotes,
@@ -72,6 +74,19 @@
   <!-- 表示 -->
   <section class="space-y-3">
     <h5 class="font-semibold text-base-content/70 uppercase text-xs tracking-wide">表示</h5>
+
+    <div class="form-control">
+      <label class="label py-1" for="col-custom-name">
+        <span class="label-text">カラム名</span>
+      </label>
+      <input
+        id="col-custom-name"
+        type="text"
+        class="input input-bordered input-sm w-full"
+        placeholder={config.channelName}
+        bind:value={customName}
+      />
+    </div>
 
     <div class="form-control">
       <label class="label py-1" for="col-width">

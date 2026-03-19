@@ -86,18 +86,17 @@
       <!-- アクセントバー (横) -->
       <div class="accent-bar w-full h-[3px] shrink-0" style="background-color: {config.color};"></div>
 
-      <div class="flex flex-col items-center flex-1 py-2 gap-2 w-full overflow-hidden">
-        <!-- 展開ボタン -->
-        <button
-          class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-base-content"
-          onclick={handleToggle}
-          aria-label="展開"
-          title="展開"
-        >
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </button>
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class="flex flex-col items-center flex-1 py-2 gap-2 w-full overflow-hidden cursor-pointer hover:bg-base-200/60 transition-colors"
+        onclick={handleToggle}
+        title="展開"
+      >
+        <!-- 展開アイコン -->
+        <svg class="w-3 h-3 shrink-0 text-base-content/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
 
         <!-- タイムライン名 (縦書き) -->
         <div
@@ -106,17 +105,17 @@
         >
           <span
             class="text-xs font-semibold text-base-content/60 select-none truncate"
-            title={config.channelName}
+            title={config.customName ? `${config.customName} (${config.channelName})` : config.channelName}
             style="max-height: 12rem;"
           >
-            {config.channelName}
+            {config.customName || config.channelName}
           </span>
         </div>
 
         <!-- 削除ボタン -->
         <button
           class="btn btn-ghost btn-xs btn-square text-base-content/30 hover:text-error"
-          onclick={handleRemove}
+          onclick={(e) => { e.stopPropagation(); handleRemove(); }}
           aria-label="カラムを削除"
           title="カラムを削除"
         >

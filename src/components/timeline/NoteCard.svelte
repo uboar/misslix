@@ -185,14 +185,19 @@
         <NoteUser user={displayNote.user} {hostUrl} compact={depth > 0} {emojis} onclick={handleUserClick} />
       </div>
 
-      <!-- タイムスタンプ -->
-      <time
-        class="text-[0.6rem] text-base-content/30 shrink-0 mt-0.5"
-        datetime={displayNote.createdAt}
+      <!-- タイムスタンプ (クリックで元ノートを開く) -->
+      <a
+        class="text-[0.6rem] text-base-content/30 shrink-0 mt-0.5 hover:text-base-content/60 hover:underline transition-colors"
+        href="{hostUrl}/notes/{displayNote.id}"
+        target="_blank"
+        rel="noopener noreferrer"
         title={new Date(displayNote.createdAt).toLocaleString('ja-JP')}
+        onclick={(e) => e.stopPropagation()}
       >
-        {createdAt}
-      </time>
+        <time datetime={displayNote.createdAt}>
+          {createdAt}
+        </time>
+      </a>
     </div>
 
     <!-- 本文 -->

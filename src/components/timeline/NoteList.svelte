@@ -4,6 +4,7 @@
   import type { AccountRuntime, ColumnConfig } from '$lib/types';
   import { CHANNEL_ENDPOINTS } from '$lib/api/endpoints';
   import { settingsStore } from '$lib/stores/settings.svelte';
+  import { accountStore } from '$lib/stores/accounts.svelte';
   import NoteCard from './NoteCard.svelte';
   import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
 
@@ -18,6 +19,9 @@
   // ミュート設定
   const muteUsers = $derived(settingsStore.settings.muteUsers);
   const muteWords = $derived(settingsStore.settings.muteWords);
+
+  // ホストURL (タイムスタンプリンク用)
+  const hostUrl = $derived(accountStore.findById(config.accountId)?.hostUrl ?? '');
 
   // ノートリスト
   let notes = $state<entities.Note[]>([]);
@@ -262,6 +266,7 @@
         {note}
         {config}
         emojis={emojiMap}
+        {hostUrl}
         {muteUsers}
         {muteWords}
         runtime={account}

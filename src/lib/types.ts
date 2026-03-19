@@ -71,6 +71,7 @@ export type ColumnConfig = {
   channel: ChannelType;
   channelId?: string;
   channelName: string;
+  customName?: string;
   color: string;
   width: ColumnWidth;
   maxNotes: number;

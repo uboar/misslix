@@ -45,13 +45,14 @@
       <path d={CHANNEL_ICONS[config.channel] ?? CHANNEL_ICONS.homeTimeline} />
     </svg>
 
-    <!-- タイムライン名 -->
-    <span
-      class="flex-1 text-xs font-semibold truncate text-base-content/90 select-none"
-      title={config.channelName}
+    <!-- タイムライン名 (クリックで折り畳みトグル) -->
+    <button
+      class="flex-1 text-xs font-semibold truncate text-base-content/90 select-none text-left cursor-pointer hover:text-base-content min-w-0"
+      title={config.customName ? `${config.customName} (${config.channelName})` : config.channelName}
+      onclick={ontoggle}
     >
-      {config.channelName}
-    </span>
+      {config.customName || config.channelName}
+    </button>
 
     <!-- 設定ボタン -->
     <button
