@@ -34,7 +34,23 @@
     collapsed ? COLLAPSED_WIDTH : COLUMN_WIDTH_MAP[config.width]
   );
 
+  // ドラッグ後のクリック誤発火を防止するフラグ
+  let wasDragged = $state(false);
+
+  function handleDragStartWrapper(e: DragEvent) {
+    wasDragged = false;
+    ondragstart?.(e);
+  }
+
+  function handleDragEndWrapper(e: DragEvent) {
+    wasDragged = true;
+    ondragend?.(e);
+    // 次のクリックイベントをブロックした後リセット
+    setTimeout(() => { wasDragged = false; }, 0);
+  }
+
   function handleToggle() {
+    if (wasDragged) return;
     timelineStore.updateColumn(config.id, { collapsed: !config.collapsed });
   }
 
@@ -102,8 +118,8 @@
       <div
         class="flex flex-col items-center flex-1 py-2 gap-2 w-full overflow-hidden cursor-pointer hover:bg-base-200/60 transition-colors"
         draggable="true"
-        ondragstart={ondragstart}
-        ondragend={ondragend}
+        ondragstart={handleDragStartWrapper}
+        ondragend={handleDragEndWrapper}
         onclick={handleToggle}
         title="展開"
       >
@@ -141,7 +157,7 @@
     </div>
   {:else}
     <!-- 通常表示 -->
-    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} {ondragstart} {ondragend} />
+    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} />
 
     <!-- メインエリア -->
     {#if runtime}
