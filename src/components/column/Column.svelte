@@ -134,6 +134,6 @@
       </div>
     {/if}
 
-    <ColumnFooter {config} />
+    <ColumnFooter {config} {runtime} />
   {/if}
 </div>
