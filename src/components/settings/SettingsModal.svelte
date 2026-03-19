@@ -1,6 +1,9 @@
 <script lang="ts">
   import Modal from '../common/Modal.svelte';
   import AuthSettings from './AuthSettings.svelte';
+  import AccountSettings from './AccountSettings.svelte';
+  import GeneralSettings from './GeneralSettings.svelte';
+  import MuteSettings from './MuteSettings.svelte';
 
   type Props = {
     open: boolean;
@@ -35,10 +38,12 @@
     <div class="min-h-48">
       {#if activeTab === 'account'}
         <AuthSettings />
+        <div class="divider"></div>
+        <AccountSettings />
       {:else if activeTab === 'general'}
-        <p class="text-base-content/50 text-sm">一般設定は Phase 6 で実装予定です。</p>
+        <GeneralSettings />
       {:else if activeTab === 'mute'}
-        <p class="text-base-content/50 text-sm">ミュート設定は Phase 6 で実装予定です。</p>
+        <MuteSettings />
       {/if}
     </div>
   {/snippet}

@@ -61,3 +61,22 @@ export async function getCachedEmojiMap(
   await cache.put(cacheKey, response);
   return map;
 }
+
+/**
+ * 特定ホストの絵文字キャッシュを削除する
+ */
+export async function clearCachedEmojiMap(hostUrl: string): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  await caches.delete(CACHE_NAME_PREFIX + hostUrl);
+}
+
+/**
+ * すべての絵文字キャッシュを削除する
+ */
+export async function clearAllCachedEmojiMaps(): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  const keys = await caches.keys();
+  await Promise.all(
+    keys.filter((k) => k.startsWith(CACHE_NAME_PREFIX)).map((k) => caches.delete(k)),
+  );
+}
