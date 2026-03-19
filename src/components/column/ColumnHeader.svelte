@@ -6,9 +6,11 @@
     config: ColumnConfig;
     onremove?: () => void;
     ontoggle?: () => void;
+    ondragstart?: (e: DragEvent) => void;
+    ondragend?: (e: DragEvent) => void;
   };
 
-  let { config, onremove, ontoggle }: Props = $props();
+  let { config, onremove, ontoggle, ondragstart, ondragend }: Props = $props();
 
   let settingsOpen = $state(false);
 
@@ -29,7 +31,28 @@
   <div class="accent-bar h-[3px] w-full" style="background-color: {config.color};"></div>
 
   <!-- ヘッダー本体 -->
-  <div class="flex items-center gap-1 px-2 py-1.5 bg-base-200 border-b border-base-300 min-h-9">
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    class="flex items-center gap-1 px-2 py-1.5 bg-base-200 border-b border-base-300 min-h-9"
+    draggable="true"
+    ondragstart={ondragstart}
+    ondragend={ondragend}
+  >
+    <!-- ドラッグハンドル -->
+    <svg
+      class="w-3 h-3 shrink-0 opacity-30 cursor-grab active:cursor-grabbing"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <circle cx="9" cy="6" r="1.5" />
+      <circle cx="15" cy="6" r="1.5" />
+      <circle cx="9" cy="12" r="1.5" />
+      <circle cx="15" cy="12" r="1.5" />
+      <circle cx="9" cy="18" r="1.5" />
+      <circle cx="15" cy="18" r="1.5" />
+    </svg>
+
     <!-- チャンネルアイコン -->
     <svg
       class="w-3.5 h-3.5 shrink-0 opacity-70"

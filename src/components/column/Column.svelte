@@ -11,9 +11,15 @@
   type Props = {
     config: ColumnConfig;
     runtime?: AccountRuntime;
+    ondragstart?: (e: DragEvent) => void;
+    ondragend?: (e: DragEvent) => void;
+    ondragover?: (e: DragEvent) => void;
+    ondragleave?: (e: DragEvent) => void;
+    ondrop?: (e: DragEvent) => void;
+    dropIndicator?: 'left' | 'right' | null;
   };
 
-  let { config, runtime }: Props = $props();
+  let { config, runtime, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null }: Props = $props();
 
   // NoteList コンポーネント参照
   let noteList = $state<ReturnType<typeof NoteList> | null>(null);
@@ -73,11 +79,16 @@
   });
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="column flex flex-col h-full border-r border-base-300 bg-base-100 transition-all duration-200 ease-in-out overflow-hidden shrink-0"
+  class="column flex flex-col h-full border-r border-base-300 bg-base-100 transition-all duration-200 ease-in-out overflow-hidden shrink-0 relative"
+  class:opacity-50={dropIndicator !== null}
   style="width: {columnWidth}; min-width: {columnWidth};"
   role="region"
   aria-label={config.channelName}
+  {ondragover}
+  {ondragleave}
+  {ondrop}
 >
   <!-- ヘッダー: collapsed時は縦向きに表示 -->
   {#if collapsed}
@@ -90,6 +101,9 @@
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class="flex flex-col items-center flex-1 py-2 gap-2 w-full overflow-hidden cursor-pointer hover:bg-base-200/60 transition-colors"
+        draggable="true"
+        ondragstart={ondragstart}
+        ondragend={ondragend}
         onclick={handleToggle}
         title="展開"
       >
@@ -127,7 +141,7 @@
     </div>
   {:else}
     <!-- 通常表示 -->
-    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} />
+    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} {ondragstart} {ondragend} />
 
     <!-- メインエリア -->
     {#if runtime}
