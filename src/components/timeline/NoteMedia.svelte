@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { entities } from 'misskey-js';
   import type { ColumnConfig } from '$lib/types';
+  import MediaModal from './MediaModal.svelte';
 
   type Props = {
     files: entities.DriveFile[];
@@ -53,6 +54,43 @@
   function next() {
     currentIndex = (currentIndex + 1) % imageFiles.length;
   }
+
+  // スワイプ
+  let touchStartX = $state(0);
+  let touchDeltaX = $state(0);
+  let isSwiping = $state(false);
+
+  function handleTouchStart(e: TouchEvent) {
+    touchStartX = e.touches[0].clientX;
+    touchDeltaX = 0;
+    isSwiping = true;
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    if (!isSwiping) return;
+    touchDeltaX = e.touches[0].clientX - touchStartX;
+  }
+
+  function handleTouchEnd() {
+    if (!isSwiping) return;
+    isSwiping = false;
+    const threshold = 50;
+    if (touchDeltaX < -threshold) {
+      next();
+    } else if (touchDeltaX > threshold) {
+      prev();
+    }
+    touchDeltaX = 0;
+  }
+
+  // モーダル状態
+  let modalOpen = $state(false);
+  let modalInitialIndex = $state(0);
+
+  function openModal(index: number) {
+    modalInitialIndex = index;
+    modalOpen = true;
+  }
 </script>
 
 {#if files.length > 0}
@@ -62,7 +100,7 @@
     {#if imageFiles.length === 1}
       <!-- 単一画像 -->
       {@const file = imageFiles[0]}
-      <div class="relative overflow-hidden rounded-md" style="max-height: {mediaSize}px;">
+      <div class="relative overflow-hidden rounded-md bg-base-300/30" style="max-height: {mediaSize}px;">
         {#if shouldBlur(file)}
           <!-- NSFWぼかし -->
           <div
@@ -89,21 +127,32 @@
             </div>
           </div>
         {:else}
-          <a href={file.url} target="_blank" rel="noopener noreferrer">
+          <button
+            class="w-full cursor-pointer border-0 bg-transparent p-0"
+            onclick={() => openModal(0)}
+            aria-label="画像を拡大表示"
+          >
             <img
               src={file.thumbnailUrl ?? file.url}
               alt={file.comment || file.name}
-              class="w-full object-cover rounded-md transition-opacity hover:opacity-90"
+              class="w-full object-contain rounded-md transition-opacity hover:opacity-90"
               style="max-height: {mediaSize}px;"
               loading="lazy"
             />
-          </a>
+          </button>
         {/if}
       </div>
 
     {:else if imageFiles.length > 1}
       <!-- 複数画像カルーセル -->
-      <div class="relative overflow-hidden rounded-md" style="max-height: {mediaSize}px;">
+      <div
+        class="relative overflow-hidden rounded-md bg-base-300/30"
+        style="max-height: {mediaSize}px;"
+        ontouchstart={handleTouchStart}
+        ontouchmove={handleTouchMove}
+        ontouchend={handleTouchEnd}
+        role="presentation"
+      >
         <div class="relative">
           {#if shouldBlur(currentCarouselFile)}
             <div
@@ -130,15 +179,20 @@
               </div>
             </div>
           {:else}
-            <a href={currentCarouselFile.url} target="_blank" rel="noopener noreferrer">
+            <button
+              class="w-full cursor-pointer border-0 bg-transparent p-0"
+              onclick={() => openModal(currentIndex)}
+              aria-label="画像を拡大表示"
+              style="transform: translateX({isSwiping ? touchDeltaX * 0.3 : 0}px); transition: {isSwiping ? 'none' : 'transform 0.2s ease'};"
+            >
               <img
                 src={currentCarouselFile.thumbnailUrl ?? currentCarouselFile.url}
                 alt={currentCarouselFile.comment || currentCarouselFile.name}
-                class="w-full object-cover rounded-md transition-opacity hover:opacity-90"
+                class="w-full object-contain rounded-md transition-opacity hover:opacity-90"
                 style="max-height: {mediaSize}px;"
                 loading="lazy"
               />
-            </a>
+            </button>
           {/if}
 
           <!-- カルーセルナビゲーション -->
@@ -238,4 +292,14 @@
     {/each}
 
   </div>
+{/if}
+
+<!-- 画像モーダル -->
+{#if imageFiles.length > 0}
+  <MediaModal
+    open={modalOpen}
+    files={imageFiles}
+    initialIndex={modalInitialIndex}
+    onclose={() => { modalOpen = false; }}
+  />
 {/if}
