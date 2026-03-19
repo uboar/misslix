@@ -125,3 +125,15 @@ export type ChannelEndpointInfo = {
   restEndpoint: string;
   paramKey?: string;
 };
+
+// ─── ノート表示 (Phase 4) ───
+
+/**
+ * タイムライン上のノートラッパー型。
+ * misskey-js の entities.Note を拡張し、再帰的な renote/reply を持つ。
+ */
+export type NoteWrapper = entities.Note & {
+  renote?: NoteWrapper;
+  reply?: NoteWrapper;
+  reactionEmojis?: Record<string, string>;
+};
