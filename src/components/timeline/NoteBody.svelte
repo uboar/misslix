@@ -3,7 +3,7 @@
   import type { entities } from 'misskey-js';
   import type { ColumnConfig } from '$lib/types';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
-  import { Home, Lock, AtSign, WifiOff } from 'lucide-svelte';
+  import { Home, Lock, AtSign, GlobeOff } from 'lucide-svelte';
 
   type Props = {
     note: entities.Note;
@@ -93,13 +93,11 @@
       <!-- ローカルのみ (連合なし) アイコン -->
       {#if isLocalOnly}
         <span
-          class="local-only-badge inline-flex items-center gap-0.5 text-[0.6rem] text-info/60 font-medium"
+          class="local-only-badge inline-flex items-center text-[0.6rem] text-info/60 font-medium"
           title="ローカルのみ (連合なし)"
           aria-label="ローカルのみのノート"
         >
-          <!-- wifi-off アイコン: 連合(外部ネットワーク)なしを表現 -->
-          <WifiOff class="w-2.5 h-2.5" aria-hidden="true" />
-          <span>ローカル</span>
+          <GlobeOff class="w-2.5 h-2.5" aria-hidden="true" />
         </span>
       {/if}
 
