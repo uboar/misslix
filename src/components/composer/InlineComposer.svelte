@@ -165,6 +165,22 @@
     }
   }
 
+  function handlePaste(e: ClipboardEvent) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const imageFiles: File[] = [];
+    for (const item of Array.from(items)) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) imageFiles.push(file);
+      }
+    }
+    if (imageFiles.length > 0) {
+      e.preventDefault();
+      attachedFiles = [...attachedFiles, ...imageFiles].slice(0, 16);
+    }
+  }
+
   function handleCancel() {
     text = '';
     cwEnabled = false;
@@ -258,6 +274,7 @@
       bind:value={text}
       rows={3}
       onkeydown={handleKeydown}
+      onpaste={handlePaste}
     ></textarea>
   {/if}
 
