@@ -84,10 +84,22 @@
   }
 </script>
 
+<style>
+  dialog {
+    transition: none !important;
+    animation: none !important;
+  }
+  dialog::backdrop {
+    transition: none !important;
+    animation: none !important;
+  }
+</style>
+
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <dialog
   bind:this={dialogEl}
   class="modal bg-black/80 backdrop-blur-sm"
+  style="transition: none; animation: none;"
   onkeydown={handleKeydown}
   onclick={handleBackdropClick}
 >

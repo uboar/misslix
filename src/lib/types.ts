@@ -4,9 +4,9 @@
  */
 
 import type { Stream, ChannelConnection, api, entities } from 'misskey-js';
+import type { NotificationState } from './stores/notifications.svelte';
 
 type APIClient = api.APIClient;
-type Notification = entities.Notification;
 type EmojiDetailed = entities.EmojiDetailed;
 
 // ─── アカウント ───
@@ -25,8 +25,7 @@ export type AccountRuntime = {
   stream: Stream;
   cli: APIClient;
   mainConnection: ChannelConnection;
-  notifications: Notification[];
-  hasUnread: boolean;
+  notifState: NotificationState;
   emojis: EmojiDetailed[];
   busy: boolean;
   userId: string;

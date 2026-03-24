@@ -19,7 +19,7 @@
   function openPanel() {
     panelOpen = true;
     if (runtime) {
-      runtime.hasUnread = false;
+      runtime.notifState.hasUnread = false;
     }
   }
 
@@ -66,14 +66,14 @@
         <button
           class="btn btn-ghost btn-xs btn-square relative"
           onclick={togglePanel}
-          aria-label="通知{runtime.hasUnread ? ' (未読あり)' : ''}"
+          aria-label="通知{runtime.notifState.hasUnread ? ' (未読あり)' : ''}"
           title="通知"
         >
           <svg class="w-3.5 h-3.5 text-base-content/70" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
           </svg>
           <!-- 未読インジケータ (赤い丸) -->
-          {#if runtime.hasUnread}
+          {#if runtime.notifState.hasUnread}
             <span
               class="absolute top-0 right-0 w-2 h-2 rounded-full bg-error"
               aria-label="未読通知あり"

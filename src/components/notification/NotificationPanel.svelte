@@ -2,6 +2,8 @@
   import type { AccountRuntime } from '$lib/types';
   import type { entities } from 'misskey-js';
   import Avatar from '$components/common/Avatar.svelte';
+  import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
+  import { getEmojiMap } from '$lib/emoji/cache';
   import { formatRelativeTime } from '$lib/utils/date';
 
   type Notification = entities.Notification;
@@ -96,6 +98,23 @@
     }
     return '';
   }
+
+  // 絵文字マップ (カスタム絵文字名 → URL)
+  const emojiMap = $derived(getEmojiMap('', runtime.emojis));
+
+  function isCustomEmoji(reaction: string): boolean {
+    return reaction.startsWith(':') && reaction.endsWith(':');
+  }
+
+  function getCustomEmojiName(reaction: string): string {
+    return reaction.slice(1, -1).split('@')[0];
+  }
+
+  function getEmojiUrl(reaction: string): string | null {
+    const name = getCustomEmojiName(reaction);
+    const fullName = reaction.slice(1, -1);
+    return emojiMap[name] ?? emojiMap[fullName] ?? emojiMap[reaction] ?? null;
+  }
 </script>
 
 <!-- 通知パネル本体 -->
@@ -123,13 +142,13 @@
 
   <!-- 通知リスト -->
   <div class="flex-1 overflow-y-auto">
-    {#if runtime.notifications.length === 0}
+    {#if runtime.notifState.notifications.length === 0}
       <div class="flex items-center justify-center h-20 text-base-content/40 text-sm">
         通知はありません
       </div>
     {:else}
       <ul class="divide-y divide-base-300">
-        {#each runtime.notifications as notification (notification.id)}
+        {#each runtime.notifState.notifications as notification (notification.id)}
           {@const meta = getNotificationMeta(notification.type)}
           {@const user = getNotificationUser(notification)}
           {@const notePreview = getNotePreview(notification)}
@@ -165,7 +184,18 @@
 
               <!-- リアクション絵文字 -->
               {#if reaction}
-                <div class="text-sm mt-0.5">{reaction}</div>
+                <div class="text-sm mt-0.5" aria-label={reaction}>
+                  {#if isCustomEmoji(reaction)}
+                    {@const emojiUrl = getEmojiUrl(reaction)}
+                    {#if emojiUrl}
+                      <EmojiRenderer name={getCustomEmojiName(reaction)} url={emojiUrl} height="1.25em" />
+                    {:else}
+                      <span class="text-xs">{getCustomEmojiName(reaction)}</span>
+                    {/if}
+                  {:else}
+                    <EmojiRenderer emoji={reaction} height="1.25em" />
+                  {/if}
+                </div>
               {/if}
 
               <!-- ノートプレビュー -->

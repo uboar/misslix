@@ -4,6 +4,7 @@
   import { checkMute } from '$lib/utils/mute';
   import { formatShortTime } from '$lib/utils/date';
   import { addReactionHistory } from '$lib/utils/reactionHistory';
+  import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
   import NoteCard from './NoteCard.svelte';
   import NoteUser from './NoteUser.svelte';
   import NoteBody from './NoteBody.svelte';
@@ -44,6 +45,12 @@
 
   // Renoteした人 (純Renoteの場合)
   const renoteUser = $derived(isPureRenote ? note.user : null);
+
+  // Renoteユーザーの絵文字マップ
+  const renoteUserEmojis = $derived({
+    ...emojis,
+    ...(renoteUser?.emojis as Record<string, string> | undefined ?? {}),
+  });
 
   // 引用Renote: テキストあり + renoteあり
   const isQuote = $derived(!!note.renote && (!!note.text || !!note.cw));
@@ -158,7 +165,9 @@
           <path d="M21 13v2a4 4 0 01-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span class="truncate">
-          <span class="font-semibold text-base-content/50">{renoteUser.name || renoteUser.username}</span> がRenote
+          <span class="font-semibold text-base-content/50">
+            <MfmRenderer text={renoteUser.name || renoteUser.username} emojis={renoteUserEmojis} isInline />
+          </span> がRenote
         </span>
       </div>
     {/if}

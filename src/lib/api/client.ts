@@ -1,6 +1,7 @@
 import { Stream, api } from 'misskey-js';
 import type { ChannelConnection, entities } from 'misskey-js';
 import type { Account, AccountRuntime } from '$lib/types';
+import { NotificationState } from '$lib/stores/notifications.svelte';
 import { showApiError } from '$lib/utils/error';
 import { settingsStore } from '$lib/stores/settings.svelte';
 
@@ -51,12 +52,24 @@ export async function initAccountRuntime(account: Account): Promise<AccountRunti
     // ユーザーID取得失敗は無視
   }
 
+  // 通知リアクティブ状態を初期化
+  const notifState = new NotificationState();
+
+  // 初期通知を取得
+  try {
+    const buffer = settingsStore.settings.notificationBuffer;
+    const initialNotifications = await cli.request('i/notifications', { limit: Math.min(buffer, 100) });
+    notifState.notifications = initialNotifications;
+    notifState.hasUnread = initialNotifications.length > 0;
+  } catch {
+    // 通知取得失敗は無視して続行
+  }
+
   const runtime: AccountRuntime = {
     stream,
     cli,
     mainConnection,
-    notifications: [],
-    hasUnread: false,
+    notifState,
     emojis,
     busy: false,
     userId,
@@ -65,8 +78,8 @@ export async function initAccountRuntime(account: Account): Promise<AccountRunti
   // mainチャンネルの通知リスナー (アカウントごとに1回のみ)
   (mainConnection as any).on('notification', (notification: entities.Notification) => {
     const buffer = settingsStore.settings.notificationBuffer;
-    runtime.notifications = [notification, ...runtime.notifications].slice(0, buffer);
-    runtime.hasUnread = true;
+    notifState.notifications = [notification, ...notifState.notifications].slice(0, buffer);
+    notifState.hasUnread = true;
   });
 
   // ストリーム切断時のエラーハンドリング
