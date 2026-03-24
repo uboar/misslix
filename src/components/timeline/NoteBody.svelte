@@ -125,21 +125,22 @@
   <!-- CW (Content Warning) -->
   {#if hasCw}
     <div class="cw-block">
-      <!-- CW テキスト -->
-      <div class="flex items-center gap-1.5">
-        <span class="text-[0.6rem] px-1 py-0.5 rounded bg-warning/20 text-warning font-semibold uppercase tracking-wide">CW</span>
-        <span class="text-xs text-base-content/70 flex-1">
+      <!-- CW テキスト行: 全体をクリックで展開/折り畳み -->
+      <button
+        class="cw-header flex items-center gap-1.5 w-full text-left rounded px-1 py-0.5 -mx-1
+          hover:bg-warning/5 active:bg-warning/10 transition-colors cursor-pointer"
+        onclick={toggleCw}
+        aria-expanded={cwExpanded}
+        aria-label={cwExpanded ? 'コンテンツを隠す' : 'コンテンツを表示'}
+      >
+        <span class="text-[0.6rem] px-1 py-0.5 rounded bg-warning/20 text-warning font-semibold uppercase tracking-wide shrink-0">CW</span>
+        <span class="text-xs text-base-content/70 flex-1 text-left">
           <MfmRenderer text={cwText} {emojis} isInline />
         </span>
-        <button
-          class="btn btn-xs btn-ghost px-1.5 py-0.5 h-auto min-h-0 text-[0.6rem] text-base-content/50 hover:text-base-content border border-base-300/50"
-          onclick={toggleCw}
-          aria-expanded={cwExpanded}
-          aria-label={cwExpanded ? 'コンテンツを隠す' : 'コンテンツを表示'}
-        >
-          {cwExpanded ? '隠す' : '表示'}
-        </button>
-      </div>
+        <span class="text-[0.6rem] text-base-content/40 shrink-0 ml-1 select-none">
+          {cwExpanded ? '▲' : '▼'}
+        </span>
+      </button>
 
       <!-- CWコンテンツ (トグル) -->
       {#if cwExpanded}
