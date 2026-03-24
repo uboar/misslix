@@ -15,7 +15,7 @@
   import NoteMoreMenu from './NoteMoreMenu.svelte';
   import InlineComposer from '$components/composer/InlineComposer.svelte';
   import UserDetailModal from '$components/user/UserDetailModal.svelte';
-  import { EyeOff, Repeat2, Hash, MessageSquare, Loader2, MoreHorizontal } from 'lucide-svelte';
+  import { EyeOff, Repeat2, MessageSquare, Loader2, MoreHorizontal } from 'lucide-svelte';
 
   type Props = {
     note: entities.Note;
@@ -282,26 +282,14 @@
       </a>
     </div>
 
-    <!-- チャンネルバッジ -->
-    {#if hasChannel && noteChannel && depth === 0}
-      <div class="channel-badge-row mb-1">
-        <a
-          class="channel-badge inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[0.6rem] font-medium leading-none transition-all duration-150 hover:opacity-80"
-          style="background-color: {noteChannel.color}18; color: {noteChannel.color}; border: 1px solid {noteChannel.color}30;"
-          href="{hostUrl}/channels/{noteChannel.id}"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="チャンネル: {noteChannel.name}"
-          onclick={(e) => e.stopPropagation()}
-        >
-          <Hash class="w-2.5 h-2.5 shrink-0 opacity-80" aria-hidden="true" />
-          <span class="truncate max-w-[12rem]">{noteChannel.name}</span>
-        </a>
-      </div>
-    {/if}
-
-    <!-- 本文 -->
-    <NoteBody note={displayNote} {config} emojis={noteEmojis} />
+    <!-- 本文 (チャンネル・公開範囲・ローカルのみは NoteBody 内で横並び表示) -->
+    <NoteBody
+      note={displayNote}
+      {config}
+      emojis={noteEmojis}
+      channel={depth === 0 && hasChannel ? noteChannel : null}
+      {hostUrl}
+    />
 
     <!-- 引用Renote -->
     {#if isQuote && note.renote && depth < maxDepth}
