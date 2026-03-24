@@ -11,9 +11,10 @@
     user: entities.UserLite;
     runtime?: AccountRuntime;
     emojis?: Record<string, string>;
+    hostUrl?: string;
   };
 
-  let { open, onclose, user, runtime, emojis = {} }: Props = $props();
+  let { open, onclose, user, runtime, emojis = {}, hostUrl }: Props = $props();
 
   // ユーザー詳細情報 (APIから取得)
   let detail = $state<entities.UserDetailed | null>(null);
@@ -217,7 +218,7 @@
       <!-- プロフィールリンク -->
       <div class="pt-2 border-t border-base-300/60">
         <a
-          href={detail.url ?? `https://${user.host ?? 'misskey.io'}/@${user.username}`}
+          href={detail.url ?? `${hostUrl ?? (user.host ? `https://${user.host}` : 'https://misskey.io')}/@${user.username}`}
           target="_blank"
           rel="noopener noreferrer"
           class="text-xs text-primary hover:underline"

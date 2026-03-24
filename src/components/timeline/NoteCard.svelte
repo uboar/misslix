@@ -461,6 +461,7 @@
       onclose={() => { userModalOpen = false; }}
       user={userModalTarget}
       {runtime}
+      {hostUrl}
       emojis={noteEmojis}
     />
   {/if}

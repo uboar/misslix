@@ -171,26 +171,21 @@
     {/if}
   </div>
 
-  <!-- スペーサー -->
-  <div class="flex-1"></div>
-
-  <!-- 中央: ノート投稿ボタン (absolute で中央固定) -->
+  <!-- 中央: ノート投稿ボタン (通知・リンク集を除いた残り全幅) -->
   {#if runtime}
-    <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-stretch" bind:this={composerWrapperEl}>
-      <div class="relative flex items-stretch">
-        <button
-          bind:this={composerBtnEl}
-          class="flex items-center justify-center px-2.5 transition-colors
-            {composerPanelOpen
-              ? 'bg-primary text-primary-content'
-              : 'text-primary hover:bg-primary/10'}"
-          onclick={toggleComposerPanel}
-          aria-label="ノートを投稿"
-          title="ノートを投稿"
-        >
-          <MessageCircle class="w-4 h-4 shrink-0" aria-hidden="true" />
-        </button>
-      </div>
+    <div class="flex-1 flex items-stretch" bind:this={composerWrapperEl}>
+      <button
+        bind:this={composerBtnEl}
+        class="flex-1 flex items-center justify-center transition-colors
+          {composerPanelOpen
+            ? 'bg-primary text-primary-content'
+            : 'text-primary hover:bg-primary/10'}"
+        onclick={toggleComposerPanel}
+        aria-label="ノートを投稿"
+        title="ノートを投稿"
+      >
+        <MessageCircle class="w-4 h-4 shrink-0" aria-hidden="true" />
+      </button>
     </div>
 
     {#if composerPanelOpen}
@@ -198,10 +193,9 @@
         <ColumnComposerPanel {config} {runtime} onclose={closeComposerPanel} />
       </div>
     {/if}
+  {:else}
+    <div class="flex-1"></div>
   {/if}
-
-  <!-- スペーサー -->
-  <div class="flex-1"></div>
 
   <!-- 右: リンク集ボタン -->
   <div class="flex items-stretch" bind:this={linksWrapperEl}>

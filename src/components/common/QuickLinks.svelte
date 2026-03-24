@@ -19,8 +19,6 @@
     { label: '通知', path: '/my/notifications' },
     { label: 'メッセージ', path: '/my/messaging' },
     { label: 'お気に入り', path: '/my/favorites' },
-    { label: 'フォロー', path: `/my/following` },
-    { label: 'フォロワー', path: `/my/followers` },
     { label: 'リスト', path: '/my/lists' },
     { label: 'アンテナ', path: '/my/antennas' },
     { label: 'チャンネル', path: '/channels' },
