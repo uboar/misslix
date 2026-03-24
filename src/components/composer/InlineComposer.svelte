@@ -2,6 +2,8 @@
   import type { AccountRuntime, Visibility } from '$lib/types';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
   import EmojiPickerPopup from './EmojiPickerPopup.svelte';
+  import FileAttachmentArea from './FileAttachmentArea.svelte';
+  import { uploadFileToDrive } from './composerLogic';
   import type { entities } from 'misskey-js';
   import { MessageSquare, Repeat2, Eye, Send } from 'lucide-svelte';
 
@@ -51,6 +53,7 @@
   let error = $state('');
   let previewMode = $state(false);
   let emojiPickerOpen = $state(false);
+  let attachedFiles = $state<File[]>([]);
 
   let textareaEl = $state<HTMLTextAreaElement | null>(null);
 
@@ -72,7 +75,7 @@
 
   // ── 送信可能判定 ──
   const canPost = $derived(
-    (text.trim().length > 0 || (isRenote && !text.trim())) &&
+    (text.trim().length > 0 || (isRenote && !text.trim()) || attachedFiles.length > 0) &&
     !posting
   );
 
@@ -102,6 +105,15 @@
     error = '';
 
     try {
+      // ファイルをアカウントのドライブにアップロード
+      let fileIds: string[] = [];
+      if (attachedFiles.length > 0) {
+        const token = runtime.cli.credential ?? '';
+        fileIds = await Promise.all(
+          attachedFiles.map((f) => uploadFileToDrive(runtime.cli.origin, token, f)),
+        );
+      }
+
       const params: Record<string, unknown> = {
         visibility,
         localOnly,
@@ -122,6 +134,9 @@
       if (channelId) {
         params.channelId = channelId;
       }
+      if (fileIds.length > 0) {
+        params.fileIds = fileIds;
+      }
 
       await runtime.cli.request('notes/create', params as Parameters<typeof runtime.cli.request>[1]);
 
@@ -133,6 +148,7 @@
       localOnly = defaultLocalOnly;
       previewMode = false;
       emojiPickerOpen = false;
+      attachedFiles = [];
       oncomplete?.();
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -157,6 +173,7 @@
     localOnly = defaultLocalOnly;
     previewMode = false;
     emojiPickerOpen = false;
+    attachedFiles = [];
     error = '';
     oncancel?.();
   }
@@ -254,6 +271,13 @@
       onclose={() => { emojiPickerOpen = false; }}
     />
   {/if}
+
+  <!-- ファイル添付 -->
+  <FileAttachmentArea
+    files={attachedFiles}
+    onchange={(f) => { attachedFiles = f; }}
+    disabled={posting}
+  />
 
   <!-- エラー表示 -->
   {#if error}

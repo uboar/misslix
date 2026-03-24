@@ -20,6 +20,7 @@ export type PostParams = {
   localOnly: boolean;
   replyId?: string | null;
   renoteId?: string | null;
+  fileIds?: string[];
 };
 
 // ─── アカウント選択 ───
@@ -68,15 +69,18 @@ export function toggleCw(enabled: boolean): string | null {
  * 投稿可能かどうかを判定する。
  *
  * - text が空でも renoteId があれば投稿可能（Renote）
+ * - text が空でも fileCount > 0 があれば投稿可能（ファイル添付）
  * - selectedAccounts が 1 以上
  */
 export function canPost(
   text: string,
   selectedCount: number,
   renoteId?: string | null,
+  fileCount = 0,
 ): boolean {
   if (selectedCount === 0) return false;
   if (renoteId) return true;
+  if (fileCount > 0) return true;
   return text.trim().length > 0;
 }
 
@@ -101,6 +105,9 @@ export async function postNote(cli: APIClient, params: PostParams): Promise<unkn
   }
   if (params.renoteId) {
     body.renoteId = params.renoteId;
+  }
+  if (params.fileIds && params.fileIds.length > 0) {
+    body.fileIds = params.fileIds;
   }
 
   return cli.request('notes/create', body as Parameters<APIClient['request']>[1]);
@@ -141,6 +148,37 @@ export async function postToMultipleAccounts(
   }
 
   return Promise.allSettled(promises);
+}
+
+// ─── ファイルアップロード ───
+
+/**
+ * ファイルを Misskey ドライブにアップロードし、ドライブファイル ID を返す。
+ * misskey-js の APIClient は multipart/form-data をサポートしないため fetch を直接使用する。
+ */
+export async function uploadFileToDrive(
+  hostUrl: string,
+  token: string,
+  file: File,
+  isSensitive = false,
+): Promise<string> {
+  const origin = hostUrl.startsWith('http') ? hostUrl : `https://${hostUrl}`;
+  const formData = new FormData();
+  formData.append('i', token);
+  formData.append('file', file);
+  formData.append('name', file.name);
+  if (isSensitive) formData.append('isSensitive', 'true');
+
+  const res = await fetch(`${origin}/api/drive/files/create`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`ファイルアップロード失敗: ${res.status} ${text}`);
+  }
+  const data = (await res.json()) as { id: string };
+  return data.id;
 }
 
 // ─── 可視性ラベル ───

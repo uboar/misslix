@@ -5,7 +5,7 @@
  * APIClient.request は vi.fn() でモック化し、実際のネットワーク通信は行わない。
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { api } from 'misskey-js';
 import type { Account, AccountRuntime, Visibility } from '$lib/types';
 import {
@@ -16,6 +16,7 @@ import {
   canPost,
   postNote,
   postToMultipleAccounts,
+  uploadFileToDrive,
   VISIBILITY_LABELS,
 } from '../composerLogic';
 
@@ -160,6 +161,18 @@ describe('canPost', () => {
   it('テキストが半角スペースのみでも false', () => {
     expect(canPost(' \t\n', 1)).toBe(false);
   });
+
+  it('テキストが空でも fileCount > 0 なら true', () => {
+    expect(canPost('', 1, null, 1)).toBe(true);
+  });
+
+  it('テキストが空で fileCount 0 なら false', () => {
+    expect(canPost('', 1, null, 0)).toBe(false);
+  });
+
+  it('選択アカウント 0 でも fileCount > 0 なら false (アカウント必須)', () => {
+    expect(canPost('', 0, null, 3)).toBe(false);
+  });
 });
 
 // ─── postNote ───
@@ -281,6 +294,32 @@ describe('postNote', () => {
       postNote(cli, { text: 'fail', visibility: 'public', localOnly: false }),
     ).rejects.toThrow('API Error');
   });
+
+  it('fileIds が設定されているとき fileIds パラメータが含まれる', async () => {
+    await postNote(cli, {
+      text: 'With files',
+      visibility: 'public',
+      localOnly: false,
+      fileIds: ['file-id-1', 'file-id-2'],
+    });
+
+    expect(cli.request).toHaveBeenCalledWith(
+      'notes/create',
+      expect.objectContaining({ fileIds: ['file-id-1', 'file-id-2'] }),
+    );
+  });
+
+  it('fileIds が空配列のとき fileIds パラメータは含まれない', async () => {
+    await postNote(cli, {
+      text: 'No files',
+      visibility: 'public',
+      localOnly: false,
+      fileIds: [],
+    });
+
+    const callArg = (cli.request as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
+    expect(callArg).not.toHaveProperty('fileIds');
+  });
 });
 
 // ─── postToMultipleAccounts ───
@@ -388,6 +427,61 @@ describe('postToMultipleAccounts', () => {
 
     expect(results).toHaveLength(3);
     results.forEach((r) => expect(r.status).toBe('fulfilled'));
+  });
+});
+
+// ─── uploadFileToDrive ───
+
+describe('uploadFileToDrive', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('FormData で drive/files/create を POST し ID を返す', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'drive-file-123' }),
+    });
+
+    const file = new File(['hello'], 'test.png', { type: 'image/png' });
+    const id = await uploadFileToDrive('example.com', 'token_abc', file);
+
+    expect(id).toBe('drive-file-123');
+    const [url, opts] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe('https://example.com/api/drive/files/create');
+    expect(opts.method).toBe('POST');
+    expect(opts.body).toBeInstanceOf(FormData);
+  });
+
+  it('hostUrl が https:// で始まる場合そのまま使う', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'xyz' }),
+    });
+
+    const file = new File([''], 'a.jpg', { type: 'image/jpeg' });
+    await uploadFileToDrive('https://misskey.io', 'tok', file);
+
+    const [url] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe('https://misskey.io/api/drive/files/create');
+  });
+
+  it('レスポンスが ok でなければ例外を throw する', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: false,
+      status: 413,
+      statusText: 'Payload Too Large',
+      text: async () => 'File too large',
+    });
+
+    const file = new File([''], 'big.png', { type: 'image/png' });
+    await expect(uploadFileToDrive('example.com', 'tok', file)).rejects.toThrow(
+      'ファイルアップロード失敗',
+    );
   });
 });
 

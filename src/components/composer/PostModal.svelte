@@ -4,6 +4,8 @@
   import Modal from '../common/Modal.svelte';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
   import EmojiPickerPopup from './EmojiPickerPopup.svelte';
+  import FileAttachmentArea from './FileAttachmentArea.svelte';
+  import { uploadFileToDrive } from './composerLogic';
   import { Check, X, Eye, Send } from 'lucide-svelte';
 
   type PostResult = {
@@ -32,6 +34,7 @@
   let previewMode = $state(false);
   let emojiPickerOpen = $state(false);
   let posting = $state(false);
+  let attachedFiles = $state<File[]>([]);
   let postResults = $state<PostResult[]>([]);
   let showResults = $state(false);
 
@@ -145,6 +148,14 @@
         const runtime = runtimes.get(account.id);
         if (!runtime) throw new Error('runtime not found');
 
+        // ファイルをアカウントのドライブにアップロード
+        let fileIds: string[] = [];
+        if (attachedFiles.length > 0) {
+          fileIds = await Promise.all(
+            attachedFiles.map((f) => uploadFileToDrive(account.hostUrl, account.token, f)),
+          );
+        }
+
         const params: Record<string, unknown> = {
           text: text || undefined,
           visibility,
@@ -152,6 +163,9 @@
         };
         if (cwEnabled && cwText.trim()) {
           params.cw = cwText.trim();
+        }
+        if (fileIds.length > 0) {
+          params.fileIds = fileIds;
         }
 
         await runtime.cli.request('notes/create', params as Parameters<typeof runtime.cli.request>[1]);
@@ -194,6 +208,7 @@
     emojiPickerOpen = false;
     postResults = [];
     showResults = false;
+    attachedFiles = [];
   }
 
   function handleClose() {
@@ -210,7 +225,7 @@
   ];
 
   const canPost = $derived(
-    (text.trim().length > 0 || (cwEnabled && cwText.trim().length > 0)) &&
+    (text.trim().length > 0 || (cwEnabled && cwText.trim().length > 0) || attachedFiles.length > 0) &&
     selectedAccountIds.size > 0 &&
     !posting
   );
@@ -338,6 +353,13 @@
         rows={5}
       ></textarea>
     {/if}
+
+    <!-- ファイル添付 -->
+    <FileAttachmentArea
+      files={attachedFiles}
+      onchange={(f) => { attachedFiles = f; }}
+      disabled={posting}
+    />
 
     <!-- 公開範囲 / ローカル限定 -->
     <div class="flex flex-wrap items-center gap-3">
