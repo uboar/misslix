@@ -4,6 +4,7 @@
   import EmojiPickerPopup from './EmojiPickerPopup.svelte';
   import FileAttachmentArea from './FileAttachmentArea.svelte';
   import { uploadFileToDrive } from './composerLogic';
+  import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
   import type { entities } from 'misskey-js';
   import { MessageSquare, Repeat2, Eye, Send } from 'lucide-svelte';
 
@@ -43,12 +44,17 @@
     oncancel,
   }: Props = $props();
 
+  // ── 前回の投稿設定を復元 ──
+  type ComposerSettings = { visibility: Visibility; localOnly: boolean; cwEnabled: boolean };
+  const SETTINGS_KEY = 'composer-last-settings';
+  const savedSettings = loadFromStorage<ComposerSettings | null>(SETTINGS_KEY, null);
+
   // ── フォーム状態 ──
   let text = $state('');
-  let cwEnabled = $state(false);
+  let cwEnabled = $state(savedSettings?.cwEnabled ?? false);
   let cwText = $state('');
-  let visibility = $state<Visibility>(defaultVisibility);
-  let localOnly = $state(defaultLocalOnly);
+  let visibility = $state<Visibility>(savedSettings?.visibility ?? defaultVisibility);
+  let localOnly = $state(savedSettings?.localOnly ?? defaultLocalOnly);
   let posting = $state(false);
   let error = $state('');
   let previewMode = $state(false);
@@ -140,12 +146,10 @@
 
       await runtime.cli.request('notes/create', params as Parameters<typeof runtime.cli.request>[1]);
 
-      // 成功: リセット
+      // 成功: 設定を保存してリセット (visibility/localOnly/cwEnabled は引き継ぐ)
+      saveToStorage(SETTINGS_KEY, { visibility, localOnly, cwEnabled });
       text = '';
-      cwEnabled = false;
       cwText = '';
-      visibility = defaultVisibility;
-      localOnly = defaultLocalOnly;
       previewMode = false;
       emojiPickerOpen = false;
       attachedFiles = [];
@@ -183,10 +187,7 @@
 
   function handleCancel() {
     text = '';
-    cwEnabled = false;
     cwText = '';
-    visibility = defaultVisibility;
-    localOnly = defaultLocalOnly;
     previewMode = false;
     emojiPickerOpen = false;
     attachedFiles = [];

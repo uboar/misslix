@@ -6,6 +6,7 @@
   import EmojiPickerPopup from './EmojiPickerPopup.svelte';
   import FileAttachmentArea from './FileAttachmentArea.svelte';
   import { uploadFileToDrive } from './composerLogic';
+  import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
   import { Check, X, Eye, Send } from 'lucide-svelte';
 
   type PostResult = {
@@ -62,7 +63,10 @@
     return result;
   });
 
-  // モーダルが開いたとき: アカウントを全選択し状態リセット
+  type ComposerSettings = { visibility: Visibility; localOnly: boolean; cwEnabled: boolean };
+  const SETTINGS_KEY = 'composer-last-settings';
+
+  // モーダルが開いたとき: アカウントを全選択し状態リセット、前回の設定を復元
   $effect(() => {
     if (open) {
       // 全アカウント選択
@@ -71,6 +75,13 @@
       showResults = false;
       previewMode = false;
       emojiPickerOpen = false;
+      // 前回の投稿設定を復元
+      const saved = loadFromStorage<ComposerSettings | null>(SETTINGS_KEY, null);
+      if (saved) {
+        visibility = saved.visibility;
+        localOnly = saved.localOnly;
+        cwEnabled = saved.cwEnabled;
+      }
     }
   });
 
@@ -187,7 +198,8 @@
 
     const allOk = mapped.every((r) => r.status === 'fulfilled');
     if (allOk) {
-      // 全成功: リセットして閉じる
+      // 全成功: 設定を保存してリセット・閉じる
+      saveToStorage<ComposerSettings>(SETTINGS_KEY, { visibility, localOnly, cwEnabled });
       resetForm();
       onpost?.(mapped);
       onclose();
