@@ -93,6 +93,12 @@
 
   function selectAccount(id: number) {
     selectedAccountId = id;
+    const account = accountStore.accounts.find(a => a.id === id);
+    if (account?.themeColor) {
+      selectedColor = account.themeColor;
+    } else {
+      selectedColor = ACCENT_COLORS[0];
+    }
     step = 2;
   }
 
