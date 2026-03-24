@@ -1,0 +1,270 @@
+<script lang="ts">
+  import type { entities } from 'misskey-js';
+  import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
+  import { getReactionHistory, addReactionHistory } from '$lib/utils/reactionHistory';
+
+  type EmojiDetailed = entities.EmojiDetailed;
+
+  type Props = {
+    /** アカウントが持つカスタム絵文字リスト */
+    accountEmojis: EmojiDetailed[];
+    /** リアクションデッキ (カラム設定から) */
+    deck?: string[];
+    /** 絵文字URLマップ (カスタム絵文字名 -> URL) */
+    emojis?: Record<string, string>;
+    /** 絵文字選択時コールバック (絵文字名のみ、コロンなし) */
+    onselect: (name: string) => void;
+    /** 閉じる時コールバック */
+    onclose?: () => void;
+  };
+
+  const {
+    accountEmojis,
+    deck = [],
+    emojis = {},
+    onselect,
+    onclose,
+  }: Props = $props();
+
+  let searchQuery = $state('');
+  let searchInputEl = $state<HTMLInputElement | null>(null);
+
+  // 無限スクロール用
+  const PAGE_SIZE = 60;
+  let displayCount = $state(PAGE_SIZE);
+  let scrollEl = $state<HTMLDivElement | null>(null);
+
+  // リアクション履歴
+  const reactionHistory = $derived(getReactionHistory());
+
+  // カスタム絵文字かどうか判定 (:name: 形式)
+  function isCustomEmoji(reaction: string): boolean {
+    return reaction.startsWith(':') && reaction.endsWith(':');
+  }
+
+  function getCustomEmojiName(reaction: string): string {
+    return reaction.slice(1, -1).split('@')[0];
+  }
+
+  // デッキ/履歴の絵文字URLを取得
+  function getDeckEmojiUrl(reaction: string): string | null {
+    if (!isCustomEmoji(reaction)) return null;
+    const name = getCustomEmojiName(reaction);
+    return emojis[name] ?? emojis[reaction] ?? null;
+  }
+
+  // 検索結果 (searchQueryが空なら全件、そうでなければフィルタ)
+  const searchResults = $derived(
+    searchQuery.trim().length === 0
+      ? []
+      : accountEmojis.filter((e) => {
+          const q = searchQuery.toLowerCase();
+          return (
+            e.name.toLowerCase().includes(q) ||
+            (e.aliases ?? []).some((a) => a.toLowerCase().includes(q)) ||
+            (e.category ?? '').toLowerCase().includes(q)
+          );
+        })
+  );
+
+  const isSearching = $derived(searchQuery.trim().length > 0);
+
+  // 表示する絵文字リスト (無限スクロール対応)
+  const displayedEmojis = $derived(accountEmojis.slice(0, displayCount));
+  const hasMore = $derived(displayCount < accountEmojis.length);
+
+  function handleSelect(name: string) {
+    // 履歴に追加 (:name: 形式で保存)
+    addReactionHistory(`:${name}:`);
+    onselect(name);
+  }
+
+  function handleDeckSelect(reaction: string) {
+    const name = isCustomEmoji(reaction) ? getCustomEmojiName(reaction) : reaction;
+    addReactionHistory(isCustomEmoji(reaction) ? reaction : `:${reaction}:`);
+    onselect(name);
+  }
+
+  function handleHistorySelect(reaction: string) {
+    if (isCustomEmoji(reaction)) {
+      const name = getCustomEmojiName(reaction);
+      addReactionHistory(reaction);
+      onselect(name);
+    } else {
+      // Unicode絵文字は名前として渡す (テキストに挿入)
+      addReactionHistory(reaction);
+      onselect(reaction);
+    }
+  }
+
+  // スクロールハンドラ (無限スクロール)
+  function handleScroll() {
+    if (!scrollEl) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollEl;
+    if (scrollHeight - scrollTop - clientHeight < 100 && hasMore) {
+      displayCount = Math.min(displayCount + PAGE_SIZE, accountEmojis.length);
+    }
+  }
+
+  // 検索クエリが変わったらスクロール位置をリセット
+  $effect(() => {
+    searchQuery; // 依存
+    displayCount = PAGE_SIZE;
+    if (scrollEl) scrollEl.scrollTop = 0;
+  });
+
+  // マウント時に検索フォームにフォーカス
+  $effect(() => {
+    if (searchInputEl) {
+      searchInputEl.focus();
+    }
+  });
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      onclose?.();
+    }
+  }
+</script>
+
+<div
+  class="emoji-picker-popup flex flex-col border border-base-300 rounded-lg bg-base-100 shadow-xl"
+  style="width: 22rem; max-width: min(22rem, calc(100vw - 1rem)); max-height: 20rem;"
+  role="dialog"
+  aria-label="絵文字ピッカー"
+  onkeydown={handleKeydown}
+>
+  <!-- 検索フォーム -->
+  <div class="px-2 pt-2 pb-1 shrink-0">
+    <input
+      bind:this={searchInputEl}
+      bind:value={searchQuery}
+      type="text"
+      placeholder="絵文字を検索..."
+      class="input input-sm input-bordered w-full text-xs"
+      aria-label="絵文字検索"
+    />
+  </div>
+
+  <!-- スクロール領域 -->
+  <div
+    bind:this={scrollEl}
+    class="flex-1 overflow-y-auto px-2 pb-2"
+    onscroll={handleScroll}
+  >
+    {#if isSearching}
+      <!-- 検索結果 -->
+      {#if searchResults.length === 0}
+        <div class="text-xs text-base-content/40 text-center py-4">
+          一致する絵文字がありません
+        </div>
+      {:else}
+        <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5 pt-1">
+          検索結果 ({searchResults.length}件)
+        </div>
+        <div class="flex flex-wrap gap-0.5">
+          {#each searchResults as emoji (emoji.name)}
+            <button
+              class="emoji-btn flex items-center justify-center w-8 h-8 rounded hover:bg-base-200 transition-colors duration-100"
+              title=":{emoji.name}:"
+              aria-label=":{emoji.name}:"
+              onclick={() => handleSelect(emoji.name)}
+            >
+              {#if emoji.url}
+                <EmojiRenderer name={emoji.name} url={emoji.url} height="1.4em" />
+              {:else}
+                <span class="text-[0.6rem] truncate px-0.5">{emoji.name}</span>
+              {/if}
+            </button>
+          {/each}
+        </div>
+      {/if}
+    {:else}
+      <!-- デッキ -->
+      {#if deck.length > 0}
+        <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5 pt-1">デッキ</div>
+        <div class="flex flex-wrap gap-0.5 mb-2">
+          {#each deck as reaction (reaction)}
+            {@const url = getDeckEmojiUrl(reaction)}
+            {@const name = isCustomEmoji(reaction) ? getCustomEmojiName(reaction) : null}
+            <button
+              class="emoji-btn flex items-center justify-center w-8 h-8 rounded hover:bg-base-200 transition-colors duration-100"
+              title={reaction}
+              aria-label={reaction}
+              onclick={() => handleDeckSelect(reaction)}
+            >
+              {#if url && name}
+                <EmojiRenderer {name} {url} height="1.4em" />
+              {:else if isCustomEmoji(reaction)}
+                <span class="text-[0.6rem] leading-none truncate px-0.5 max-w-8">{name}</span>
+              {:else}
+                <EmojiRenderer emoji={reaction} height="1.4em" />
+              {/if}
+            </button>
+          {/each}
+        </div>
+      {/if}
+
+      <!-- 履歴 -->
+      {#if reactionHistory.length > 0}
+        <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5">履歴</div>
+        <div class="flex flex-wrap gap-0.5 mb-2">
+          {#each reactionHistory as reaction (reaction)}
+            {@const url = getDeckEmojiUrl(reaction)}
+            {@const name = isCustomEmoji(reaction) ? getCustomEmojiName(reaction) : null}
+            <button
+              class="emoji-btn flex items-center justify-center w-8 h-8 rounded hover:bg-base-200 transition-colors duration-100"
+              title={reaction}
+              aria-label={reaction}
+              onclick={() => handleHistorySelect(reaction)}
+            >
+              {#if url && name}
+                <EmojiRenderer {name} {url} height="1.4em" />
+              {:else if isCustomEmoji(reaction)}
+                <span class="text-[0.6rem] leading-none truncate px-0.5 max-w-8">{name}</span>
+              {:else}
+                <EmojiRenderer emoji={reaction} height="1.4em" />
+              {/if}
+            </button>
+          {/each}
+        </div>
+      {/if}
+
+      <!-- ローカル絵文字 (無限スクロール) -->
+      {#if displayedEmojis.length > 0}
+        <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5">ローカル絵文字</div>
+        <div class="flex flex-wrap gap-0.5">
+          {#each displayedEmojis as emoji (emoji.name)}
+            <button
+              class="emoji-btn flex items-center justify-center w-8 h-8 rounded hover:bg-base-200 transition-colors duration-100"
+              title=":{emoji.name}:"
+              aria-label=":{emoji.name}:"
+              onclick={() => handleSelect(emoji.name)}
+            >
+              {#if emoji.url}
+                <EmojiRenderer name={emoji.name} url={emoji.url} height="1.4em" />
+              {:else}
+                <span class="text-[0.6rem] truncate px-0.5">{emoji.name}</span>
+              {/if}
+            </button>
+          {/each}
+          {#if hasMore}
+            <div class="w-full text-center py-1">
+              <span class="text-[0.6rem] text-base-content/30">スクロールして続きを表示...</span>
+            </div>
+          {/if}
+        </div>
+      {:else if deck.length === 0 && reactionHistory.length === 0}
+        <div class="text-xs text-base-content/40 text-center py-4">
+          カスタム絵文字がありません
+        </div>
+      {/if}
+    {/if}
+  </div>
+</div>
+
+<style>
+  .emoji-btn {
+    cursor: pointer;
+  }
+</style>
