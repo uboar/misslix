@@ -77,6 +77,7 @@
       channelId={initialChannelId}
       defaultVisibility={initialVisibility}
       defaultLocalOnly={initialLocalOnly}
+      reactionDeck={config.reactionDeck}
       oncomplete={onclose}
       oncancel={onclose}
     />

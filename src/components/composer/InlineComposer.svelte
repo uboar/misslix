@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { AccountRuntime, Visibility } from '$lib/types';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
+  import EmojiPickerPopup from './EmojiPickerPopup.svelte';
   import type { entities } from 'misskey-js';
   import { MessageSquare, Repeat2, Eye, Send } from 'lucide-svelte';
 
@@ -18,6 +19,8 @@
     defaultVisibility?: Visibility;
     /** デフォルトローカル限定設定 (省略時: false) */
     defaultLocalOnly?: boolean;
+    /** リアクションデッキ (絵文字ピッカーに表示) */
+    reactionDeck?: string[];
     /** 投稿完了時コールバック */
     oncomplete?: () => void;
     /** キャンセル時コールバック */
@@ -33,6 +36,7 @@
     channelId,
     defaultVisibility = 'public',
     defaultLocalOnly = false,
+    reactionDeck = [],
     oncomplete,
     oncancel,
   }: Props = $props();
@@ -53,7 +57,7 @@
   // ── 文字数 ──
   const charCount = $derived(text.length + (cwEnabled ? cwText.length : 0));
 
-  // ── 絵文字マップ (プレビュー用) ──
+  // ── 絵文字マップ (プレビュー用 & ピッカー用) ──
   const emojiMap = $derived<Record<string, string>>(() => {
     const result: Record<string, string> = {};
     for (const e of runtime.emojis) {
@@ -61,9 +65,6 @@
     }
     return result;
   });
-
-  // ── 表示用絵文字リスト ──
-  const pickerEmojis = $derived(runtime.emojis.slice(0, 200));
 
   // ── モード判定 ──
   const isReply = $derived(!!replyId);
@@ -245,27 +246,13 @@
 
   <!-- 絵文字ピッカー -->
   {#if emojiPickerOpen}
-    <div class="border border-base-300 rounded p-1.5 max-h-32 overflow-y-auto bg-base-100">
-      {#if pickerEmojis.length === 0}
-        <p class="text-xs text-base-content/50 text-center py-1">カスタム絵文字なし</p>
-      {:else}
-        <div class="flex flex-wrap gap-0.5">
-          {#each pickerEmojis as emoji (emoji.name)}
-            <button
-              class="btn btn-ghost btn-xs p-0.5 h-auto min-h-0 hover:bg-base-300"
-              onclick={() => insertEmoji(emoji.name)}
-              title=":{emoji.name}:"
-            >
-              <img
-                src={emoji.url}
-                alt=":{emoji.name}:"
-                class="h-5 w-auto max-w-6 object-contain"
-              />
-            </button>
-          {/each}
-        </div>
-      {/if}
-    </div>
+    <EmojiPickerPopup
+      accountEmojis={runtime.emojis}
+      deck={reactionDeck}
+      emojis={emojiMap()}
+      onselect={(name) => insertEmoji(name)}
+      onclose={() => { emojiPickerOpen = false; }}
+    />
   {/if}
 
   <!-- エラー表示 -->

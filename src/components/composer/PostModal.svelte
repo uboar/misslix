@@ -3,6 +3,7 @@
   import { accountStore } from '$lib/stores/accounts.svelte';
   import Modal from '../common/Modal.svelte';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
+  import EmojiPickerPopup from './EmojiPickerPopup.svelte';
   import { Check, X, Eye, Send } from 'lucide-svelte';
 
   type PostResult = {
@@ -109,12 +110,25 @@
   }
 
   // 表示用の絵文字リスト (最初の選択アカウントのカスタム絵文字)
-  const pickerEmojis = $derived(() => {
+  const pickerAccountEmojis = $derived(() => {
     const firstId = [...selectedAccountIds][0];
     if (firstId == null) return [];
     const runtime = runtimes.get(firstId);
     if (!runtime) return [];
-    return runtime.emojis.slice(0, 200); // 表示上限
+    return runtime.emojis;
+  });
+
+  // 絵文字URLマップ (最初の選択アカウント)
+  const pickerEmojiMap = $derived(() => {
+    const firstId = [...selectedAccountIds][0];
+    if (firstId == null) return {} as Record<string, string>;
+    const runtime = runtimes.get(firstId);
+    if (!runtime) return {} as Record<string, string>;
+    const result: Record<string, string> = {};
+    for (const e of runtime.emojis) {
+      result[e.name] = e.url;
+    }
+    return result;
   });
 
   async function post() {
@@ -298,27 +312,12 @@
 
     <!-- 絵文字ピッカー -->
     {#if emojiPickerOpen}
-      <div class="border border-base-300 rounded-lg p-2 max-h-40 overflow-y-auto bg-base-200">
-        {#if pickerEmojis().length === 0}
-          <p class="text-xs text-base-content/50 text-center py-2">カスタム絵文字がありません</p>
-        {:else}
-          <div class="flex flex-wrap gap-1">
-            {#each pickerEmojis() as emoji (emoji.name)}
-              <button
-                class="btn btn-ghost btn-xs p-0.5 h-auto min-h-0 hover:bg-base-300"
-                onclick={() => insertEmoji(emoji.name)}
-                title=":{emoji.name}:"
-              >
-                <img
-                  src={emoji.url}
-                  alt=":{emoji.name}:"
-                  class="h-6 w-auto max-w-8 object-contain"
-                />
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
+      <EmojiPickerPopup
+        accountEmojis={pickerAccountEmojis()}
+        emojis={pickerEmojiMap()}
+        onselect={(name) => insertEmoji(name)}
+        onclose={() => { emojiPickerOpen = false; }}
+      />
     {/if}
 
     <!-- 本文入力 / プレビュー -->
