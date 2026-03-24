@@ -91,6 +91,18 @@
     modalInitialIndex = index;
     modalOpen = true;
   }
+
+  // 読み込み状態 (スケルトン表示用)
+  let imageLoaded = $state<Record<string, boolean>>({});
+  let videoLoaded = $state<Record<string, boolean>>({});
+
+  function markImageLoaded(fileId: string) {
+    imageLoaded = { ...imageLoaded, [fileId]: true };
+  }
+
+  function markVideoLoaded(fileId: string) {
+    videoLoaded = { ...videoLoaded, [fileId]: true };
+  }
 </script>
 
 {#if files.length > 0}
@@ -100,7 +112,10 @@
     {#if imageFiles.length === 1}
       <!-- 単一画像 -->
       {@const file = imageFiles[0]}
-      <div class="relative overflow-hidden rounded-md bg-base-300/30" style="max-height: {mediaSize}px;">
+      <div
+        class="relative overflow-hidden rounded-md bg-base-300/40 {!imageLoaded[file.id] ? 'animate-pulse' : ''}"
+        style="{imageLoaded[file.id] ? 'max-height' : 'height'}: {mediaSize}px;"
+      >
         {#if shouldBlur(file)}
           <!-- NSFWぼかし -->
           <div
@@ -117,6 +132,8 @@
               class="w-full object-cover blur-xl scale-105 transition-all duration-300"
               style="max-height: {mediaSize}px;"
               loading="lazy"
+              onload={() => markImageLoaded(file.id)}
+              onerror={() => markImageLoaded(file.id)}
             />
             <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
               <svg class="w-5 h-5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -135,9 +152,11 @@
             <img
               src={file.thumbnailUrl ?? file.url}
               alt={file.comment || file.name}
-              class="w-full object-contain rounded-md transition-opacity hover:opacity-90"
+              class="w-full object-contain rounded-md transition-opacity duration-300 {imageLoaded[file.id] ? 'opacity-100 hover:opacity-90' : 'opacity-0'}"
               style="max-height: {mediaSize}px;"
               loading="lazy"
+              onload={() => markImageLoaded(file.id)}
+              onerror={() => markImageLoaded(file.id)}
             />
           </button>
         {/if}
@@ -146,8 +165,8 @@
     {:else if imageFiles.length > 1}
       <!-- 複数画像カルーセル -->
       <div
-        class="relative overflow-hidden rounded-md bg-base-300/30"
-        style="max-height: {mediaSize}px;"
+        class="relative overflow-hidden rounded-md bg-base-300/40 {!imageLoaded[currentCarouselFile?.id] ? 'animate-pulse' : ''}"
+        style="{imageLoaded[currentCarouselFile?.id] ? 'max-height' : 'height'}: {mediaSize}px;"
         ontouchstart={handleTouchStart}
         ontouchmove={handleTouchMove}
         ontouchend={handleTouchEnd}
@@ -169,6 +188,8 @@
                 class="w-full object-cover blur-xl scale-105"
                 style="max-height: {mediaSize}px;"
                 loading="lazy"
+                onload={() => markImageLoaded(currentCarouselFile.id)}
+                onerror={() => markImageLoaded(currentCarouselFile.id)}
               />
               <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
                 <svg class="w-5 h-5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -188,9 +209,11 @@
               <img
                 src={currentCarouselFile.thumbnailUrl ?? currentCarouselFile.url}
                 alt={currentCarouselFile.comment || currentCarouselFile.name}
-                class="w-full object-contain rounded-md transition-opacity hover:opacity-90"
+                class="w-full object-contain rounded-md transition-opacity duration-300 {imageLoaded[currentCarouselFile.id] ? 'opacity-100 hover:opacity-90' : 'opacity-0'}"
                 style="max-height: {mediaSize}px;"
                 loading="lazy"
+                onload={() => markImageLoaded(currentCarouselFile.id)}
+                onerror={() => markImageLoaded(currentCarouselFile.id)}
               />
             </button>
           {/if}
@@ -252,13 +275,27 @@
             </div>
           {:else}
             <!-- svelte-ignore a11y_media_has_caption -->
-            <video
-              src={file.url}
-              controls
-              preload="metadata"
-              class="w-full rounded-md"
-              style="max-height: {mediaSize}px;"
-            ></video>
+            <div
+              class="relative {!videoLoaded[file.id] ? 'animate-pulse bg-base-300/40 rounded-md' : ''}"
+              style="{videoLoaded[file.id] ? '' : `height: ${mediaSize}px;`}"
+            >
+              <video
+                src={file.url}
+                controls
+                preload="metadata"
+                class="w-full rounded-md transition-opacity duration-300 {videoLoaded[file.id] ? 'opacity-100' : 'opacity-0'}"
+                style="max-height: {mediaSize}px;"
+                onloadedmetadata={() => markVideoLoaded(file.id)}
+                onerror={() => markVideoLoaded(file.id)}
+              ></video>
+              {#if !videoLoaded[file.id]}
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <svg class="w-8 h-8 text-base-content/20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+              {/if}
+            </div>
           {/if}
         {:else if isAudio(file)}
           <!-- 音声プレーヤー -->
