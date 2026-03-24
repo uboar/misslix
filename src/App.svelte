@@ -57,7 +57,46 @@
 
   // テーマ適用
   $effect(() => {
-    document.documentElement.setAttribute('data-theme', settingsStore.theme);
+    const theme = settingsStore.theme;
+    const customJson = settingsStore.settings.customThemeJson;
+
+    if (theme === 'custom' && customJson) {
+      try {
+        const parsed = JSON.parse(customJson) as Record<string, string>;
+        const root = document.documentElement;
+        root.setAttribute('data-theme', 'custom');
+        // color-scheme
+        if (parsed['color-scheme']) {
+          root.style.setProperty('color-scheme', parsed['color-scheme']);
+        }
+        // CSS変数を動的に適用
+        for (const [key, value] of Object.entries(parsed)) {
+          if (key.startsWith('--')) {
+            root.style.setProperty(key, value);
+          }
+        }
+      } catch {
+        // JSONパースエラー時はフォールバック
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    } else {
+      // light/dark および組み込みテーマはカスタム変数をリセット
+      const root = document.documentElement;
+      root.style.removeProperty('color-scheme');
+      // 以前に設定したカスタムCSS変数をクリア
+      const style = root.style;
+      const toRemove: string[] = [];
+      for (let i = 0; i < style.length; i++) {
+        const prop = style.item(i);
+        if (prop.startsWith('--color-') || prop.startsWith('--radius-') || prop.startsWith('--size-') || prop.startsWith('--border') || prop.startsWith('--depth') || prop.startsWith('--noise')) {
+          toRemove.push(prop);
+        }
+      }
+      for (const prop of toRemove) {
+        root.style.removeProperty(prop);
+      }
+      root.setAttribute('data-theme', theme);
+    }
   });
 
   // 初期化実行

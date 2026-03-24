@@ -31,6 +31,15 @@ class SettingsStore {
     this.settings.theme = value;
     this.persist();
   }
+
+  get customThemeJson() {
+    return this.settings.customThemeJson;
+  }
+
+  set customThemeJson(value: string) {
+    this.settings.customThemeJson = value;
+    this.persist();
+  }
 }
 
 export const settingsStore = new SettingsStore();
