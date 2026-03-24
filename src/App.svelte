@@ -12,7 +12,6 @@
   import PostModal from './components/composer/PostModal.svelte';
   import ToastContainer from './components/common/ToastContainer.svelte';
   import { timelineStore } from '$lib/stores/timelines.svelte';
-  import { presetStore } from '$lib/stores/presets.svelte';
   import { showToast } from '$lib/utils/error';
 
   // ── モーダル状態 ──
@@ -20,20 +19,13 @@
   let settingsOpen = $state(false);
   let postModalOpen = $state(false);
   let presetModalOpen = $state(false);
+  let clearConfirmOpen = $state(false);
 
-  let confirmClear = $state(false);
-
-  function handleClearColumns() {
-    if (confirmClear) {
-      timelineStore.columns = [];
-      timelineStore.persist();
-      showToast('全カラムをクリアしました', 'info');
-      confirmClear = false;
-    } else {
-      confirmClear = true;
-      setTimeout(() => { confirmClear = false; }, 3000);
-      showToast('もう一度押すと全カラムを削除します', 'warning', 3000);
-    }
+  function executeClearColumns() {
+    timelineStore.columns = [];
+    timelineStore.persist();
+    showToast('全カラムをクリアしました', 'info');
+    clearConfirmOpen = false;
   }
 
   // ── ランタイム管理 ──
@@ -86,12 +78,27 @@
     onadd={() => addColumnOpen = true}
     onsettings={() => settingsOpen = true}
     onpreset={() => presetModalOpen = true}
-    onclearcolumns={handleClearColumns}
+    onclearcolumns={() => clearConfirmOpen = true}
   />
 
   <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} {runtimes} />
   <PresetModal open={presetModalOpen} onclose={() => presetModalOpen = false} />
   <SettingsModal open={settingsOpen} onclose={() => settingsOpen = false} />
   <PostModal open={postModalOpen} onclose={() => postModalOpen = false} {runtimes} />
+  <!-- 全クリア確認モーダル -->
+  {#if clearConfirmOpen}
+    <dialog class="modal modal-open">
+      <div class="modal-box max-w-sm">
+        <h3 class="text-lg font-bold mb-2">全カラムをクリア</h3>
+        <p class="text-sm text-base-content/70 mb-4">すべてのカラムを削除します。この操作は元に戻せません。</p>
+        <div class="modal-action">
+          <button class="btn btn-ghost" onclick={() => clearConfirmOpen = false}>キャンセル</button>
+          <button class="btn btn-error" onclick={executeClearColumns}>削除する</button>
+        </div>
+      </div>
+      <button class="modal-backdrop" onclick={() => clearConfirmOpen = false} aria-label="閉じる"></button>
+    </dialog>
+  {/if}
+
   <ToastContainer />
 </div>
