@@ -15,16 +15,20 @@
 
   // ファイルごとのプレビューURL (image/* のみ)
   let previewUrls = $state<(string | null)[]>([]);
+  // 解放用に前回生成した URL を非リアクティブ変数で保持 ($effect の依存追跡を避けるため)
+  let urlsToRevoke: (string | null)[] = [];
 
   $effect(() => {
-    // 古い URL を解放
-    previewUrls.forEach((url) => url && URL.revokeObjectURL(url));
+    // 前回生成した URL を解放
+    urlsToRevoke.forEach((url) => url && URL.revokeObjectURL(url));
     // 新しい URL を生成
-    previewUrls = files.map((f) =>
+    const newUrls = files.map((f) =>
       f.type.startsWith('image/') ? URL.createObjectURL(f) : null,
     );
+    urlsToRevoke = newUrls;
+    previewUrls = newUrls;
     return () => {
-      previewUrls.forEach((url) => url && URL.revokeObjectURL(url));
+      newUrls.forEach((url) => url && URL.revokeObjectURL(url));
     };
   });
 
