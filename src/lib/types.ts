@@ -73,6 +73,7 @@ export type ColumnConfig = {
   customName?: string;
   color: string;
   width: ColumnWidth;
+  customWidth?: number;
   maxNotes: number;
   bufferSize: number;
   collapsed: boolean;

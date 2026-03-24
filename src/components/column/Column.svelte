@@ -34,10 +34,46 @@
 
   // 折り畳み時の幅
   const COLLAPSED_WIDTH = '3rem';
+  const MIN_WIDTH_PX = 128;
 
   let columnWidth = $derived(
-    collapsed ? COLLAPSED_WIDTH : COLUMN_WIDTH_MAP[config.width]
+    collapsed
+      ? COLLAPSED_WIDTH
+      : config.customWidth != null
+        ? `${config.customWidth}px`
+        : COLUMN_WIDTH_MAP[config.width]
   );
+
+  // ─── リサイズ処理 ───
+  let isResizing = $state(false);
+  let resizeStartX = 0;
+  let resizeStartWidth = 0;
+
+  function handleResizePointerDown(e: PointerEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    isResizing = true;
+    resizeStartX = e.clientX;
+
+    // 現在の実際の幅をpxで取得
+    const el = (e.currentTarget as HTMLElement).parentElement!;
+    resizeStartWidth = el.getBoundingClientRect().width;
+
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }
+
+  function handleResizePointerMove(e: PointerEvent) {
+    if (!isResizing) return;
+    const dx = e.clientX - resizeStartX;
+    const newWidth = Math.max(MIN_WIDTH_PX, resizeStartWidth + dx);
+    timelineStore.updateColumn(config.id, { customWidth: Math.round(newWidth) });
+  }
+
+  function handleResizePointerUp(e: PointerEvent) {
+    if (!isResizing) return;
+    isResizing = false;
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+  }
 
   // ドラッグ後のクリック誤発火を防止するフラグ
   let wasDragged = $state(false);
@@ -112,7 +148,10 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="column flex flex-col h-full border-r border-base-300 bg-base-100 transition-all duration-200 ease-in-out overflow-hidden shrink-0 relative"
+  class="column flex flex-col h-full border-r border-base-300 bg-base-100 overflow-hidden shrink-0 relative"
+  class:transition-all={!isResizing}
+  class:duration-200={!isResizing}
+  class:ease-in-out={!isResizing}
   class:opacity-50={dropIndicator !== null}
   style="width: {columnWidth}; min-width: {columnWidth};"
   role="region"
@@ -194,5 +233,22 @@
     {/if}
 
     <ColumnFooter {config} {runtime} {account} />
+  {/if}
+
+  <!-- リサイズハンドル -->
+  {#if !collapsed}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+      class="resize-handle absolute top-0 right-0 w-2 h-full z-20 cursor-col-resize flex items-stretch"
+      onpointerdown={handleResizePointerDown}
+      onpointermove={handleResizePointerMove}
+      onpointerup={handleResizePointerUp}
+    >
+      <div
+        class="w-px ml-auto h-full transition-opacity duration-150 opacity-0 hover:opacity-50"
+        class:opacity-80={isResizing}
+        style="background-color: oklch(var(--p));"
+      ></div>
+    </div>
   {/if}
 </div>
