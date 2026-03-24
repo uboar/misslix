@@ -62,21 +62,39 @@
 
     if (theme === 'custom' && customJson) {
       try {
-        const parsed = JSON.parse(customJson) as Record<string, string>;
+        let vars: Record<string, string> = {};
+
+        if (customJson.trim().includes('{')) {
+          // CSS形式: @plugin "daisyui/theme" { ... } または { ... }
+          const blockMatch = customJson.match(/\{([\s\S]+)\}/);
+          if (blockMatch) {
+            for (const line of blockMatch[1].split(/[\n;]/)) {
+              const trimmed = line.trim();
+              if (!trimmed) continue;
+              const colonIdx = trimmed.indexOf(':');
+              if (colonIdx === -1) continue;
+              const key = trimmed.slice(0, colonIdx).trim();
+              const value = trimmed.slice(colonIdx + 1).trim();
+              if (key && value) vars[key] = value;
+            }
+          }
+        } else {
+          // JSON形式（後方互換）
+          vars = JSON.parse(customJson) as Record<string, string>;
+        }
+
         const root = document.documentElement;
         root.setAttribute('data-theme', 'custom');
-        // color-scheme
-        if (parsed['color-scheme']) {
-          root.style.setProperty('color-scheme', parsed['color-scheme']);
+        if (vars['color-scheme']) {
+          root.style.setProperty('color-scheme', vars['color-scheme']);
         }
-        // CSS変数を動的に適用
-        for (const [key, value] of Object.entries(parsed)) {
+        for (const [key, value] of Object.entries(vars)) {
           if (key.startsWith('--')) {
             root.style.setProperty(key, value);
           }
         }
       } catch {
-        // JSONパースエラー時はフォールバック
+        // パースエラー時はフォールバック
         document.documentElement.setAttribute('data-theme', 'dark');
       }
     } else {

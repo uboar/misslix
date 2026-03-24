@@ -24,6 +24,7 @@
   let composerWrapperEl = $state<HTMLDivElement | null>(null);
   let composerBtnEl = $state<HTMLButtonElement | null>(null);
   let composerPopupStyle = $state('');
+  let composerPopupEl = $state<HTMLDivElement | null>(null);
 
   // ── リンク集パネル ──
   let linksPanelOpen = $state(false);
@@ -118,7 +119,8 @@
       if (notifPanelOpen && notifWrapperEl && !notifWrapperEl.contains(target)) {
         closeNotifPanel();
       }
-      if (composerPanelOpen && composerWrapperEl && !composerWrapperEl.contains(target)) {
+      if (composerPanelOpen && composerWrapperEl && !composerWrapperEl.contains(target) &&
+          (!composerPopupEl || !composerPopupEl.contains(target))) {
         closeComposerPanel();
       }
       if (linksPanelOpen && linksWrapperEl && !linksWrapperEl.contains(target)) {
@@ -188,14 +190,14 @@
         >
           <MessageCircle class="w-4 h-4 shrink-0" aria-hidden="true" />
         </button>
-
-        {#if composerPanelOpen}
-          <div class="z-50" style={composerPopupStyle}>
-            <ColumnComposerPanel {config} {runtime} onclose={closeComposerPanel} />
-          </div>
-        {/if}
       </div>
     </div>
+
+    {#if composerPanelOpen}
+      <div class="z-50" style={composerPopupStyle} bind:this={composerPopupEl}>
+        <ColumnComposerPanel {config} {runtime} onclose={closeComposerPanel} />
+      </div>
+    {/if}
   {/if}
 
   <!-- スペーサー -->

@@ -21,15 +21,49 @@
     settingsStore.update({ theme: value });
   }
 
-  function validateAndApplyCustomJson() {
+  function parseCssTheme(css: string): Record<string, string> | null {
+    const blockMatch = css.match(/\{([\s\S]+)\}/);
+    if (!blockMatch) return null;
+    const result: Record<string, string> = {};
+    for (const line of blockMatch[1].split(/[\n;]/)) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      const colonIdx = trimmed.indexOf(':');
+      if (colonIdx === -1) continue;
+      const key = trimmed.slice(0, colonIdx).trim();
+      const value = trimmed.slice(colonIdx + 1).trim();
+      if (key && value) result[key] = value;
+    }
+    return Object.keys(result).length > 0 ? result : null;
+  }
+
+  function validateAndApplyCustomTheme() {
     const raw = customJsonInput.trim();
     if (!raw) {
-      customJsonError = 'JSONを入力してください。';
+      customJsonError = 'CSS または JSON を入力してください。';
       return;
     }
+
+    // CSS形式 (@plugin "daisyui/theme" { ... } または { ... }) を優先
+    if (raw.includes('{')) {
+      const parsed = parseCssTheme(raw);
+      if (!parsed) {
+        customJsonError = 'CSS ブロック（{...}）が見つかりません。';
+        return;
+      }
+      const hasVars = Object.keys(parsed).some(k => k.startsWith('--'));
+      if (!hasVars) {
+        customJsonError = 'daisyUI テーマのCSS変数（--color-* など）が見つかりません。';
+        return;
+      }
+      customJsonError = '';
+      settingsStore.update({ theme: CUSTOM_THEME_VALUE, customThemeJson: raw });
+      return;
+    }
+
+    // フォールバック: JSON形式
     try {
       const parsed = JSON.parse(raw) as Record<string, string>;
-      // 最低限のバリデーション：少なくとも1つのCSS変数が含まれているか
       const hasVars = Object.keys(parsed).some(k => k.startsWith('--'));
       if (!hasVars) {
         customJsonError = 'daisyUI テーマのCSS変数（--color-* など）が見つかりません。';
@@ -38,7 +72,7 @@
       customJsonError = '';
       settingsStore.update({ theme: CUSTOM_THEME_VALUE, customThemeJson: raw });
     } catch {
-      customJsonError = 'JSONの形式が正しくありません。';
+      customJsonError = 'CSS または JSON の形式が正しくありません。';
     }
   }
 
@@ -82,7 +116,7 @@
       {#each BUILTIN_THEMES as theme (theme)}
         <option value={theme}>{theme}</option>
       {/each}
-      <option value={CUSTOM_THEME_VALUE}>カスタム（JSON）</option>
+      <option value={CUSTOM_THEME_VALUE}>カスタム（CSS/JSON）</option>
     </select>
   </div>
 
@@ -90,7 +124,7 @@
   {#if settings.theme === CUSTOM_THEME_VALUE}
     <div class="form-control">
       <label class="label" for="custom-theme-json">
-        <span class="label-text font-medium">カスタムテーマ JSON</span>
+        <span class="label-text font-medium">カスタムテーマ</span>
       </label>
       <!-- テーマクリエイター誘導バナー -->
       <div class="alert alert-info mb-2 py-2 px-3 text-sm">
@@ -104,14 +138,14 @@
             rel="noopener noreferrer"
             class="link link-hover font-medium"
           >daisyUI テーマクリエイター</a>
-          でテーマを作成し、「Export as JSON」でコピーして貼り付けてください。
+          でテーマを作成し、CSS（Export as CSS）または JSON をコピーして貼り付けてください。
         </span>
       </div>
       <textarea
         id="custom-theme-json"
         class="textarea textarea-bordered w-full font-mono text-xs"
         rows={8}
-        placeholder={`{\n  "color-scheme": "dark",\n  "--color-base-100": "oklch(20% 0.02 260)",\n  "--color-primary": "oklch(65% 0.2 270)",\n  ...\n}`}
+        placeholder={`@plugin "daisyui/theme" {\n  name: "mytheme";\n  --color-base-100: oklch(20% 0.02 260);\n  --color-primary: oklch(65% 0.2 270);\n}`}
         bind:value={customJsonInput}
       ></textarea>
       {#if customJsonError}
@@ -121,7 +155,7 @@
       {/if}
       <button
         class="btn btn-primary btn-sm mt-2 w-full"
-        onclick={validateAndApplyCustomJson}
+        onclick={validateAndApplyCustomTheme}
       >
         テーマを適用
       </button>
