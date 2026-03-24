@@ -15,16 +15,41 @@
   // ── 通知パネル ──
   let notifPanelOpen = $state(false);
   let notifWrapperEl = $state<HTMLDivElement | null>(null);
+  let notifBtnEl = $state<HTMLButtonElement | null>(null);
+  let notifPopupStyle = $state('');
 
   // ── 投稿パネル ──
   let composerPanelOpen = $state(false);
   let composerWrapperEl = $state<HTMLDivElement | null>(null);
+  let composerBtnEl = $state<HTMLButtonElement | null>(null);
+  let composerPopupStyle = $state('');
 
   // ── リンク集パネル ──
   let linksPanelOpen = $state(false);
   let linksWrapperEl = $state<HTMLDivElement | null>(null);
+  let linksBtnEl = $state<HTMLButtonElement | null>(null);
+  let linksPopupStyle = $state('');
+
+  // ポップアップの位置をボタンの位置から計算する
+  // ポップアップはボタンの上側に表示する (fixed positioning)
+  function calcPopupStyle(btnEl: HTMLButtonElement | null, alignRight: boolean): string {
+    if (!btnEl) return '';
+    const rect = btnEl.getBoundingClientRect();
+    const bottom = window.innerHeight - rect.top + 4; // ボタン上端から4px上
+    const margin = 4; // ビューポート端からの最小余白
+    if (alignRight) {
+      // 右端基準: ボタン右端に合わせる。左側にはみ出さないよう clamp
+      const right = Math.max(margin, window.innerWidth - rect.right);
+      return `position: fixed; bottom: ${bottom}px; right: ${right}px;`;
+    } else {
+      // 左端基準: ボタン左端に合わせる。右側にはみ出さないよう clamp
+      const left = Math.max(margin, rect.left);
+      return `position: fixed; bottom: ${bottom}px; left: ${left}px;`;
+    }
+  }
 
   function openNotifPanel() {
+    notifPopupStyle = calcPopupStyle(notifBtnEl, false);
     notifPanelOpen = true;
     composerPanelOpen = false;
     linksPanelOpen = false;
@@ -46,6 +71,7 @@
   }
 
   function openComposerPanel() {
+    composerPopupStyle = calcPopupStyle(composerBtnEl, true);
     composerPanelOpen = true;
     notifPanelOpen = false;
     linksPanelOpen = false;
@@ -67,6 +93,7 @@
     if (linksPanelOpen) {
       linksPanelOpen = false;
     } else {
+      linksPopupStyle = calcPopupStyle(linksBtnEl, true);
       linksPanelOpen = true;
       notifPanelOpen = false;
       composerPanelOpen = false;
@@ -111,6 +138,7 @@
     {#if runtime}
       <div class="relative flex items-stretch">
         <button
+          bind:this={notifBtnEl}
           class="flex items-center justify-center px-2.5 relative hover:bg-base-300 transition-colors {notifPanelOpen ? 'bg-base-300' : ''}"
           class:opacity-60={!runtime.hasUnread}
           onclick={toggleNotifPanel}
@@ -130,7 +158,7 @@
         </button>
 
         {#if notifPanelOpen}
-          <div class="absolute bottom-full left-0 mb-1 z-50">
+          <div class="z-50" style={notifPopupStyle}>
             <NotificationPanel {runtime} onclose={closeNotifPanel} />
           </div>
         {/if}
@@ -143,6 +171,7 @@
     {#if account}
       <div class="relative flex items-stretch">
         <button
+          bind:this={linksBtnEl}
           class="flex items-center justify-center px-2.5 hover:bg-base-300 transition-colors text-base-content/60 hover:text-base-content {linksPanelOpen ? 'bg-base-300' : ''}"
           onclick={toggleLinksPanel}
           aria-label="クイックリンク"
@@ -155,7 +184,7 @@
         </button>
 
         {#if linksPanelOpen}
-          <div class="absolute bottom-full right-0 mb-1 z-50 bg-base-200 border border-base-300 rounded-lg shadow-xl p-3 w-48">
+          <div class="z-50 bg-base-200 border border-base-300 rounded-lg shadow-xl p-3 w-48" style="{linksPopupStyle} max-width: min(12rem, calc(100vw - 1rem));">
             <QuickLinks {account} onclose={closeLinksPanel} />
           </div>
         {/if}
@@ -171,6 +200,7 @@
     <div class="flex items-stretch" bind:this={composerWrapperEl}>
       <div class="relative flex items-stretch">
         <button
+          bind:this={composerBtnEl}
           class="flex items-center justify-center gap-1.5 px-3 font-semibold text-xs transition-colors
             {composerPanelOpen
               ? 'bg-primary text-primary-content'
@@ -194,7 +224,7 @@
         </button>
 
         {#if composerPanelOpen}
-          <div class="absolute bottom-full right-0 mb-1 z-50">
+          <div class="z-50" style={composerPopupStyle}>
             <ColumnComposerPanel {config} {runtime} onclose={closeComposerPanel} />
           </div>
         {/if}
