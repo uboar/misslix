@@ -114,23 +114,12 @@
       </svg>
     </button>
 
-    <!-- 削除ボタン -->
-    <button
-      class="btn btn-ghost btn-xs btn-square text-base-content/40 hover:text-error"
-      onclick={onremove}
-      aria-label="カラムを削除"
-      title="カラムを削除"
-    >
-      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-        <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-    </button>
   </div>
 
   <!-- カラム設定パネル (インラインドロップダウン) -->
   {#if settingsOpen}
     <div class="bg-base-100 border-b border-base-300 px-3 py-3 overflow-y-auto max-h-[80vh] shadow-lg z-10">
-      <ColumnSettings {config} onclose={() => (settingsOpen = false)} />
+      <ColumnSettings {config} onclose={() => (settingsOpen = false)} {onremove} />
     </div>
   {/if}
 </div>

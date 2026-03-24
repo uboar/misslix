@@ -5,9 +5,10 @@
   type Props = {
     config: ColumnConfig;
     onclose: () => void;
+    onremove?: () => void;
   };
 
-  let { config, onclose }: Props = $props();
+  let { config, onclose, onremove }: Props = $props();
 
   // ローカル編集用コピー
   let customName = $state(config.customName ?? '');
@@ -293,4 +294,11 @@
     <button class="btn btn-primary btn-sm flex-1" onclick={save}>保存</button>
     <button class="btn btn-ghost btn-sm" onclick={onclose}>キャンセル</button>
   </div>
+
+  {#if onremove}
+    <div class="divider my-1"></div>
+    <div class="pt-1">
+      <button class="btn btn-error btn-sm w-full" onclick={onremove}>このカラムを削除</button>
+    </div>
+  {/if}
 </div>
