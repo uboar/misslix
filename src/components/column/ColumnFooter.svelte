@@ -3,7 +3,7 @@
   import NotificationPanel from '$components/notification/NotificationPanel.svelte';
   import QuickLinks from '$components/common/QuickLinks.svelte';
   import ColumnComposerPanel from '$components/composer/ColumnComposerPanel.svelte';
-  import { Bell, Link2, SquarePen } from 'lucide-svelte';
+  import { Bell, Link2, MessageCircle } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
@@ -33,15 +33,19 @@
 
   // ポップアップの位置をボタンの位置から計算する
   // ポップアップはボタンの上側に表示する (fixed positioning)
-  function calcPopupStyle(btnEl: HTMLButtonElement | null, alignRight: boolean): string {
+  function calcPopupStyle(btnEl: HTMLButtonElement | null, align: 'left' | 'right' | 'center'): string {
     if (!btnEl) return '';
     const rect = btnEl.getBoundingClientRect();
     const bottom = window.innerHeight - rect.top + 4; // ボタン上端から4px上
     const margin = 4; // ビューポート端からの最小余白
-    if (alignRight) {
+    if (align === 'right') {
       // 右端基準: ボタン右端に合わせる。左側にはみ出さないよう clamp
       const right = Math.max(margin, window.innerWidth - rect.right);
       return `position: fixed; bottom: ${bottom}px; right: ${right}px;`;
+    } else if (align === 'center') {
+      // 中央基準: ボタン中央に合わせ、左右にはみ出さないよう transform で調整
+      const btnCenterX = rect.left + rect.width / 2;
+      return `position: fixed; bottom: ${bottom}px; left: ${btnCenterX}px; transform: translateX(-50%);`;
     } else {
       // 左端基準: ボタン左端に合わせる。右側にはみ出さないよう clamp
       const left = Math.max(margin, rect.left);
@@ -50,7 +54,7 @@
   }
 
   function openNotifPanel() {
-    notifPopupStyle = calcPopupStyle(notifBtnEl, false);
+    notifPopupStyle = calcPopupStyle(notifBtnEl, 'left');
     notifPanelOpen = true;
     composerPanelOpen = false;
     linksPanelOpen = false;
@@ -72,7 +76,7 @@
   }
 
   function openComposerPanel() {
-    composerPopupStyle = calcPopupStyle(composerBtnEl, true);
+    composerPopupStyle = calcPopupStyle(composerBtnEl, 'center');
     composerPanelOpen = true;
     notifPanelOpen = false;
     linksPanelOpen = false;
@@ -94,7 +98,7 @@
     if (linksPanelOpen) {
       linksPanelOpen = false;
     } else {
-      linksPopupStyle = calcPopupStyle(linksBtnEl, true);
+      linksPopupStyle = calcPopupStyle(linksBtnEl, 'right');
       linksPanelOpen = true;
       notifPanelOpen = false;
       composerPanelOpen = false;
@@ -131,7 +135,7 @@
 
 <!-- カラムフッター -->
 <div
-  class="column-footer shrink-0 flex items-stretch bg-base-200 border-t border-base-300"
+  class="column-footer shrink-0 relative flex items-stretch bg-base-200 border-t border-base-300"
   style="--accent: {config.color}; min-height: 2rem;"
 >
   <!-- 左: 通知ベルアイコン -->
@@ -165,7 +169,39 @@
     {/if}
   </div>
 
-  <!-- 中央: リンク集ボタン -->
+  <!-- スペーサー -->
+  <div class="flex-1"></div>
+
+  <!-- 中央: ノート投稿ボタン (absolute で中央固定) -->
+  {#if runtime}
+    <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-stretch" bind:this={composerWrapperEl}>
+      <div class="relative flex items-stretch">
+        <button
+          bind:this={composerBtnEl}
+          class="flex items-center justify-center px-2.5 transition-colors
+            {composerPanelOpen
+              ? 'bg-primary text-primary-content'
+              : 'text-primary hover:bg-primary/10'}"
+          onclick={toggleComposerPanel}
+          aria-label="ノートを投稿"
+          title="ノートを投稿"
+        >
+          <MessageCircle class="w-4 h-4 shrink-0" aria-hidden="true" />
+        </button>
+
+        {#if composerPanelOpen}
+          <div class="z-50" style={composerPopupStyle}>
+            <ColumnComposerPanel {config} {runtime} onclose={closeComposerPanel} />
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
+
+  <!-- スペーサー -->
+  <div class="flex-1"></div>
+
+  <!-- 右: リンク集ボタン -->
   <div class="flex items-stretch" bind:this={linksWrapperEl}>
     {#if account}
       <div class="relative flex items-stretch">
@@ -187,34 +223,4 @@
       </div>
     {/if}
   </div>
-
-  <!-- スペーサー -->
-  <div class="flex-1"></div>
-
-  <!-- 右: ノート投稿ボタン -->
-  {#if runtime}
-    <div class="flex items-stretch" bind:this={composerWrapperEl}>
-      <div class="relative flex items-stretch">
-        <button
-          bind:this={composerBtnEl}
-          class="flex items-center justify-center gap-1.5 px-3 font-semibold text-xs transition-colors
-            {composerPanelOpen
-              ? 'bg-primary text-primary-content'
-              : 'text-primary hover:bg-primary/10'}"
-          onclick={toggleComposerPanel}
-          aria-label="ノートを投稿"
-          title="ノートを投稿"
-        >
-          <SquarePen class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-          <span>ノート</span>
-        </button>
-
-        {#if composerPanelOpen}
-          <div class="z-50" style={composerPopupStyle}>
-            <ColumnComposerPanel {config} {runtime} onclose={closeComposerPanel} />
-          </div>
-        {/if}
-      </div>
-    </div>
-  {/if}
 </div>
