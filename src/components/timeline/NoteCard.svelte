@@ -12,6 +12,8 @@
   import NoteMedia from './NoteMedia.svelte';
   import NoteReactions from './NoteReactions.svelte';
   import ReactionButton from '$components/reaction/ReactionButton.svelte';
+  import NoteMoreMenu from './NoteMoreMenu.svelte';
+  import InlineComposer from '$components/composer/InlineComposer.svelte';
   import UserDetailModal from '$components/user/UserDetailModal.svelte';
 
   type Props = {
@@ -112,6 +114,77 @@
     if (reaction) {
       addReactionHistory(reaction);
     }
+  }
+
+  // ── ツールバー状態 ──
+
+  // リプライ / 引用リノート用インラインコンポーザー
+  let composerMode = $state<'reply' | 'quote' | null>(null);
+
+  // リノートメニュー
+  let renoteMenuVisible = $state(false);
+  let renoteMenuStyle = $state('');
+  let renoteBusy = $state(false);
+
+  // その他メニュー
+  let moreMenuVisible = $state(false);
+  let moreMenuStyle = $state('');
+
+  function computePopupPosition(mouseX: number, mouseY: number): string {
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const spaceBelow = viewportHeight - mouseY;
+    const top = spaceBelow >= 200 ? `${mouseY + 4}px` : `${mouseY - 200}px`;
+    const left = `${Math.max(0, Math.min(mouseX, viewportWidth - 240))}px`;
+    return `top: ${top}; left: ${left};`;
+  }
+
+  // リプライ
+  function handleReply() {
+    composerMode = composerMode === 'reply' ? null : 'reply';
+  }
+
+  // リノートメニュー表示
+  function handleRenoteClick(e: MouseEvent) {
+    renoteMenuStyle = computePopupPosition(e.clientX, e.clientY);
+    renoteMenuVisible = true;
+  }
+
+  // 純リノート実行
+  async function doRenote() {
+    if (!runtime || renoteBusy) return;
+    renoteBusy = true;
+    renoteMenuVisible = false;
+    try {
+      await (runtime.cli as any).request('notes/create', {
+        renoteId: displayNote.id,
+      });
+    } catch (err) {
+      console.error('[NoteCard] Renote失敗:', err);
+    } finally {
+      renoteBusy = false;
+    }
+  }
+
+  // 引用リノート
+  function doQuote() {
+    renoteMenuVisible = false;
+    composerMode = composerMode === 'quote' ? null : 'quote';
+  }
+
+  // その他メニュー表示
+  function handleMoreClick(e: MouseEvent) {
+    moreMenuStyle = computePopupPosition(e.clientX, e.clientY);
+    moreMenuVisible = true;
+  }
+
+  // コンポーザー完了/キャンセル
+  function handleComposerComplete() {
+    composerMode = null;
+  }
+
+  function handleComposerCancel() {
+    composerMode = null;
   }
 
   // ユーザー詳細モーダル
@@ -245,9 +318,50 @@
       />
     {/if}
 
-    <!-- タブバー (depth=0のみ) -->
+    <!-- ツールバー (depth=0のみ) -->
     {#if depth === 0 && runtime}
       <div class="note-tabs flex items-center gap-1 mt-1.5 pt-1 border-t border-base-300/30">
+        <!-- リプライボタン -->
+        <button
+          class="toolbar-btn inline-flex items-center justify-center w-6 h-6 rounded
+            text-base-content/30 hover:text-info/70 hover:bg-info/10
+            transition-all duration-150
+            {composerMode === 'reply' ? 'text-info/70 bg-info/10' : ''}"
+          title="リプライ"
+          aria-label="リプライ"
+          onclick={handleReply}
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <!-- リノートボタン -->
+        <button
+          class="toolbar-btn inline-flex items-center justify-center w-6 h-6 rounded
+            text-base-content/30 hover:text-success/70 hover:bg-success/10
+            transition-all duration-150
+            {renoteMenuVisible || composerMode === 'quote' ? 'text-success/70 bg-success/10' : ''}
+            {renoteBusy ? 'opacity-40 cursor-not-allowed' : ''}"
+          title="リノート"
+          aria-label="リノート"
+          disabled={renoteBusy}
+          onclick={handleRenoteClick}
+        >
+          {#if renoteBusy}
+            <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/>
+            </svg>
+          {:else}
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M17 1l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 11V9a4 4 0 014-4h14" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 23l-4-4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 13v2a4 4 0 01-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          {/if}
+        </button>
+
         <!-- リアクションボタン -->
         <ReactionButton
           noteId={displayNote.id}
@@ -258,8 +372,99 @@
           onreacted={handleReacted}
         />
 
-        <!-- 将来の拡張用スペース -->
+        <!-- スペーサー -->
+        <div class="flex-1"></div>
+
+        <!-- その他ボタン -->
+        <button
+          class="toolbar-btn inline-flex items-center justify-center w-6 h-6 rounded
+            text-base-content/30 hover:text-base-content/60 hover:bg-base-200
+            transition-all duration-150
+            {moreMenuVisible ? 'text-base-content/60 bg-base-200' : ''}"
+          title="その他"
+          aria-label="その他"
+          onclick={handleMoreClick}
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <circle cx="12" cy="12" r="1"/>
+            <circle cx="19" cy="12" r="1"/>
+            <circle cx="5" cy="12" r="1"/>
+          </svg>
+        </button>
       </div>
+
+      <!-- リノートメニュー -->
+      {#if renoteMenuVisible}
+        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+        <div class="fixed inset-0 z-40" onclick={() => { renoteMenuVisible = false; }}>
+          <div
+            class="fixed z-50 rounded-lg shadow-xl border border-base-300 bg-base-100 py-1"
+            style="min-width: 160px; {renoteMenuStyle}"
+            role="menu"
+            aria-label="リノートメニュー"
+            onkeydown={(e) => { if (e.key === 'Escape') renoteMenuVisible = false; }}
+          >
+            <button
+              class="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-left hover:bg-base-200 transition-colors"
+              onclick={doRenote}
+              role="menuitem"
+            >
+              <svg class="w-3.5 h-3.5 shrink-0 text-success/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M17 1l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 11V9a4 4 0 014-4h14" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 23l-4-4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 13v2a4 4 0 01-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Renote
+            </button>
+            <button
+              class="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-left hover:bg-base-200 transition-colors"
+              onclick={doQuote}
+              role="menuitem"
+            >
+              <svg class="w-3.5 h-3.5 shrink-0 text-success/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              引用Renote
+            </button>
+          </div>
+        </div>
+      {/if}
+
+      <!-- その他メニュー -->
+      {#if moreMenuVisible}
+        <NoteMoreMenu
+          noteId={displayNote.id}
+          noteText={displayNote.text ?? null}
+          hostUrl={hostUrl ?? ''}
+          {runtime}
+          positionStyle={moreMenuStyle}
+          onclose={() => { moreMenuVisible = false; }}
+        />
+      {/if}
+
+      <!-- インラインコンポーザー (リプライ / 引用Renote) -->
+      {#if composerMode === 'reply'}
+        <div class="mt-1.5">
+          <InlineComposer
+            {runtime}
+            replyId={displayNote.id}
+            replyNote={displayNote}
+            oncomplete={handleComposerComplete}
+            oncancel={handleComposerCancel}
+          />
+        </div>
+      {:else if composerMode === 'quote'}
+        <div class="mt-1.5">
+          <InlineComposer
+            {runtime}
+            renoteId={displayNote.id}
+            renoteNote={displayNote}
+            oncomplete={handleComposerComplete}
+            oncancel={handleComposerCancel}
+          />
+        </div>
+      {/if}
     {/if}
 
   {/if}
@@ -285,5 +490,9 @@
 
   .quote-block :global(.note-card:hover) {
     background-color: transparent;
+  }
+
+  .toolbar-btn {
+    transition: transform 150ms ease, color 150ms ease, background-color 150ms ease;
   }
 </style>
