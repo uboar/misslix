@@ -4,3 +4,4 @@ dist/
 *.local
 .env
 docker/setup/credentials.json
+.claude/worktrees/
