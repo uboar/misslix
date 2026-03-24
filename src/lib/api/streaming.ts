@@ -22,11 +22,15 @@ export type TimelineConnection = {
   subNote: (noteId: string) => void;
   /** ノートのリアクション更新の購読を解除する */
   unsubNote: (noteId: string) => void;
+  /** WebSocketを手動で再接続する */
+  reconnect: () => void;
 };
 
 type TimelineCallbacks = {
   onNote: (note: entities.Note) => void;
   onNoteUpdated?: (data: NoteUpdatedData) => void;
+  /** WebSocket接続状態が変化したときに呼ばれる */
+  onStateChange?: (connected: boolean) => void;
 };
 
 /**
@@ -70,11 +74,30 @@ export function connectTimeline(
     (runtime.stream as any).on('noteUpdated', noteUpdatedHandler);
   }
 
+  // WebSocket接続状態の変化を監視
+  const connectedHandler = () => {
+    callbacks.onStateChange?.(true);
+  };
+  const disconnectedHandler = () => {
+    callbacks.onStateChange?.(false);
+  };
+
+  if (callbacks.onStateChange) {
+    (runtime.stream as any).on('_connected_', connectedHandler);
+    (runtime.stream as any).on('_disconnected_', disconnectedHandler);
+    // 初期状態をコールバックで通知
+    callbacks.onStateChange(runtime.stream.state === 'connected');
+  }
+
   return {
     disconnect() {
       connection.dispose();
       if (callbacks.onNoteUpdated) {
         (runtime.stream as any).off('noteUpdated', noteUpdatedHandler);
+      }
+      if (callbacks.onStateChange) {
+        (runtime.stream as any).off('_connected_', connectedHandler);
+        (runtime.stream as any).off('_disconnected_', disconnectedHandler);
       }
     },
 
@@ -84,6 +107,11 @@ export function connectTimeline(
 
     unsubNote(noteId: string) {
       (runtime.stream as any).send('unsubNote', { id: noteId });
+    },
+
+    reconnect() {
+      // misskey-js の Stream が内部で持つ ReconnectingWebSocket の reconnect() を呼ぶ
+      (runtime.stream as any).stream?.reconnect?.();
     },
   };
 }

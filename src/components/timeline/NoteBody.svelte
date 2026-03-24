@@ -138,19 +138,23 @@
 
         <!-- 展開ボタン (グラデーション外に配置) -->
         {#if config.noteDisplay.collapseEnabled && !contentExpanded && isOverflowing}
-          <button
-            class="mt-0.5 text-[0.6rem] text-primary/70 hover:text-primary transition-colors"
-            onclick={toggleContent}
-          >
-            続きを読む
-          </button>
+          <div class="flex justify-center mt-1">
+            <button
+              class="btn btn-xs btn-ghost px-4 py-1 h-auto min-h-0 text-xs text-primary/70 hover:text-primary hover:bg-primary/10 transition-colors rounded-full border border-primary/20 hover:border-primary/40"
+              onclick={toggleContent}
+            >
+              続きを読む
+            </button>
+          </div>
         {:else if config.noteDisplay.collapseEnabled && contentExpanded && isOverflowing}
-          <button
-            class="mt-0.5 text-[0.6rem] text-base-content/40 hover:text-base-content/60 transition-colors"
-            onclick={toggleContent}
-          >
-            折り畳む
-          </button>
+          <div class="flex justify-center mt-1">
+            <button
+              class="btn btn-xs btn-ghost px-4 py-1 h-auto min-h-0 text-xs text-base-content/40 hover:text-base-content/60 hover:bg-base-content/5 transition-colors rounded-full border border-base-content/10 hover:border-base-content/20"
+              onclick={toggleContent}
+            >
+              折り畳む
+            </button>
+          </div>
         {/if}
       </div>
     {/if}

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { entities } from 'misskey-js';
   import type { ColumnConfig, AccountRuntime } from '$lib/types';
+  import { settingsStore } from '$lib/stores/settings.svelte';
   import { checkMute } from '$lib/utils/mute';
   import { formatShortTime } from '$lib/utils/date';
   import { addReactionHistory } from '$lib/utils/reactionHistory';
@@ -230,7 +231,7 @@
 
     <!-- メディア -->
     {#if hasMedia}
-      <NoteMedia files={mediaFiles} {config} />
+      <NoteMedia files={mediaFiles} {config} mediaDisplayMode={settingsStore.settings.mediaDisplayMode} />
     {/if}
 
     <!-- リアクション表示 -->

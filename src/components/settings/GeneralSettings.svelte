@@ -35,6 +35,11 @@
       settingsStore.update({ notificationBuffer: value });
     }
   }
+
+  function onMediaDisplayModeChange(e: Event) {
+    const value = (e.target as HTMLInputElement).checked ? 'grid' : 'carousel';
+    settingsStore.update({ mediaDisplayMode: value as 'grid' | 'carousel' });
+  }
 </script>
 
 <div class="space-y-5">
@@ -95,6 +100,23 @@
         class="toggle toggle-primary"
         checked={settings.autoFetch}
         onchange={onAutoFetchChange}
+      />
+    </label>
+  </div>
+
+  <!-- メディア表示モード -->
+  <div class="form-control">
+    <label class="label cursor-pointer" for="media-grid-toggle">
+      <div class="flex flex-col gap-0.5">
+        <span class="label-text">メディアをグリッド表示</span>
+        <span class="text-[0.65rem] text-base-content/50">ONでX風のグリッド、OFFでカルーセル（従来）</span>
+      </div>
+      <input
+        id="media-grid-toggle"
+        type="checkbox"
+        class="toggle toggle-primary"
+        checked={settings.mediaDisplayMode !== 'carousel'}
+        onchange={onMediaDisplayModeChange}
       />
     </label>
   </div>

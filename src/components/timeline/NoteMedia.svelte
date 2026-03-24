@@ -1,14 +1,15 @@
 <script lang="ts">
   import type { entities } from 'misskey-js';
-  import type { ColumnConfig } from '$lib/types';
+  import type { ColumnConfig, MediaDisplayMode } from '$lib/types';
   import MediaModal from './MediaModal.svelte';
 
   type Props = {
     files: entities.DriveFile[];
     config: ColumnConfig;
+    mediaDisplayMode?: MediaDisplayMode;
   };
 
-  let { files, config }: Props = $props();
+  let { files, config, mediaDisplayMode = 'grid' }: Props = $props();
 
   // メディアサイズ (px)
   const mediaSize = $derived(config.noteDisplay.mediaSize);
@@ -92,166 +93,260 @@
     modalOpen = true;
   }
 
-  // 読み込み状態 (スケルトン表示用)
-  let imageLoaded = $state<Record<string, boolean>>({});
-  let videoLoaded = $state<Record<string, boolean>>({});
-
-  function markImageLoaded(fileId: string) {
-    imageLoaded = { ...imageLoaded, [fileId]: true };
+  // グリッドレイアウト計算
+  // imageFiles の件数に応じてグリッドクラスを返す
+  function getGridClass(count: number): string {
+    if (count === 2) return 'grid-2';
+    if (count === 3) return 'grid-3';
+    if (count === 4) return 'grid-4';
+    return 'grid-5plus';
   }
 
-  function markVideoLoaded(fileId: string) {
-    videoLoaded = { ...videoLoaded, [fileId]: true };
-  }
+  // 5枚以上の場合は最初の4枚を表示し、残りは+N表示
+  const gridImageFiles = $derived(imageFiles.slice(0, 4));
+  const extraCount = $derived(Math.max(0, imageFiles.length - 4));
 </script>
 
 {#if files.length > 0}
   <div class="note-media mt-1.5 flex flex-col gap-1">
 
-    <!-- 画像カルーセル -->
-    {#if imageFiles.length === 1}
-      <!-- 単一画像 -->
-      {@const file = imageFiles[0]}
-      <div
-        class="relative overflow-hidden rounded-md bg-base-300/40 {!imageLoaded[file.id] ? 'animate-pulse' : ''}"
-        style="{imageLoaded[file.id] ? 'max-height' : 'height'}: {mediaSize}px;"
-      >
-        {#if shouldBlur(file)}
-          <!-- NSFWぼかし -->
-          <div
-            class="relative cursor-pointer"
-            onclick={() => revealNsfw(file.id)}
-            role="button"
-            tabindex="0"
-            onkeydown={(e) => e.key === 'Enter' && revealNsfw(file.id)}
-            aria-label="センシティブなコンテンツ — クリックして表示"
-          >
-            <img
-              src={file.thumbnailUrl ?? file.url}
-              alt={file.comment || file.name}
-              class="w-full object-cover blur-xl scale-105 transition-all duration-300"
-              style="max-height: {mediaSize}px;"
-              loading="lazy"
-              onload={() => markImageLoaded(file.id)}
-              onerror={() => markImageLoaded(file.id)}
-            />
-            <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
-              <svg class="w-5 h-5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/>
-                <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
-              </svg>
-              <span class="text-[0.6rem] text-base-content/60 font-medium">NSFW — タップして表示</span>
-            </div>
-          </div>
-        {:else}
-          <button
-            class="w-full cursor-pointer border-0 bg-transparent p-0"
-            onclick={() => openModal(0)}
-            aria-label="画像を拡大表示"
-          >
-            <img
-              src={file.thumbnailUrl ?? file.url}
-              alt={file.comment || file.name}
-              class="w-full object-contain rounded-md transition-opacity duration-300 {imageLoaded[file.id] ? 'opacity-100 hover:opacity-90' : 'opacity-0'}"
-              style="max-height: {mediaSize}px;"
-              loading="lazy"
-              onload={() => markImageLoaded(file.id)}
-              onerror={() => markImageLoaded(file.id)}
-            />
-          </button>
-        {/if}
-      </div>
-
-    {:else if imageFiles.length > 1}
-      <!-- 複数画像カルーセル -->
-      <div
-        class="relative overflow-hidden rounded-md bg-base-300/40 {!imageLoaded[currentCarouselFile?.id] ? 'animate-pulse' : ''}"
-        style="{imageLoaded[currentCarouselFile?.id] ? 'max-height' : 'height'}: {mediaSize}px;"
-        ontouchstart={handleTouchStart}
-        ontouchmove={handleTouchMove}
-        ontouchend={handleTouchEnd}
-        role="presentation"
-      >
-        <div class="relative">
-          {#if shouldBlur(currentCarouselFile)}
+    {#if mediaDisplayMode === 'grid'}
+      <!-- グリッドモード -->
+      {#if imageFiles.length === 1}
+        <!-- 単一画像 -->
+        {@const file = imageFiles[0]}
+        <div class="relative overflow-hidden rounded-md bg-base-300/30" style="max-height: {mediaSize}px;">
+          {#if shouldBlur(file)}
             <div
               class="relative cursor-pointer"
-              onclick={() => revealNsfw(currentCarouselFile.id)}
+              onclick={() => revealNsfw(file.id)}
               role="button"
               tabindex="0"
-              onkeydown={(e) => e.key === 'Enter' && revealNsfw(currentCarouselFile.id)}
+              onkeydown={(e) => e.key === 'Enter' && revealNsfw(file.id)}
               aria-label="センシティブなコンテンツ — クリックして表示"
             >
               <img
-                src={currentCarouselFile.thumbnailUrl ?? currentCarouselFile.url}
-                alt={currentCarouselFile.comment || currentCarouselFile.name}
-                class="w-full object-cover blur-xl scale-105"
+                src={file.thumbnailUrl ?? file.url}
+                alt={file.comment || file.name}
+                class="w-full object-cover blur-xl scale-105 transition-all duration-300"
                 style="max-height: {mediaSize}px;"
                 loading="lazy"
-                onload={() => markImageLoaded(currentCarouselFile.id)}
-                onerror={() => markImageLoaded(currentCarouselFile.id)}
               />
               <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
                 <svg class="w-5 h-5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/>
                   <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
                 </svg>
-                <span class="text-[0.6rem] text-base-content/60">NSFW — タップして表示</span>
+                <span class="text-[0.6rem] text-base-content/60 font-medium">NSFW — タップして表示</span>
               </div>
             </div>
           {:else}
             <button
               class="w-full cursor-pointer border-0 bg-transparent p-0"
-              onclick={() => openModal(currentIndex)}
+              onclick={() => openModal(0)}
               aria-label="画像を拡大表示"
-              style="transform: translateX({isSwiping ? touchDeltaX * 0.3 : 0}px); transition: {isSwiping ? 'none' : 'transform 0.2s ease'};"
             >
               <img
-                src={currentCarouselFile.thumbnailUrl ?? currentCarouselFile.url}
-                alt={currentCarouselFile.comment || currentCarouselFile.name}
-                class="w-full object-contain rounded-md transition-opacity duration-300 {imageLoaded[currentCarouselFile.id] ? 'opacity-100 hover:opacity-90' : 'opacity-0'}"
+                src={file.thumbnailUrl ?? file.url}
+                alt={file.comment || file.name}
+                class="w-full object-contain rounded-md transition-opacity hover:opacity-90"
                 style="max-height: {mediaSize}px;"
                 loading="lazy"
-                onload={() => markImageLoaded(currentCarouselFile.id)}
-                onerror={() => markImageLoaded(currentCarouselFile.id)}
               />
             </button>
           {/if}
+        </div>
 
-          <!-- カルーセルナビゲーション -->
-          {#if imageFiles.length > 1}
-            <button
-              class="absolute left-1 top-1/2 -translate-y-1/2 btn btn-circle btn-xs bg-base-100/70 hover:bg-base-100 border-0"
-              onclick={prev}
-              aria-label="前の画像"
-            >
-              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <button
-              class="absolute right-1 top-1/2 -translate-y-1/2 btn btn-circle btn-xs bg-base-100/70 hover:bg-base-100 border-0"
-              onclick={next}
-              aria-label="次の画像"
-            >
-              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-
-            <!-- インジケーター -->
-            <div class="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-              {#each imageFiles as _, i}
+      {:else if imageFiles.length > 1}
+        <!-- 複数画像グリッド -->
+        <div
+          class="media-grid {getGridClass(imageFiles.length)} rounded-md overflow-hidden"
+          style="max-height: {mediaSize}px;"
+        >
+          {#each gridImageFiles as file, i (file.id)}
+            <div class="media-grid-item relative overflow-hidden bg-base-300/30 {imageFiles.length === 3 && i === 0 ? 'grid-item-large' : ''}">
+              {#if shouldBlur(file)}
+                <div
+                  class="w-full h-full relative cursor-pointer"
+                  onclick={() => revealNsfw(file.id)}
+                  role="button"
+                  tabindex="0"
+                  onkeydown={(e) => e.key === 'Enter' && revealNsfw(file.id)}
+                  aria-label="センシティブなコンテンツ — クリックして表示"
+                >
+                  <img
+                    src={file.thumbnailUrl ?? file.url}
+                    alt={file.comment || file.name}
+                    class="w-full h-full object-cover blur-xl scale-105 transition-all duration-300"
+                    loading="lazy"
+                  />
+                  <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
+                    <svg class="w-4 h-4 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/>
+                      <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
+                    </svg>
+                    <span class="text-[0.55rem] text-base-content/60 font-medium">NSFW</span>
+                  </div>
+                </div>
+              {:else}
                 <button
-                  class="w-1.5 h-1.5 rounded-full transition-colors {i === currentIndex ? 'bg-white' : 'bg-white/40'}"
-                  onclick={() => { currentIndex = i; }}
-                  aria-label={`画像 ${i + 1}`}
-                ></button>
-              {/each}
+                  class="w-full h-full cursor-pointer border-0 bg-transparent p-0 relative"
+                  onclick={() => openModal(i)}
+                  aria-label="画像を拡大表示"
+                >
+                  <img
+                    src={file.thumbnailUrl ?? file.url}
+                    alt={file.comment || file.name}
+                    class="w-full h-full object-cover transition-opacity hover:opacity-90"
+                    loading="lazy"
+                  />
+                  <!-- 5枚以上の最後のセルに +N バッジ -->
+                  {#if i === 3 && extraCount > 0}
+                    <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span class="text-white font-bold text-lg">+{extraCount}</span>
+                    </div>
+                  {/if}
+                </button>
+              {/if}
             </div>
+          {/each}
+        </div>
+      {/if}
+
+    {:else}
+      <!-- カルーセルモード (従来通り) -->
+      {#if imageFiles.length === 1}
+        <!-- 単一画像 -->
+        {@const file = imageFiles[0]}
+        <div class="relative overflow-hidden rounded-md bg-base-300/30" style="max-height: {mediaSize}px;">
+          {#if shouldBlur(file)}
+            <div
+              class="relative cursor-pointer"
+              onclick={() => revealNsfw(file.id)}
+              role="button"
+              tabindex="0"
+              onkeydown={(e) => e.key === 'Enter' && revealNsfw(file.id)}
+              aria-label="センシティブなコンテンツ — クリックして表示"
+            >
+              <img
+                src={file.thumbnailUrl ?? file.url}
+                alt={file.comment || file.name}
+                class="w-full object-cover blur-xl scale-105 transition-all duration-300"
+                style="max-height: {mediaSize}px;"
+                loading="lazy"
+              />
+              <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
+                <svg class="w-5 h-5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/>
+                  <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
+                </svg>
+                <span class="text-[0.6rem] text-base-content/60 font-medium">NSFW — タップして表示</span>
+              </div>
+            </div>
+          {:else}
+            <button
+              class="w-full cursor-pointer border-0 bg-transparent p-0"
+              onclick={() => openModal(0)}
+              aria-label="画像を拡大表示"
+            >
+              <img
+                src={file.thumbnailUrl ?? file.url}
+                alt={file.comment || file.name}
+                class="w-full object-contain rounded-md transition-opacity hover:opacity-90"
+                style="max-height: {mediaSize}px;"
+                loading="lazy"
+              />
+            </button>
           {/if}
         </div>
-      </div>
+
+      {:else if imageFiles.length > 1}
+        <!-- 複数画像カルーセル -->
+        <div
+          class="relative overflow-hidden rounded-md bg-base-300/30"
+          style="max-height: {mediaSize}px;"
+          ontouchstart={handleTouchStart}
+          ontouchmove={handleTouchMove}
+          ontouchend={handleTouchEnd}
+          role="presentation"
+        >
+          <div class="relative">
+            {#if shouldBlur(currentCarouselFile)}
+              <div
+                class="relative cursor-pointer"
+                onclick={() => revealNsfw(currentCarouselFile.id)}
+                role="button"
+                tabindex="0"
+                onkeydown={(e) => e.key === 'Enter' && revealNsfw(currentCarouselFile.id)}
+                aria-label="センシティブなコンテンツ — クリックして表示"
+              >
+                <img
+                  src={currentCarouselFile.thumbnailUrl ?? currentCarouselFile.url}
+                  alt={currentCarouselFile.comment || currentCarouselFile.name}
+                  class="w-full object-cover blur-xl scale-105"
+                  style="max-height: {mediaSize}px;"
+                  loading="lazy"
+                />
+                <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
+                  <svg class="w-5 h-5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
+                  </svg>
+                  <span class="text-[0.6rem] text-base-content/60">NSFW — タップして表示</span>
+                </div>
+              </div>
+            {:else}
+              <button
+                class="w-full cursor-pointer border-0 bg-transparent p-0"
+                onclick={() => openModal(currentIndex)}
+                aria-label="画像を拡大表示"
+                style="transform: translateX({isSwiping ? touchDeltaX * 0.3 : 0}px); transition: {isSwiping ? 'none' : 'transform 0.2s ease'};"
+              >
+                <img
+                  src={currentCarouselFile.thumbnailUrl ?? currentCarouselFile.url}
+                  alt={currentCarouselFile.comment || currentCarouselFile.name}
+                  class="w-full object-contain rounded-md transition-opacity hover:opacity-90"
+                  style="max-height: {mediaSize}px;"
+                  loading="lazy"
+                />
+              </button>
+            {/if}
+
+            <!-- カルーセルナビゲーション -->
+            {#if imageFiles.length > 1}
+              <button
+                class="absolute left-1 top-1/2 -translate-y-1/2 btn btn-circle btn-xs bg-base-100/70 hover:bg-base-100 border-0"
+                onclick={prev}
+                aria-label="前の画像"
+              >
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button
+                class="absolute right-1 top-1/2 -translate-y-1/2 btn btn-circle btn-xs bg-base-100/70 hover:bg-base-100 border-0"
+                onclick={next}
+                aria-label="次の画像"
+              >
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+
+              <!-- インジケーター -->
+              <div class="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+                {#each imageFiles as _, i}
+                  <button
+                    class="w-1.5 h-1.5 rounded-full transition-colors {i === currentIndex ? 'bg-white' : 'bg-white/40'}"
+                    onclick={() => { currentIndex = i; }}
+                    aria-label={`画像 ${i + 1}`}
+                  ></button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
     {/if}
 
     <!-- 動画・音声・その他ファイル -->
@@ -275,27 +370,13 @@
             </div>
           {:else}
             <!-- svelte-ignore a11y_media_has_caption -->
-            <div
-              class="relative {!videoLoaded[file.id] ? 'animate-pulse bg-base-300/40 rounded-md' : ''}"
-              style="{videoLoaded[file.id] ? '' : `height: ${mediaSize}px;`}"
-            >
-              <video
-                src={file.url}
-                controls
-                preload="metadata"
-                class="w-full rounded-md transition-opacity duration-300 {videoLoaded[file.id] ? 'opacity-100' : 'opacity-0'}"
-                style="max-height: {mediaSize}px;"
-                onloadedmetadata={() => markVideoLoaded(file.id)}
-                onerror={() => markVideoLoaded(file.id)}
-              ></video>
-              {#if !videoLoaded[file.id]}
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <svg class="w-8 h-8 text-base-content/20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                </div>
-              {/if}
-            </div>
+            <video
+              src={file.url}
+              controls
+              preload="metadata"
+              class="w-full rounded-md"
+              style="max-height: {mediaSize}px;"
+            ></video>
           {/if}
         {:else if isAudio(file)}
           <!-- 音声プレーヤー -->
@@ -340,3 +421,54 @@
     onclose={() => { modalOpen = false; }}
   />
 {/if}
+
+<style>
+  /* グリッドレイアウト */
+  .media-grid {
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  /* 2枚: 左右並べ */
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  /* 3枚: 左に大きく1枚、右に上下2枚 */
+  .grid-3 {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .grid-3 .grid-item-large {
+    grid-row: 1 / 3;
+  }
+
+  /* 4枚: 2x2グリッド */
+  .grid-4 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  /* 5枚以上: 最初の4枚を2x2で表示し、4枚目に +N バッジ */
+  .grid-5plus {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .media-grid-item {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .media-grid-item img {
+    display: block;
+  }
+
+  .media-grid-item button {
+    display: block;
+  }
+</style>

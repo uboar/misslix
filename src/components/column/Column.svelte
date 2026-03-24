@@ -4,6 +4,7 @@
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import { connectTimeline } from '$lib/api/streaming';
   import type { NoteUpdatedData } from '$lib/api/streaming';
+  import { accountStore } from '$lib/stores/accounts.svelte';
   import ColumnHeader from './ColumnHeader.svelte';
   import { getEmojiMap } from '$lib/emoji/cache';
   import ColumnFooter from './ColumnFooter.svelte';
@@ -21,6 +22,9 @@
   };
 
   let { config, runtime, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null }: Props = $props();
+
+  // アカウント情報 (ColumnFooterのリンク集に使用)
+  let account = $derived(accountStore.findById(config.accountId));
 
   // NoteList コンポーネント参照
   let noteList = $state<ReturnType<typeof NoteList> | null>(null);
@@ -64,6 +68,7 @@
   // ストリーミング接続
   import type { TimelineConnection } from '$lib/api/streaming';
   let connection = $state<TimelineConnection | null>(null);
+  let wsConnected = $state(true);
 
   $effect(() => {
     if (!runtime || collapsed) {
@@ -89,6 +94,9 @@
           noteList?.applyUnreaction(data.id, body.reaction, body.userId);
         }
       },
+      onStateChange(connected) {
+        wsConnected = connected;
+      },
     });
     connection = conn;
 
@@ -96,6 +104,10 @@
       conn.disconnect();
     };
   });
+
+  function handleReconnect() {
+    connection?.reconnect();
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -160,7 +172,7 @@
     </div>
   {:else}
     <!-- 通常表示 -->
-    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} emojis={emojiMap} />
+    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} emojis={emojiMap} {wsConnected} onreconnect={handleReconnect} />
 
     <!-- メインエリア -->
     {#if runtime}
@@ -181,6 +193,6 @@
       </div>
     {/if}
 
-    <ColumnFooter {config} {runtime} />
+    <ColumnFooter {config} {runtime} {account} />
   {/if}
 </div>

@@ -56,4 +56,24 @@ describe('SettingsStore', () => {
     const persisted = JSON.parse(localStorage.getItem('misslix:settings')!);
     expect(persisted.notificationBuffer).toBe(50);
   });
+
+  it('mediaDisplayMode defaults to grid', async () => {
+    const store = await getStore();
+    expect(store.settings.mediaDisplayMode).toBe('grid');
+  });
+
+  it('mediaDisplayMode can be set to carousel', async () => {
+    const store = await getStore();
+    store.update({ mediaDisplayMode: 'carousel' });
+    expect(store.settings.mediaDisplayMode).toBe('carousel');
+    const persisted = JSON.parse(localStorage.getItem('misslix:settings')!);
+    expect(persisted.mediaDisplayMode).toBe('carousel');
+  });
+
+  it('mediaDisplayMode restores from localStorage', async () => {
+    const saved = { ...DEFAULT_SETTINGS, mediaDisplayMode: 'carousel' };
+    localStorage.setItem('misslix:settings', JSON.stringify(saved));
+    const store = await getStore();
+    expect(store.settings.mediaDisplayMode).toBe('carousel');
+  });
 });

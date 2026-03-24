@@ -30,6 +30,19 @@
     ...(user.emojis as Record<string, string> | undefined ?? {}),
   });
 
+  // 外部サーバーユーザーかどうか
+  const isRemote = $derived(!!user.host);
+
+  // サーバー表示名 (instance.name があればそれを使い、なければ host)
+  const serverName = $derived(
+    isRemote
+      ? (user.instance?.name || user.host)
+      : null
+  );
+
+  // サーバーテーマカラー
+  const serverThemeColor = $derived(user.instance?.themeColor ?? null);
+
   function handleClick() {
     if (onclick) onclick(user);
   }
@@ -51,13 +64,27 @@
 
   <!-- ユーザー情報 -->
   <div class="flex flex-col min-w-0 leading-tight">
-    <!-- 表示名 -->
-    <span
-      class="text-xs font-semibold text-base-content truncate"
-      title={displayName}
-    >
-      <MfmRenderer text={displayName} emojis={mergedEmojis} isInline />
-    </span>
+    <!-- 表示名 + サーバーバッジ行 -->
+    <div class="flex items-center gap-1 min-w-0">
+      <span
+        class="text-xs font-semibold text-base-content truncate"
+        title={displayName}
+      >
+        <MfmRenderer text={displayName} emojis={mergedEmojis} isInline />
+      </span>
+
+      <!-- 外部サーバーバッジ -->
+      {#if isRemote && serverName}
+        <span
+          class="server-badge shrink-0 inline-flex items-center px-1 py-px rounded text-[0.55rem] font-medium leading-none opacity-80"
+          style="background-color: {serverThemeColor ?? '#6b7280'}1a; color: {serverThemeColor ?? '#6b7280'}; border: 1px solid {serverThemeColor ?? '#6b7280'}40;"
+          title={user.host ?? ''}
+          aria-label="サーバー: {serverName}"
+        >
+          {serverName}
+        </span>
+      {/if}
+    </div>
 
     <!-- ハンドル -->
     <span

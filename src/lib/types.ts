@@ -99,6 +99,8 @@ export type Visibility = 'public' | 'home' | 'followers' | 'specified';
 
 // ─── 設定 ───
 
+export type MediaDisplayMode = 'grid' | 'carousel';
+
 export type SettingsType = {
   theme: string;
   emojiSpace: boolean;
@@ -107,6 +109,7 @@ export type SettingsType = {
   notificationBuffer: number;
   muteUsers: string[];
   muteWords: string[];
+  mediaDisplayMode: MediaDisplayMode;
 };
 
 export const DEFAULT_SETTINGS: SettingsType = {
@@ -117,6 +120,7 @@ export const DEFAULT_SETTINGS: SettingsType = {
   notificationBuffer: 100,
   muteUsers: [],
   muteWords: [],
+  mediaDisplayMode: 'grid',
 };
 
 // ─── APIエンドポイント情報 ───
