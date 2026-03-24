@@ -64,31 +64,62 @@
     followers: 'フォロワー',
     specified: 'ダイレクト',
   }[note.visibility] ?? '');
+
+  // ローカルのみ判定
+  const isLocalOnly = $derived(!!(note as entities.Note & { localOnly?: boolean }).localOnly);
 </script>
 
 <div class="note-body text-xs leading-relaxed text-base-content/90">
 
-  <!-- 可視性インジケーター -->
-  {#if visibilityIcon}
-    <span class="inline-flex items-center gap-0.5 text-[0.6rem] text-base-content/40 mb-0.5" title={visibilityLabel}>
-      {#if visibilityIcon === 'home'}
-        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round"/>
-          <polyline points="9,22 9,12 15,12 15,22" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      {:else if visibilityIcon === 'lock'}
-        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      {:else if visibilityIcon === 'mention'}
-        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+  <!-- 可視性インジケーター行 -->
+  {#if visibilityIcon || isLocalOnly}
+    <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+
+      <!-- 可視性アイコン (home / followers / specified) -->
+      {#if visibilityIcon}
+        <span class="inline-flex items-center gap-0.5 text-[0.6rem] text-base-content/40" title={visibilityLabel}>
+          {#if visibilityIcon === 'home'}
+            <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="9,22 9,12 15,12 15,22" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          {:else if visibilityIcon === 'lock'}
+            <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          {:else if visibilityIcon === 'mention'}
+            <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          {/if}
+          <span>{visibilityLabel}</span>
+        </span>
       {/if}
-      <span>{visibilityLabel}</span>
-    </span>
+
+      <!-- ローカルのみ (連合なし) アイコン -->
+      {#if isLocalOnly}
+        <span
+          class="local-only-badge inline-flex items-center gap-0.5 text-[0.6rem] text-info/60 font-medium"
+          title="ローカルのみ (連合なし)"
+          aria-label="ローカルのみのノート"
+        >
+          <!-- wifi-off アイコン: 連合(外部ネットワーク)なしを表現 -->
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16.72 11.06A10.94 10.94 0 0119 12.55" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 12.55a10.94 10.94 0 015.17-2.39" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10.71 5.05A16 16 0 0122.56 9" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M1.42 9a15.91 15.91 0 014.7-2.88" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.53 16.11a6 6 0 016.95 0" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="12" y1="20" x2="12.01" y2="20" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>ローカル</span>
+        </span>
+      {/if}
+
+    </div>
   {/if}
 
   <!-- CW (Content Warning) -->
