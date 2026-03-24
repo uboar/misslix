@@ -104,7 +104,6 @@
   // ストリーミング接続
   import type { TimelineConnection } from '$lib/api/streaming';
   let connection = $state<TimelineConnection | null>(null);
-  let wsConnected = $state(true);
 
   $effect(() => {
     if (!runtime || collapsed) {
@@ -130,9 +129,6 @@
           noteList?.applyUnreaction(data.id, body.reaction, body.userId);
         }
       },
-      onStateChange(connected) {
-        wsConnected = connected;
-      },
     });
     connection = conn;
 
@@ -141,9 +137,7 @@
     };
   });
 
-  function handleReconnect() {
-    connection?.reconnect();
-  }
+
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -211,7 +205,7 @@
     </div>
   {:else}
     <!-- 通常表示 -->
-    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} emojis={emojiMap} {wsConnected} onreconnect={handleReconnect} />
+    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} emojis={emojiMap} />
 
     <!-- メインエリア -->
     {#if runtime}

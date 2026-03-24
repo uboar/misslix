@@ -10,11 +10,9 @@
     ondragstart?: (e: DragEvent) => void;
     ondragend?: (e: DragEvent) => void;
     emojis?: Record<string, string>;
-    wsConnected?: boolean;
-    onreconnect?: () => void;
   };
 
-  let { config, onremove, ontoggle, ondragstart, ondragend, emojis = {}, wsConnected = true, onreconnect }: Props = $props();
+  let { config, onremove, ontoggle, ondragstart, ondragend, emojis = {} }: Props = $props();
 
   const account = $derived(accountStore.findById(config.accountId));
   const accountLabel = $derived(
@@ -135,31 +133,6 @@
     </button>
 
   </div>
-
-  <!-- WebSocket切断バナー -->
-  {#if !wsConnected}
-    <div class="flex items-center justify-between gap-1 px-2 py-1 bg-error/15 border-b border-error/30">
-      <div class="flex items-center gap-1 min-w-0">
-        <!-- 切断アイコン -->
-        <svg class="w-3 h-3 shrink-0 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M18.364 5.636a9 9 0 010 12.728M15.536 8.464a5 5 0 010 7.072M6.343 17.657a9 9 0 010-12.728M9.172 15.536a5 5 0 010-7.072" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M4 4l16 16" stroke-linecap="round" />
-        </svg>
-        <span class="text-[10px] font-medium text-error truncate">切断中</span>
-      </div>
-      <button
-        class="btn btn-error btn-xs h-5 min-h-5 px-1.5 text-[10px] font-medium shrink-0"
-        onclick={onreconnect}
-        aria-label="WebSocketに再接続"
-        title="再接続"
-      >
-        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        再接続
-      </button>
-    </div>
-  {/if}
 
   <!-- カラム設定パネル (インラインドロップダウン) -->
   {#if settingsOpen}

@@ -23,7 +23,7 @@
 </script>
 
 {#if toasts.length > 0}
-  <div class="toast toast-end toast-bottom z-[9999] pointer-events-none">
+  <div class="toast toast-start toast-bottom z-[9999] pointer-events-none">
     {#each toasts as toast (toast.id)}
       <div
         class="alert {TOAST_CLASS[toast.type] ?? 'alert-info'} shadow-lg pointer-events-auto max-w-sm text-sm"
