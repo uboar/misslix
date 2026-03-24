@@ -3,15 +3,17 @@
   import type { entities } from 'misskey-js';
   import type { ColumnConfig } from '$lib/types';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
-  import { Home, Lock, AtSign, GlobeOff } from 'lucide-svelte';
+  import { Home, Lock, AtSign, GlobeOff, Hash } from 'lucide-svelte';
 
   type Props = {
     note: entities.Note;
     config: ColumnConfig;
     emojis?: Record<string, string>;
+    channel?: { id: string; name: string; color: string } | null;
+    hostUrl?: string;
   };
 
-  let { note, config, emojis = {} }: Props = $props();
+  let { note, config, emojis = {}, channel = null, hostUrl = '' }: Props = $props();
 
   // CW展開状態
   let cwExpanded = $state(config.noteDisplay.cwExpanded);
@@ -72,13 +74,29 @@
 
 <div class="note-body text-xs leading-relaxed text-base-content/90">
 
-  <!-- 可視性インジケーター行 -->
-  {#if visibilityIcon || isLocalOnly}
-    <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+  <!-- チャンネル・可視性・ローカルのみ インジケーター行 (横並び) -->
+  {#if channel || visibilityIcon || isLocalOnly}
+    <div class="flex items-center gap-1.5 mb-0.5 flex-wrap min-h-0">
+
+      <!-- チャンネルバッジ -->
+      {#if channel}
+        <a
+          class="inline-flex items-center gap-0.5 px-1 py-0 rounded-full text-[0.6rem] font-medium leading-none transition-all duration-150 hover:opacity-80 shrink-0"
+          style="background-color: {channel.color}18; color: {channel.color}; border: 1px solid {channel.color}30;"
+          href="{hostUrl}/channels/{channel.id}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="チャンネル: {channel.name}"
+          onclick={(e) => e.stopPropagation()}
+        >
+          <Hash class="w-2.5 h-2.5 shrink-0 opacity-80" aria-hidden="true" />
+          <span class="truncate max-w-[10rem]">{channel.name}</span>
+        </a>
+      {/if}
 
       <!-- 可視性アイコン (home / followers / specified) -->
       {#if visibilityIcon}
-        <span class="inline-flex items-center gap-0.5 text-[0.6rem] text-base-content/40" title={visibilityLabel}>
+        <span class="inline-flex items-center gap-0.5 text-[0.6rem] text-base-content/40 shrink-0" title={visibilityLabel}>
           {#if visibilityIcon === 'home'}
             <Home class="w-2.5 h-2.5" aria-hidden="true" />
           {:else if visibilityIcon === 'lock'}
@@ -93,7 +111,7 @@
       <!-- ローカルのみ (連合なし) アイコン -->
       {#if isLocalOnly}
         <span
-          class="local-only-badge inline-flex items-center text-[0.6rem] text-info/60 font-medium"
+          class="local-only-badge inline-flex items-center text-[0.6rem] text-info/60 font-medium shrink-0"
           title="ローカルのみ (連合なし)"
           aria-label="ローカルのみのノート"
         >
