@@ -20,17 +20,6 @@
   let settingsOpen = $state(false);
   let postModalOpen = $state(false);
   let presetModalOpen = $state(false);
-  let presetModalTab = $state<'save' | 'load'>('load');
-
-  function openSavePreset() {
-    presetModalTab = 'save';
-    presetModalOpen = true;
-  }
-
-  function openLoadPreset() {
-    presetModalTab = 'load';
-    presetModalOpen = true;
-  }
 
   let confirmClear = $state(false);
 
@@ -96,13 +85,12 @@
     onpost={() => postModalOpen = true}
     onadd={() => addColumnOpen = true}
     onsettings={() => settingsOpen = true}
-    onsavepreset={openSavePreset}
-    onloadpreset={openLoadPreset}
+    onpreset={() => presetModalOpen = true}
     onclearcolumns={handleClearColumns}
   />
 
   <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} {runtimes} />
-  <PresetModal open={presetModalOpen} onclose={() => presetModalOpen = false} initialTab={presetModalTab} />
+  <PresetModal open={presetModalOpen} onclose={() => presetModalOpen = false} />
   <SettingsModal open={settingsOpen} onclose={() => settingsOpen = false} />
   <PostModal open={postModalOpen} onclose={() => postModalOpen = false} {runtimes} />
   <ToastContainer />
