@@ -129,7 +129,7 @@
 
 <div
   class="emoji-picker-popup flex flex-col border border-base-300 rounded-lg bg-base-100 shadow-xl"
-  style="width: 22rem; max-width: min(22rem, calc(100vw - 1rem)); max-height: 20rem;"
+  style="width: 100%; max-width: min(22rem, calc(100vw - 1rem)); max-height: 20rem;"
   role="dialog"
   aria-label="絵文字ピッカー"
   onkeydown={handleKeydown}
