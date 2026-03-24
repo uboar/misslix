@@ -24,10 +24,11 @@
   // フォロー操作中
   let followBusy = $state(false);
 
-  // ユーザー固有の絵文字をマージ
+  // ユーザー固有の絵文字をマージ (詳細情報取得後に detail.emojis も追加)
   const mergedEmojis = $derived({
     ...emojis,
     ...(user.emojis as Record<string, string> | undefined ?? {}),
+    ...(detail?.emojis as Record<string, string> | undefined ?? {}),
   });
 
   const displayName = $derived(user.name || user.username);
@@ -208,7 +209,7 @@
             <div class="flex gap-2 text-xs">
               <span class="font-semibold text-base-content/60 shrink-0">{field.name}</span>
               <span class="text-base-content/80 break-all min-w-0">
-                <MfmRenderer text={field.value} emojis={mergedEmojis} isInline />
+                <MfmRenderer text={field.value} emojis={mergedEmojis} />
               </span>
             </div>
           {/each}
