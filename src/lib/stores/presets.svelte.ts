@@ -22,7 +22,7 @@ class PresetStore {
     const preset: ColumnPreset = {
       id: crypto.randomUUID(),
       name,
-      columns: structuredClone(columns),
+      columns: $state.snapshot(columns) as import('$lib/types').ColumnConfig[],
       createdAt: Date.now(),
     };
     this.presets.push(preset);
