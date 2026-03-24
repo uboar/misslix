@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import type { entities } from 'misskey-js';
   import type { ColumnConfig } from '$lib/types';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
@@ -23,7 +24,14 @@
 
   $effect(() => {
     if (contentDiv && config.noteDisplay.collapseEnabled) {
-      isOverflowing = contentDiv.scrollHeight > config.noteDisplay.collapseHeight;
+      const el = contentDiv;
+      const collapseHeight = config.noteDisplay.collapseHeight;
+      // DOM確定後に測定してレイアウトシフトを防止
+      tick().then(() => {
+        if (el.isConnected) {
+          isOverflowing = el.scrollHeight > collapseHeight;
+        }
+      });
     }
   });
 

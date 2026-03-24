@@ -164,7 +164,7 @@
     {#if isFnBlur(node.props.name)}
       <span
         class="mfm-blur"
-        style="filter: blur(6px); display: inline-block; cursor: pointer; transition: filter 0.2s;"
+        style="filter: blur(6px); display: inline-block; cursor: pointer;"
         role="button"
         tabindex="0"
         onclick={(e) => { (e.currentTarget as HTMLElement).style.filter = 'none'; }}

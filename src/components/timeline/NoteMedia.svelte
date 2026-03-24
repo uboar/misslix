@@ -128,7 +128,7 @@
               <img
                 src={file.thumbnailUrl ?? file.url}
                 alt={file.comment || file.name}
-                class="w-full object-cover blur-xl scale-105 transition-all duration-300"
+                class="w-full object-cover blur-xl scale-105"
                 style="max-height: {mediaSize}px;"
                 loading="lazy"
               />
@@ -177,7 +177,7 @@
                   <img
                     src={file.thumbnailUrl ?? file.url}
                     alt={file.comment || file.name}
-                    class="w-full h-full object-cover blur-xl scale-105 transition-all duration-300"
+                    class="w-full h-full object-cover blur-xl scale-105"
                     loading="lazy"
                   />
                   <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
@@ -231,7 +231,7 @@
               <img
                 src={file.thumbnailUrl ?? file.url}
                 alt={file.comment || file.name}
-                class="w-full object-cover blur-xl scale-105 transition-all duration-300"
+                class="w-full object-cover blur-xl scale-105"
                 style="max-height: {mediaSize}px;"
                 loading="lazy"
               />
