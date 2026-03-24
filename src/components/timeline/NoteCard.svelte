@@ -74,6 +74,12 @@
   const hasReactions = $derived(Object.keys(reactions).length > 0 && !config.noteDisplay.reactionsHidden);
   const myReaction = $derived(displayNote.myReaction ?? null);
 
+  // チャンネル情報
+  const noteChannel = $derived(
+    (displayNote as entities.Note & { channel?: { id: string; name: string; color: string; isSensitive: boolean; allowRenoteToExternal: boolean; userId: string | null } | null }).channel ?? null
+  );
+  const hasChannel = $derived(!!noteChannel);
+
   // ノート絵文字マップ: ローカル + ノート付属の絵文字 (リモートサーバーの絵文字を含む)
   const noteEmojis = $derived({
     ...emojis,
@@ -282,6 +288,26 @@
         </time>
       </a>
     </div>
+
+    <!-- チャンネルバッジ -->
+    {#if hasChannel && noteChannel && depth === 0}
+      <div class="channel-badge-row mb-1">
+        <a
+          class="channel-badge inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[0.6rem] font-medium leading-none transition-all duration-150 hover:opacity-80"
+          style="background-color: {noteChannel.color}18; color: {noteChannel.color}; border: 1px solid {noteChannel.color}30;"
+          href="{hostUrl}/channels/{noteChannel.id}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="チャンネル: {noteChannel.name}"
+          onclick={(e) => e.stopPropagation()}
+        >
+          <svg class="w-2.5 h-2.5 shrink-0 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="truncate max-w-[12rem]">{noteChannel.name}</span>
+        </a>
+      </div>
+    {/if}
 
     <!-- 本文 -->
     <NoteBody note={displayNote} {config} emojis={noteEmojis} />
