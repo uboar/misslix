@@ -27,6 +27,20 @@
   // アカウント情報 (ColumnFooterのリンク集に使用)
   let account = $derived(accountStore.findById(config.accountId));
 
+  /** HEX背景色に対してコントラストの取れるテキスト色を返す (WCAG相対輝度ベース) */
+  function getContrastTextColor(hex: string): string {
+    const clean = hex.replace('#', '');
+    if (clean.length !== 6) return 'rgba(255,255,255,0.9)';
+    const r = parseInt(clean.slice(0, 2), 16) / 255;
+    const g = parseInt(clean.slice(2, 4), 16) / 255;
+    const b = parseInt(clean.slice(4, 6), 16) / 255;
+    const toLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+    const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    return luminance > 0.179 ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.92)';
+  }
+
+  const collapsedTextColor = $derived(getContrastTextColor(config.color));
+
   // NoteList コンポーネント参照
   let noteList = $state<ReturnType<typeof NoteList> | null>(null);
 
@@ -157,15 +171,13 @@
 >
   <!-- ヘッダー: collapsed時は縦向きに表示 -->
   {#if collapsed}
-    <!-- 折り畳み状態: ヘッダーのみ縦向き -->
-    <div class="flex flex-col items-center w-full h-full overflow-hidden">
-      <!-- アクセントバー (横) -->
-      <div class="accent-bar w-full h-[3px] shrink-0" style="background-color: {config.color};"></div>
-
+    <!-- 折り畳み状態: ヘッダーのみ縦向き (アクセントカラー背景) -->
+    <div class="flex flex-col items-center w-full h-full overflow-hidden" style="background-color: {config.color}; color: {collapsedTextColor};">
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
-        class="flex flex-col items-center flex-1 py-2 gap-2 w-full overflow-hidden cursor-pointer hover:bg-base-200/60 transition-colors"
+        class="flex flex-col items-center flex-1 py-2 gap-2 w-full overflow-hidden cursor-pointer transition-colors"
+        style="background-color: {config.color};"
         draggable="true"
         ondragstart={handleDragStartWrapper}
         ondragend={handleDragEndWrapper}
@@ -173,7 +185,7 @@
         title="展開"
       >
         <!-- 展開アイコン -->
-        <ChevronRight class="w-3 h-3 shrink-0 text-base-content/50" aria-hidden="true" />
+        <ChevronRight class="w-3 h-3 shrink-0 opacity-70" aria-hidden="true" style="color: {collapsedTextColor};" />
 
         <!-- タイムライン名 (縦書き) -->
         <div
@@ -181,9 +193,9 @@
           style="writing-mode: vertical-rl; text-orientation: mixed;"
         >
           <span
-            class="text-xs font-semibold text-base-content/60 select-none truncate"
+            class="text-xs font-semibold select-none truncate opacity-90"
             title={config.customName ? `${config.customName} (${config.channelName})` : config.channelName}
-            style="max-height: 12rem;"
+            style="max-height: 12rem; color: {collapsedTextColor};"
           >
             {config.customName || config.channelName}
           </span>
@@ -191,7 +203,8 @@
 
         <!-- 削除ボタン -->
         <button
-          class="btn btn-ghost btn-xs btn-square text-base-content/30 hover:text-error"
+          class="btn btn-ghost btn-xs btn-square opacity-50 hover:opacity-100"
+          style="color: {collapsedTextColor};"
           onclick={(e) => { e.stopPropagation(); handleRemove(); }}
           aria-label="カラムを削除"
           title="カラムを削除"
