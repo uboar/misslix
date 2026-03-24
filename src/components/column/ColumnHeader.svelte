@@ -24,6 +24,25 @@
 
   let settingsOpen = $state(false);
 
+  /**
+   * HEX カラー文字列から相対輝度を計算し、
+   * 背景が明るければ暗いテキスト色、暗ければ明るいテキスト色を返す。
+   * WCAG 基準の相対輝度 (0.179 を閾値) を使用。
+   */
+  function getContrastTextColor(hex: string): string {
+    const clean = hex.replace('#', '');
+    if (clean.length !== 6) return 'rgba(255,255,255,0.9)';
+    const r = parseInt(clean.slice(0, 2), 16) / 255;
+    const g = parseInt(clean.slice(2, 4), 16) / 255;
+    const b = parseInt(clean.slice(4, 6), 16) / 255;
+    const toLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+    const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    return luminance > 0.179 ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.92)';
+  }
+
+  const headerTextColor = $derived(getContrastTextColor(config.color));
+  const headerBg = $derived(config.color);
+
   const CHANNEL_ICONS: Record<ChannelType, string> = {
     homeTimeline: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
     localTimeline: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
@@ -37,24 +56,21 @@
 </script>
 
 <div class="column-header shrink-0 flex flex-col" style="--accent: {config.color};">
-  <!-- アクセントカラーバー -->
-  <div class="accent-bar h-[3px] w-full" style="background-color: {config.color};"></div>
-
-  <!-- ヘッダー本体 -->
+  <!-- ヘッダー本体 (アクセントカラーを背景に適用) -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="flex items-center gap-1 px-2 py-1.5 bg-base-200 border-b border-base-300 min-h-9"
+    class="flex items-center gap-1 px-2 py-1.5 min-h-9"
+    style="background-color: {headerBg}; color: {headerTextColor};"
     draggable="true"
     ondragstart={ondragstart}
     ondragend={ondragend}
   >
     <!-- ドラッグハンドル -->
-    <GripVertical class="w-3 h-3 shrink-0 opacity-30 cursor-grab active:cursor-grabbing" aria-hidden="true" />
+    <GripVertical class="w-3 h-3 shrink-0 opacity-40 cursor-grab active:cursor-grabbing" aria-hidden="true" />
 
     <!-- チャンネルアイコン -->
     <svg
-      class="w-3.5 h-3.5 shrink-0 opacity-70"
-      style="color: {config.color};"
+      class="w-3.5 h-3.5 shrink-0 opacity-80"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -68,17 +84,18 @@
 
     <!-- タイムライン名 (クリックで折り畳みトグル) -->
     <button
-      class="flex-1 flex items-baseline gap-1 min-w-0 select-none text-left cursor-pointer hover:text-base-content"
+      class="flex-1 flex items-baseline gap-1 min-w-0 select-none text-left cursor-pointer"
+      style="color: {headerTextColor};"
       title={config.customName
         ? `${config.customName} (${config.channelName})${accountLabel ? ` — ${accountLabel}` : ''}`
         : `${config.channelName}${accountLabel ? ` — ${accountLabel}` : ''}`}
       onclick={ontoggle}
     >
-      <span class="text-xs font-semibold truncate text-base-content/90 shrink-0 max-w-full">
+      <span class="text-xs font-semibold truncate shrink-0 max-w-full" style="color: {headerTextColor};">
         {config.customName || config.channelName}
       </span>
       {#if accountLabel}
-        <span class="text-[10px] font-normal text-base-content/30 truncate min-w-0">
+        <span class="text-[10px] font-normal truncate min-w-0 opacity-60">
           {accountLabel}
         </span>
       {/if}
@@ -86,7 +103,8 @@
 
     <!-- 設定ボタン -->
     <button
-      class="btn btn-ghost btn-xs btn-square text-base-content/40 hover:text-base-content"
+      class="btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100"
+      style="color: {headerTextColor};"
       onclick={() => (settingsOpen = !settingsOpen)}
       aria-label="カラム設定"
       title="カラム設定"
@@ -96,7 +114,8 @@
 
     <!-- 折り畳みトグルボタン -->
     <button
-      class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-base-content"
+      class="btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100"
+      style="color: {headerTextColor};"
       onclick={ontoggle}
       aria-label={config.collapsed ? '展開' : '折り畳み'}
       title={config.collapsed ? '展開' : '折り畳み'}
