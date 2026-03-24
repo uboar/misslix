@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AccountRuntime } from '$lib/types';
+  import { Clipboard, Link2, Star, ArrowLeft, Check, X } from 'lucide-svelte';
 
   type Props = {
     noteId: string;
@@ -152,10 +153,7 @@
             onclick={() => addToClip(clip.id)}
             role="menuitem"
           >
-            <svg class="w-3.5 h-3.5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" stroke-linecap="round" stroke-linejoin="round"/>
-              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-            </svg>
+            <Clipboard class="w-3.5 h-3.5 shrink-0 text-base-content/40" aria-hidden="true" />
             <span class="truncate">{clip.name}</span>
           </button>
         {/each}
@@ -166,9 +164,7 @@
           onclick={() => { clipMode = false; }}
           role="menuitem"
         >
-          <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <ArrowLeft class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
           戻る
         </button>
       </div>
@@ -180,10 +176,7 @@
         disabled={!noteText}
         role="menuitem"
       >
-        <svg class="w-3.5 h-3.5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <Clipboard class="w-3.5 h-3.5 shrink-0 text-base-content/40" aria-hidden="true" />
         ノート内容をコピー
       </button>
       <button
@@ -191,10 +184,7 @@
         onclick={copyLink}
         role="menuitem"
       >
-        <svg class="w-3.5 h-3.5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <Link2 class="w-3.5 h-3.5 shrink-0 text-base-content/40" aria-hidden="true" />
         ノートリンクをコピー
       </button>
       <div class="border-t border-base-300/30 my-0.5"></div>
@@ -204,9 +194,7 @@
         disabled={busy}
         role="menuitem"
       >
-        <svg class="w-3.5 h-3.5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <Star class="w-3.5 h-3.5 shrink-0 text-base-content/40" aria-hidden="true" />
         お気に入り
       </button>
       <button
@@ -215,10 +203,7 @@
         disabled={busy}
         role="menuitem"
       >
-        <svg class="w-3.5 h-3.5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" stroke-linecap="round" stroke-linejoin="round"/>
-          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-        </svg>
+        <Clipboard class="w-3.5 h-3.5 shrink-0 text-base-content/40" aria-hidden="true" />
         クリップに追加
       </button>
     {/if}

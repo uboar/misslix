@@ -3,6 +3,7 @@
   import { accountStore } from '$lib/stores/accounts.svelte';
   import Modal from '../common/Modal.svelte';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
+  import { Check, X, Eye, Send } from 'lucide-svelte';
 
   type PostResult = {
     accountId: number;
@@ -236,9 +237,7 @@
               {/if}
               <span class="max-w-28 truncate text-xs">@{account.userName}</span>
               {#if selected}
-                <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
+                <Check class="w-3 h-3 shrink-0" aria-hidden="true" />
               {/if}
             </button>
           {/each}
@@ -291,10 +290,7 @@
           onclick={() => { previewMode = !previewMode; emojiPickerOpen = false; }}
           title="プレビュー"
         >
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
+          <Eye class="w-3.5 h-3.5" aria-hidden="true" />
           <span class="text-xs">プレビュー</span>
         </button>
       </div>
@@ -374,13 +370,9 @@
         {#each postResults as result (result.accountId)}
           <div class="flex items-center gap-2 text-xs {result.status === 'fulfilled' ? 'text-success' : 'text-error'}">
             {#if result.status === 'fulfilled'}
-              <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
+              <Check class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             {:else}
-              <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
+              <X class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             {/if}
             <span>@{result.userName}</span>
             {#if result.status === 'rejected'}
@@ -405,9 +397,7 @@
           <span class="loading loading-spinner loading-xs"></span>
           投稿中...
         {:else}
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
-          </svg>
+          <Send class="w-3.5 h-3.5" aria-hidden="true" />
           {selectedAccountIds.size > 1 ? `${selectedAccountIds.size}アカウントに投稿` : '投稿'}
         {/if}
       </button>

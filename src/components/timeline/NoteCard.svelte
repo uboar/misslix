@@ -15,6 +15,7 @@
   import NoteMoreMenu from './NoteMoreMenu.svelte';
   import InlineComposer from '$components/composer/InlineComposer.svelte';
   import UserDetailModal from '$components/user/UserDetailModal.svelte';
+  import { EyeOff, Repeat2, Hash, MessageSquare, Loader2, MoreHorizontal } from 'lucide-svelte';
 
   type Props = {
     note: entities.Note;
@@ -221,10 +222,7 @@
   <!-- ミュート折り畳み表示 -->
   {#if isMuted && !muteExpanded}
     <div class="flex items-center gap-2 text-base-content/30">
-      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" stroke-linecap="round" stroke-linejoin="round"/>
-        <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
-      </svg>
+      <EyeOff class="w-3 h-3" aria-hidden="true" />
       <span class="text-[0.6rem]">{muteReason ?? 'ミュート中のノート'}</span>
       <button
         class="text-[0.6rem] text-base-content/30 hover:text-base-content/50 underline transition-colors ml-auto"
@@ -238,12 +236,7 @@
     <!-- 純Renoteバー -->
     {#if isPureRenote && renoteUser}
       <div class="renote-bar flex items-center gap-1 mb-1.5 text-[0.6rem] text-base-content/40">
-        <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M17 1l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M3 11V9a4 4 0 014-4h14" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M7 23l-4-4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M21 13v2a4 4 0 01-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <Repeat2 class="w-3 h-3 shrink-0" aria-hidden="true" />
         <span class="truncate">
           <span class="font-semibold text-base-content/50">
             <MfmRenderer text={renoteUser.name || renoteUser.username} emojis={renoteUserEmojis} isInline />
@@ -301,9 +294,7 @@
           title="チャンネル: {noteChannel.name}"
           onclick={(e) => e.stopPropagation()}
         >
-          <svg class="w-2.5 h-2.5 shrink-0 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <Hash class="w-2.5 h-2.5 shrink-0 opacity-80" aria-hidden="true" />
           <span class="truncate max-w-[12rem]">{noteChannel.name}</span>
         </a>
       </div>
@@ -357,9 +348,7 @@
           aria-label="リプライ"
           onclick={handleReply}
         >
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <MessageSquare class="w-3.5 h-3.5" aria-hidden="true" />
         </button>
 
         <!-- リノートボタン -->
@@ -375,16 +364,9 @@
           onclick={handleRenoteClick}
         >
           {#if renoteBusy}
-            <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/>
-            </svg>
+            <Loader2 class="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
           {:else}
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <path d="M17 1l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M3 11V9a4 4 0 014-4h14" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M7 23l-4-4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M21 13v2a4 4 0 01-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <Repeat2 class="w-3.5 h-3.5" aria-hidden="true" />
           {/if}
         </button>
 
@@ -411,11 +393,7 @@
           aria-label="その他"
           onclick={handleMoreClick}
         >
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <circle cx="12" cy="12" r="1"/>
-            <circle cx="19" cy="12" r="1"/>
-            <circle cx="5" cy="12" r="1"/>
-          </svg>
+          <MoreHorizontal class="w-3.5 h-3.5" aria-hidden="true" />
         </button>
       </div>
 
@@ -435,12 +413,7 @@
               onclick={doRenote}
               role="menuitem"
             >
-              <svg class="w-3.5 h-3.5 shrink-0 text-success/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M17 1l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M3 11V9a4 4 0 014-4h14" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 23l-4-4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M21 13v2a4 4 0 01-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <Repeat2 class="w-3.5 h-3.5 shrink-0 text-success/60" aria-hidden="true" />
               Renote
             </button>
             <button
@@ -448,9 +421,7 @@
               onclick={doQuote}
               role="menuitem"
             >
-              <svg class="w-3.5 h-3.5 shrink-0 text-success/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <MessageSquare class="w-3.5 h-3.5 shrink-0 text-success/60" aria-hidden="true" />
               引用Renote
             </button>
           </div>

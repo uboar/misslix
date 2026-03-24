@@ -2,6 +2,7 @@
   import type { ColumnConfig, ChannelType } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import ColumnSettings from './ColumnSettings.svelte';
+  import { GripVertical, Settings, ChevronLeft } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
@@ -48,19 +49,7 @@
     ondragend={ondragend}
   >
     <!-- ドラッグハンドル -->
-    <svg
-      class="w-3 h-3 shrink-0 opacity-30 cursor-grab active:cursor-grabbing"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <circle cx="9" cy="6" r="1.5" />
-      <circle cx="15" cy="6" r="1.5" />
-      <circle cx="9" cy="12" r="1.5" />
-      <circle cx="15" cy="12" r="1.5" />
-      <circle cx="9" cy="18" r="1.5" />
-      <circle cx="15" cy="18" r="1.5" />
-    </svg>
+    <GripVertical class="w-3 h-3 shrink-0 opacity-30 cursor-grab active:cursor-grabbing" aria-hidden="true" />
 
     <!-- チャンネルアイコン -->
     <svg
@@ -102,14 +91,7 @@
       aria-label="カラム設定"
       title="カラム設定"
     >
-      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path
-          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+      <Settings class="w-3 h-3" aria-hidden="true" />
     </button>
 
     <!-- 折り畳みトグルボタン -->
@@ -119,17 +101,7 @@
       aria-label={config.collapsed ? '展開' : '折り畳み'}
       title={config.collapsed ? '展開' : '折り畳み'}
     >
-      <svg
-        class="w-3 h-3 transition-transform duration-200"
-        class:rotate-180={config.collapsed}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
-        aria-hidden="true"
-      >
-        <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+      <ChevronLeft class="w-3 h-3 transition-transform duration-200 {config.collapsed ? 'rotate-180' : ''}" aria-hidden="true" />
     </button>
 
   </div>

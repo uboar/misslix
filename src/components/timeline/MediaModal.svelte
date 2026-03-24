@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { entities } from 'misskey-js';
+  import { X, ChevronLeft, ChevronRight } from 'lucide-svelte';
 
   type Props = {
     open: boolean;
@@ -118,9 +119,7 @@
       onclick={onclose}
       aria-label="閉じる"
     >
-      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-        <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <X class="w-4 h-4" aria-hidden="true" />
     </button>
 
     <!-- メイン画像 -->
@@ -141,18 +140,14 @@
         onclick={(e) => { e.stopPropagation(); prev(); }}
         aria-label="前の画像"
       >
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <ChevronLeft class="w-4 h-4" aria-hidden="true" />
       </button>
       <button
         class="absolute right-3 top-1/2 -translate-y-1/2 z-10 btn btn-circle btn-sm bg-base-100/70 hover:bg-base-100 border-0"
         onclick={(e) => { e.stopPropagation(); next(); }}
         aria-label="次の画像"
       >
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <ChevronRight class="w-4 h-4" aria-hidden="true" />
       </button>
 
       <!-- インジケーター -->

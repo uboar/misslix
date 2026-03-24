@@ -2,6 +2,7 @@
   import type { entities } from 'misskey-js';
   import type { ColumnConfig, MediaDisplayMode } from '$lib/types';
   import MediaModal from './MediaModal.svelte';
+  import { EyeOff, ChevronLeft, ChevronRight, Music, FileText } from 'lucide-svelte';
 
   type Props = {
     files: entities.DriveFile[];
@@ -133,10 +134,7 @@
                 loading="lazy"
               />
               <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
-                <svg class="w-5 h-5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/>
-                  <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
-                </svg>
+                <EyeOff class="w-5 h-5 text-base-content/60" aria-hidden="true" />
                 <span class="text-[0.6rem] text-base-content/60 font-medium">NSFW — タップして表示</span>
               </div>
             </div>
@@ -181,10 +179,7 @@
                     loading="lazy"
                   />
                   <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
-                    <svg class="w-4 h-4 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/>
-                      <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
-                    </svg>
+                    <EyeOff class="w-4 h-4 text-base-content/60" aria-hidden="true" />
                     <span class="text-[0.55rem] text-base-content/60 font-medium">NSFW</span>
                   </div>
                 </div>
@@ -236,10 +231,7 @@
                 loading="lazy"
               />
               <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
-                <svg class="w-5 h-5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/>
-                  <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
-                </svg>
+                <EyeOff class="w-5 h-5 text-base-content/60" aria-hidden="true" />
                 <span class="text-[0.6rem] text-base-content/60 font-medium">NSFW — タップして表示</span>
               </div>
             </div>
@@ -288,10 +280,7 @@
                   loading="lazy"
                 />
                 <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-base-300/60 backdrop-blur-sm">
-                  <svg class="w-5 h-5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/>
-                    <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
-                  </svg>
+                  <EyeOff class="w-5 h-5 text-base-content/60" aria-hidden="true" />
                   <span class="text-[0.6rem] text-base-content/60">NSFW — タップして表示</span>
                 </div>
               </div>
@@ -319,18 +308,14 @@
                 onclick={prev}
                 aria-label="前の画像"
               >
-                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <ChevronLeft class="w-3 h-3" aria-hidden="true" />
               </button>
               <button
                 class="absolute right-1 top-1/2 -translate-y-1/2 btn btn-circle btn-xs bg-base-100/70 hover:bg-base-100 border-0"
                 onclick={next}
                 aria-label="次の画像"
               >
-                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <ChevronRight class="w-3 h-3" aria-hidden="true" />
               </button>
 
               <!-- インジケーター -->
@@ -363,9 +348,7 @@
               onkeydown={(e) => e.key === 'Enter' && revealNsfw(file.id)}
               aria-label="センシティブな動画 — クリックして表示"
             >
-              <svg class="w-5 h-5 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <EyeOff class="w-5 h-5 text-base-content/40" aria-hidden="true" />
               <span class="text-xs text-base-content/50">NSFW動画</span>
             </div>
           {:else}
@@ -381,9 +364,7 @@
         {:else if isAudio(file)}
           <!-- 音声プレーヤー -->
           <div class="flex items-center gap-2 bg-base-200 rounded-md p-2">
-            <svg class="w-4 h-4 text-base-content/50 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
+            <Music class="w-4 h-4 text-base-content/50 shrink-0" aria-hidden="true" />
             <audio src={file.url} controls preload="metadata" class="flex-1 h-7"></audio>
           </div>
         {:else}
@@ -394,10 +375,7 @@
             rel="noopener noreferrer"
             class="flex items-center gap-2 bg-base-200 hover:bg-base-300 rounded-md p-2 transition-colors"
           >
-            <svg class="w-4 h-4 text-base-content/50 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-linecap="round" stroke-linejoin="round"/>
-              <polyline points="14,2 14,8 20,8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <FileText class="w-4 h-4 text-base-content/50 shrink-0" aria-hidden="true" />
             <span class="text-xs text-base-content/70 truncate">{file.name}</span>
             {#if file.size}
               <span class="text-[0.6rem] text-base-content/40 shrink-0 ml-auto">

@@ -21,6 +21,7 @@
   "dependencies": {
     "@discordapp/twemoji": "^16.0.1",
     "dayjs": "latest",
+    "lucide-svelte": "^1.0.1",
     "mfm-js": "^0.25.0",
     "misskey-js": "latest"
   },

@@ -4,6 +4,7 @@
     subscribeToasts,
     dismissToast,
   } from '$lib/utils/error';
+  import { X } from 'lucide-svelte';
 
   let toasts = $state<Toast[]>([]);
 
@@ -35,9 +36,7 @@
           onclick={() => dismissToast(toast.id)}
           aria-label="閉じる"
         >
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <X class="w-3 h-3" aria-hidden="true" />
         </button>
       </div>
     {/each}

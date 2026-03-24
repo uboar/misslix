@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { AccountRuntime } from '$lib/types';
   import ReactionDeck from './ReactionDeck.svelte';
+  import { Heart, PlusCircle, Loader2 } from 'lucide-svelte';
 
   type Props = {
     noteId: string;
@@ -135,41 +136,13 @@
 >
   {#if busy}
     <!-- ローディングスピナー -->
-    <svg
-      class="w-3.5 h-3.5 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.5"
-      aria-hidden="true"
-    >
-      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
-        stroke-linecap="round"
-      />
-    </svg>
+    <Loader2 class="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
   {:else if myReaction}
     <!-- リアクション済みアイコン (削除を示す) -->
-    <svg
-      class="w-3.5 h-3.5"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-    </svg>
+    <Heart class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true" />
   {:else}
     <!-- 未リアクション: + アイコン -->
-    <svg
-      class="w-3.5 h-3.5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.5"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M12 8v8M8 12h8" stroke-linecap="round"/>
-    </svg>
+    <PlusCircle class="w-3.5 h-3.5" aria-hidden="true" />
   {/if}
 </button>
 

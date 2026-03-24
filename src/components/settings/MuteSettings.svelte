@@ -1,5 +1,6 @@
 <script lang="ts">
   import { settingsStore } from '$lib/stores/settings.svelte';
+  import { X } from 'lucide-svelte';
 
   let settings = $derived(settingsStore.settings);
 
@@ -110,9 +111,7 @@
               onclick={() => removeMuteUser(user)}
               aria-label="削除"
             >
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+              <X class="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           </li>
         {/each}
@@ -152,9 +151,7 @@
               onclick={() => removeMuteWord(word)}
               aria-label="削除"
             >
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+              <X class="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           </li>
         {/each}

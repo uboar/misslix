@@ -2,6 +2,7 @@
   import type { AccountRuntime } from '$lib/types';
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import Column from '../column/Column.svelte';
+  import { Plus } from 'lucide-svelte';
 
   type Props = {
     onadd?: () => void;
@@ -112,9 +113,7 @@
         <p class="text-xs text-base-content/30 mt-1">右下の「カラム追加」ボタンから始めましょう</p>
       </div>
       <button class="btn btn-primary btn-sm" onclick={onadd}>
-        <svg class="w-3.5 h-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <Plus class="w-3.5 h-3.5 mr-1" aria-hidden="true" />
         カラムを追加
       </button>
     </div>

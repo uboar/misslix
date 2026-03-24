@@ -9,6 +9,7 @@
   import { getEmojiMap } from '$lib/emoji/cache';
   import ColumnFooter from './ColumnFooter.svelte';
   import NoteList from '../timeline/NoteList.svelte';
+  import { ChevronRight, X } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
@@ -172,9 +173,7 @@
         title="展開"
       >
         <!-- 展開アイコン -->
-        <svg class="w-3 h-3 shrink-0 text-base-content/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <ChevronRight class="w-3 h-3 shrink-0 text-base-content/50" aria-hidden="true" />
 
         <!-- タイムライン名 (縦書き) -->
         <div
@@ -197,9 +196,7 @@
           aria-label="カラムを削除"
           title="カラムを削除"
         >
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <X class="w-3 h-3" aria-hidden="true" />
         </button>
       </div>
     </div>
