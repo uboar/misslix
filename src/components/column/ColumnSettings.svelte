@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ColumnConfig, ColumnWidth, NoteDisplayConfig } from '$lib/types';
+  import type { ColumnConfig, ColumnWidth, NoteDisplayConfig, Visibility } from '$lib/types';
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
 
@@ -21,6 +21,10 @@
   let autoCollapse = $state(config.autoCollapse);
   let lowRate = $state(config.lowRate);
   let reactionDeckText = $state(config.reactionDeck.join(', '));
+
+  // 投稿設定
+  let defaultVisibility = $state<Visibility>(config.defaultVisibility ?? 'public');
+  let defaultLocalOnly = $state(config.defaultLocalOnly ?? false);
 
   // noteDisplay
   let mediaHidden = $state(config.noteDisplay.mediaHidden);
@@ -86,6 +90,8 @@
       lowRate,
       reactionDeck,
       noteDisplay,
+      defaultVisibility,
+      defaultLocalOnly,
     });
 
     onclose();
@@ -277,6 +283,36 @@
           />
         </div>
       {/if}
+    </div>
+  </section>
+
+  <div class="divider my-1"></div>
+
+  <!-- 投稿設定 -->
+  <section class="space-y-3">
+    <h5 class="font-semibold text-base-content/70 uppercase text-xs tracking-wide">投稿デフォルト設定</h5>
+
+    <div class="form-control">
+      <label class="label py-1" for="col-default-visibility">
+        <span class="label-text">デフォルト公開範囲</span>
+      </label>
+      <select id="col-default-visibility" class="select select-bordered select-sm w-full" bind:value={defaultVisibility}>
+        <option value="public">🌐 パブリック</option>
+        <option value="home">🏠 ホーム</option>
+        <option value="followers">🔒 フォロワー</option>
+      </select>
+    </div>
+
+    <div class="form-control">
+      <label class="label cursor-pointer py-1" for="col-default-local-only">
+        <span class="label-text">デフォルトでローカル限定</span>
+        <input
+          id="col-default-local-only"
+          type="checkbox"
+          class="toggle toggle-sm toggle-primary"
+          bind:checked={defaultLocalOnly}
+        />
+      </label>
     </div>
   </section>
 

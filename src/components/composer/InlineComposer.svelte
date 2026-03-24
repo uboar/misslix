@@ -11,6 +11,12 @@
     renoteId?: string;
     replyNote?: Note | null;
     renoteNote?: Note | null;
+    /** チャンネルへの投稿時のチャンネルID */
+    channelId?: string;
+    /** デフォルト公開範囲 (省略時: 'public') */
+    defaultVisibility?: Visibility;
+    /** デフォルトローカル限定設定 (省略時: false) */
+    defaultLocalOnly?: boolean;
     /** 投稿完了時コールバック */
     oncomplete?: () => void;
     /** キャンセル時コールバック */
@@ -23,6 +29,9 @@
     renoteId,
     replyNote = null,
     renoteNote = null,
+    channelId,
+    defaultVisibility = 'public',
+    defaultLocalOnly = false,
     oncomplete,
     oncancel,
   }: Props = $props();
@@ -31,8 +40,8 @@
   let text = $state('');
   let cwEnabled = $state(false);
   let cwText = $state('');
-  let visibility = $state<Visibility>('public');
-  let localOnly = $state(false);
+  let visibility = $state<Visibility>(defaultVisibility);
+  let localOnly = $state(defaultLocalOnly);
   let posting = $state(false);
   let error = $state('');
   let previewMode = $state(false);
@@ -108,6 +117,9 @@
       if (renoteId) {
         params.renoteId = renoteId;
       }
+      if (channelId) {
+        params.channelId = channelId;
+      }
 
       await runtime.cli.request('notes/create', params as Parameters<typeof runtime.cli.request>[1]);
 
@@ -115,6 +127,8 @@
       text = '';
       cwEnabled = false;
       cwText = '';
+      visibility = defaultVisibility;
+      localOnly = defaultLocalOnly;
       previewMode = false;
       emojiPickerOpen = false;
       oncomplete?.();
@@ -137,6 +151,8 @@
     text = '';
     cwEnabled = false;
     cwText = '';
+    visibility = defaultVisibility;
+    localOnly = defaultLocalOnly;
     previewMode = false;
     emojiPickerOpen = false;
     error = '';

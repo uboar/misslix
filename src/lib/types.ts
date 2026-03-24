@@ -81,6 +81,10 @@ export type ColumnConfig = {
   lowRate: boolean;
   reactionDeck: string[];
   noteDisplay: NoteDisplayConfig;
+  /** カラムから投稿する際のデフォルト公開範囲 */
+  defaultVisibility?: Visibility;
+  /** カラムから投稿する際のデフォルトローカル限定設定 */
+  defaultLocalOnly?: boolean;
 };
 
 export const DEFAULT_NOTE_DISPLAY: NoteDisplayConfig = {
