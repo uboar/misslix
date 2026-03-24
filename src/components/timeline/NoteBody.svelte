@@ -121,20 +121,23 @@
   {:else}
     <!-- 通常本文 -->
     {#if bodyText}
-      <div class="body-text relative">
+      <div class="body-text">
         <div
           bind:this={contentDiv}
-          class="whitespace-pre-wrap break-words text-xs text-base-content/90 overflow-hidden"
+          class="relative whitespace-pre-wrap break-words text-xs text-base-content/90 overflow-hidden"
           style={config.noteDisplay.collapseEnabled && !contentExpanded && isOverflowing
             ? `max-height: ${config.noteDisplay.collapseHeight}px;`
             : ''}
         >
           <MfmRenderer text={bodyText} {emojis} />
+          <!-- 折り畳みグラデーション (コンテンツdiv内に配置してボタンと重ならないようにする) -->
+          {#if config.noteDisplay.collapseEnabled && !contentExpanded && isOverflowing}
+            <div class="collapse-fade absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-base-100 to-transparent pointer-events-none"></div>
+          {/if}
         </div>
 
-        <!-- 折り畳みグラデーション + 展開ボタン (高さ超過時のみ表示) -->
+        <!-- 展開ボタン (グラデーション外に配置) -->
         {#if config.noteDisplay.collapseEnabled && !contentExpanded && isOverflowing}
-          <div class="collapse-fade absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-base-100 to-transparent pointer-events-none"></div>
           <button
             class="mt-0.5 text-[0.6rem] text-primary/70 hover:text-primary transition-colors"
             onclick={toggleContent}
