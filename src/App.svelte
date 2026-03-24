@@ -4,7 +4,7 @@
   import type { AccountRuntime } from '$lib/types';
   import { showApiError } from '$lib/utils/error';
   import { settingsStore } from '$lib/stores/settings.svelte';
-  import Navbar from './components/layout/Navbar.svelte';
+  import SpeedDial from './components/layout/SpeedDial.svelte';
   import ColumnContainer from './components/layout/ColumnContainer.svelte';
   import AddColumnModal from './components/column/AddColumnModal.svelte';
   import SettingsModal from './components/settings/SettingsModal.svelte';
@@ -53,12 +53,6 @@
 </script>
 
 <div class="h-full flex flex-col bg-base-100 text-base-content">
-  <Navbar
-    onpost={() => postModalOpen = true}
-    onadd={() => addColumnOpen = true}
-    onsettings={() => settingsOpen = true}
-  />
-
   {#if initializing && accountStore.accounts.length > 0}
     <main class="flex-1 flex items-center justify-center">
       <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -66,6 +60,12 @@
   {:else}
     <ColumnContainer onadd={() => addColumnOpen = true} {runtimes} />
   {/if}
+
+  <SpeedDial
+    onpost={() => postModalOpen = true}
+    onadd={() => addColumnOpen = true}
+    onsettings={() => settingsOpen = true}
+  />
 
   <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} {runtimes} />
   <SettingsModal open={settingsOpen} onclose={() => settingsOpen = false} />

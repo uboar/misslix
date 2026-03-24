@@ -109,7 +109,7 @@
       </svg>
       <div class="text-center">
         <p class="text-sm font-medium text-base-content/50">カラムを追加してください</p>
-        <p class="text-xs text-base-content/30 mt-1">上部の「カラム追加」ボタンから始めましょう</p>
+        <p class="text-xs text-base-content/30 mt-1">右下の「カラム追加」ボタンから始めましょう</p>
       </div>
       <button class="btn btn-primary btn-sm" onclick={onadd}>
         <svg class="w-3.5 h-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
