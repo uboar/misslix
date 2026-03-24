@@ -5,6 +5,7 @@
   import { connectTimeline } from '$lib/api/streaming';
   import type { NoteUpdatedData } from '$lib/api/streaming';
   import ColumnHeader from './ColumnHeader.svelte';
+  import { getEmojiMap } from '$lib/emoji/cache';
   import ColumnFooter from './ColumnFooter.svelte';
   import NoteList from '../timeline/NoteList.svelte';
 
@@ -57,6 +58,8 @@
   function handleRemove() {
     timelineStore.removeColumn(config.id);
   }
+
+  const emojiMap = $derived(runtime ? getEmojiMap('', runtime.emojis) : {});
 
   // ストリーミング接続
   import type { TimelineConnection } from '$lib/api/streaming';
@@ -157,7 +160,7 @@
     </div>
   {:else}
     <!-- 通常表示 -->
-    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} />
+    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} emojis={emojiMap} />
 
     <!-- メインエリア -->
     {#if runtime}

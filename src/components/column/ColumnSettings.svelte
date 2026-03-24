@@ -1,14 +1,16 @@
 <script lang="ts">
   import type { ColumnConfig, ColumnWidth, NoteDisplayConfig } from '$lib/types';
   import { timelineStore } from '$lib/stores/timelines.svelte';
+  import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
 
   type Props = {
     config: ColumnConfig;
     onclose: () => void;
     onremove?: () => void;
+    emojis?: Record<string, string>;
   };
 
-  let { config, onclose, onremove }: Props = $props();
+  let { config, onclose, onremove, emojis = {} }: Props = $props();
 
   // ローカル編集用コピー
   let customName = $state(config.customName ?? '');
@@ -38,11 +40,30 @@
     { value: 'full', label: 'full (100vw)' },
   ];
 
-  function save() {
-    const reactionDeck = reactionDeckText
+  // リアクションデッキのパース済み配列
+  const parsedDeck = $derived(
+    reactionDeckText
       .split(',')
       .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+      .filter((s) => s.length > 0)
+  );
+
+  function isCustomEmoji(reaction: string): boolean {
+    return reaction.startsWith(':') && reaction.endsWith(':') && reaction.length > 2;
+  }
+
+  function getCustomEmojiName(reaction: string): string {
+    return reaction.slice(1, -1).split('@')[0];
+  }
+
+  function getDeckEmojiUrl(reaction: string): string | null {
+    if (!isCustomEmoji(reaction)) return null;
+    const name = getCustomEmojiName(reaction);
+    return emojis[name] ?? emojis[reaction] ?? null;
+  }
+
+  function save() {
+    const reactionDeck = parsedDeck;
 
     const noteDisplay: NoteDisplayConfig = {
       mediaHidden,
@@ -152,28 +173,22 @@
       />
     </div>
 
-    <div class="form-control">
-      <label class="label cursor-pointer py-1" for="col-auto-collapse">
-        <span class="label-text">自動折り畳み</span>
-        <input
-          id="col-auto-collapse"
-          type="checkbox"
-          class="toggle toggle-sm toggle-primary"
-          bind:checked={autoCollapse}
-        />
-      </label>
-    </div>
+    <div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-0">
+      <label class="label-text py-1.5 cursor-pointer select-none" for="col-auto-collapse">自動折り畳み</label>
+      <input
+        id="col-auto-collapse"
+        type="checkbox"
+        class="toggle toggle-sm toggle-primary"
+        bind:checked={autoCollapse}
+      />
 
-    <div class="form-control">
-      <label class="label cursor-pointer py-1" for="col-low-rate">
-        <span class="label-text">低レートモード (Misskey.io向け)</span>
-        <input
-          id="col-low-rate"
-          type="checkbox"
-          class="toggle toggle-sm toggle-primary"
-          bind:checked={lowRate}
-        />
-      </label>
+      <label class="label-text py-1.5 cursor-pointer select-none" for="col-low-rate">低レートモード (Misskey.io向け)</label>
+      <input
+        id="col-low-rate"
+        type="checkbox"
+        class="toggle toggle-sm toggle-primary"
+        bind:checked={lowRate}
+      />
     </div>
   </section>
 
@@ -183,98 +198,94 @@
   <section class="space-y-3">
     <h5 class="font-semibold text-base-content/70 uppercase text-xs tracking-wide">ノート表示</h5>
 
-    <div class="form-control">
-      <label class="label cursor-pointer py-1" for="col-media-hidden">
-        <span class="label-text">メディアを非表示</span>
+    <!-- メディア -->
+    <div class="space-y-1">
+      <div class="grid grid-cols-[1fr_auto] items-center gap-x-3">
+        <label class="label-text py-1.5 cursor-pointer select-none" for="col-media-hidden">メディアを非表示</label>
         <input id="col-media-hidden" type="checkbox" class="toggle toggle-sm" bind:checked={mediaHidden} />
-      </label>
+      </div>
+      {#if !mediaHidden}
+        <div class="pl-4">
+          <label class="label py-1" for="col-media-size">
+            <span class="label-text text-base-content/70">メディアサイズ (px)</span>
+          </label>
+          <input
+            id="col-media-size"
+            type="number"
+            class="input input-bordered input-sm w-full"
+            min="50"
+            max="800"
+            step="10"
+            bind:value={mediaSize}
+          />
+        </div>
+      {/if}
     </div>
 
-    {#if !mediaHidden}
-      <div class="form-control pl-4">
-        <label class="label py-1" for="col-media-size">
-          <span class="label-text text-base-content/70">メディアサイズ (px)</span>
-        </label>
-        <input
-          id="col-media-size"
-          type="number"
-          class="input input-bordered input-sm w-full"
-          min="50"
-          max="800"
-          step="10"
-          bind:value={mediaSize}
-        />
-      </div>
-    {/if}
+    <div class="divider my-0.5"></div>
 
-    <div class="form-control">
-      <label class="label cursor-pointer py-1" for="col-reactions-hidden">
-        <span class="label-text">リアクションを非表示</span>
+    <!-- リアクション -->
+    <div class="space-y-1">
+      <div class="grid grid-cols-[1fr_auto] items-center gap-x-3">
+        <label class="label-text py-1.5 cursor-pointer select-none" for="col-reactions-hidden">リアクションを非表示</label>
         <input id="col-reactions-hidden" type="checkbox" class="toggle toggle-sm" bind:checked={reactionsHidden} />
-      </label>
-    </div>
-
-    {#if !reactionsHidden}
-      <div class="form-control pl-4">
-        <label class="label py-1" for="col-reaction-size">
-          <span class="label-text text-base-content/70">リアクションサイズ (px)</span>
-        </label>
-        <input
-          id="col-reaction-size"
-          type="number"
-          class="input input-bordered input-sm w-full"
-          min="12"
-          max="64"
-          step="4"
-          bind:value={reactionSize}
-        />
       </div>
-    {/if}
-
-    <div class="form-control">
-      <label class="label cursor-pointer py-1" for="col-cw-expanded">
-        <span class="label-text">CWを自動展開</span>
-        <input id="col-cw-expanded" type="checkbox" class="toggle toggle-sm" bind:checked={cwExpanded} />
-      </label>
+      {#if !reactionsHidden}
+        <div class="pl-4">
+          <label class="label py-1" for="col-reaction-size">
+            <span class="label-text text-base-content/70">リアクションサイズ (px)</span>
+          </label>
+          <input
+            id="col-reaction-size"
+            type="number"
+            class="input input-bordered input-sm w-full"
+            min="12"
+            max="64"
+            step="4"
+            bind:value={reactionSize}
+          />
+        </div>
+      {/if}
     </div>
 
-    <div class="form-control">
-      <label class="label cursor-pointer py-1" for="col-nsfw-shown">
-        <span class="label-text">NSFWコンテンツを表示</span>
-        <input id="col-nsfw-shown" type="checkbox" class="toggle toggle-sm" bind:checked={nsfwShown} />
-      </label>
-    </div>
+    <div class="divider my-0.5"></div>
 
-    <div class="form-control">
-      <label class="label cursor-pointer py-1" for="col-collapse-enabled">
-        <span class="label-text">長いノートを折り畳む</span>
-        <input id="col-collapse-enabled" type="checkbox" class="toggle toggle-sm" bind:checked={collapseEnabled} />
-      </label>
-    </div>
+    <!-- その他 -->
+    <div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-0">
+      <label class="label-text py-1.5 cursor-pointer select-none" for="col-cw-expanded">CWを自動展開</label>
+      <input id="col-cw-expanded" type="checkbox" class="toggle toggle-sm" bind:checked={cwExpanded} />
 
-    {#if collapseEnabled}
-      <div class="form-control pl-4">
-        <label class="label py-1" for="col-collapse-height">
-          <span class="label-text text-base-content/70">折り畳み高さ (px)</span>
-        </label>
-        <input
-          id="col-collapse-height"
-          type="number"
-          class="input input-bordered input-sm w-full"
-          min="100"
-          max="2000"
-          step="50"
-          bind:value={collapseHeight}
-        />
-      </div>
-    {/if}
+      <label class="label-text py-1.5 cursor-pointer select-none" for="col-nsfw-shown">NSFWコンテンツを表示</label>
+      <input id="col-nsfw-shown" type="checkbox" class="toggle toggle-sm" bind:checked={nsfwShown} />
+
+      <label class="label-text py-1.5 cursor-pointer select-none" for="col-collapse-enabled">長いノートを折り畳む</label>
+      <input id="col-collapse-enabled" type="checkbox" class="toggle toggle-sm" bind:checked={collapseEnabled} />
+
+      {#if collapseEnabled}
+        <div class="col-span-2 pl-4 pt-1">
+          <label class="label py-1" for="col-collapse-height">
+            <span class="label-text text-base-content/70">折り畳み高さ (px)</span>
+          </label>
+          <input
+            id="col-collapse-height"
+            type="number"
+            class="input input-bordered input-sm w-full"
+            min="100"
+            max="2000"
+            step="50"
+            bind:value={collapseHeight}
+          />
+        </div>
+      {/if}
+    </div>
   </section>
 
   <div class="divider my-1"></div>
 
   <!-- リアクションデッキ -->
-  <section>
-    <h5 class="font-semibold text-base-content/70 uppercase text-xs tracking-wide mb-2">リアクションデッキ</h5>
+  <section class="space-y-3">
+    <h5 class="font-semibold text-base-content/70 uppercase text-xs tracking-wide">リアクションデッキ</h5>
+
     <div class="form-control">
       <label class="label py-1" for="col-reaction-deck">
         <span class="label-text">絵文字 (カンマ区切り)</span>
@@ -287,6 +298,31 @@
         bind:value={reactionDeckText}
       />
     </div>
+
+    <!-- プレビュー -->
+    {#if parsedDeck.length > 0}
+      <div>
+        <div class="text-[0.65rem] text-base-content/40 mb-1.5">プレビュー</div>
+        <div class="flex flex-wrap gap-1">
+          {#each parsedDeck as reaction}
+            {@const url = getDeckEmojiUrl(reaction)}
+            {@const name = isCustomEmoji(reaction) ? getCustomEmojiName(reaction) : null}
+            <div
+              class="flex items-center justify-center w-8 h-8 rounded border border-base-300 bg-base-200"
+              title={reaction}
+            >
+              {#if url && name}
+                <EmojiRenderer {name} {url} height="1.4em" />
+              {:else if name}
+                <span class="text-[0.55rem] leading-none truncate px-0.5 max-w-8 text-base-content/60">{name}</span>
+              {:else}
+                <EmojiRenderer emoji={reaction} height="1.4em" />
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   </section>
 
   <!-- 操作ボタン -->

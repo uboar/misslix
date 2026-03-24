@@ -8,9 +8,10 @@
     ontoggle?: () => void;
     ondragstart?: (e: DragEvent) => void;
     ondragend?: (e: DragEvent) => void;
+    emojis?: Record<string, string>;
   };
 
-  let { config, onremove, ontoggle, ondragstart, ondragend }: Props = $props();
+  let { config, onremove, ontoggle, ondragstart, ondragend, emojis = {} }: Props = $props();
 
   let settingsOpen = $state(false);
 
@@ -119,7 +120,7 @@
   <!-- カラム設定パネル (インラインドロップダウン) -->
   {#if settingsOpen}
     <div class="bg-base-100 border-b border-base-300 px-3 py-3 overflow-y-auto max-h-[80vh] shadow-lg z-10">
-      <ColumnSettings {config} onclose={() => (settingsOpen = false)} {onremove} />
+      <ColumnSettings {config} onclose={() => (settingsOpen = false)} {onremove} {emojis} />
     </div>
   {/if}
 </div>
