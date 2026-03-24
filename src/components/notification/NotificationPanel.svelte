@@ -120,7 +120,7 @@
 <!-- 通知パネル本体 -->
 <div
   class="notification-panel flex flex-col bg-base-200 border border-base-300 rounded-lg shadow-xl overflow-hidden"
-  style="width: 20rem; max-height: 24rem;"
+  style="width: 20rem; max-width: min(20rem, calc(100vw - 1rem)); max-height: 24rem;"
   role="dialog"
   aria-label="通知パネル"
 >

@@ -31,7 +31,7 @@
 <!-- 投稿コンポーザーパネル本体 -->
 <div
   class="column-composer-panel flex flex-col bg-base-200 border border-base-300 rounded-lg shadow-xl overflow-hidden"
-  style="width: 22rem; max-height: 32rem;"
+  style="width: 22rem; max-width: min(22rem, calc(100vw - 1rem)); max-height: 32rem;"
   role="dialog"
   aria-label="ノート投稿"
 >
