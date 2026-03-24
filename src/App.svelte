@@ -7,14 +7,45 @@
   import SpeedDial from './components/layout/SpeedDial.svelte';
   import ColumnContainer from './components/layout/ColumnContainer.svelte';
   import AddColumnModal from './components/column/AddColumnModal.svelte';
+  import PresetModal from './components/column/PresetModal.svelte';
   import SettingsModal from './components/settings/SettingsModal.svelte';
   import PostModal from './components/composer/PostModal.svelte';
   import ToastContainer from './components/common/ToastContainer.svelte';
+  import { timelineStore } from '$lib/stores/timelines.svelte';
+  import { presetStore } from '$lib/stores/presets.svelte';
+  import { showToast } from '$lib/utils/error';
 
   // ── モーダル状態 ──
   let addColumnOpen = $state(false);
   let settingsOpen = $state(false);
   let postModalOpen = $state(false);
+  let presetModalOpen = $state(false);
+  let presetModalTab = $state<'save' | 'load'>('load');
+
+  function openSavePreset() {
+    presetModalTab = 'save';
+    presetModalOpen = true;
+  }
+
+  function openLoadPreset() {
+    presetModalTab = 'load';
+    presetModalOpen = true;
+  }
+
+  let confirmClear = $state(false);
+
+  function handleClearColumns() {
+    if (confirmClear) {
+      timelineStore.columns = [];
+      timelineStore.persist();
+      showToast('全カラムをクリアしました', 'info');
+      confirmClear = false;
+    } else {
+      confirmClear = true;
+      setTimeout(() => { confirmClear = false; }, 3000);
+      showToast('もう一度押すと全カラムを削除します', 'warning', 3000);
+    }
+  }
 
   // ── ランタイム管理 ──
   let runtimes = $state<Map<number, AccountRuntime>>(new Map());
@@ -65,9 +96,13 @@
     onpost={() => postModalOpen = true}
     onadd={() => addColumnOpen = true}
     onsettings={() => settingsOpen = true}
+    onsavepreset={openSavePreset}
+    onloadpreset={openLoadPreset}
+    onclearcolumns={handleClearColumns}
   />
 
   <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} {runtimes} />
+  <PresetModal open={presetModalOpen} onclose={() => presetModalOpen = false} initialTab={presetModalTab} />
   <SettingsModal open={settingsOpen} onclose={() => settingsOpen = false} />
   <PostModal open={postModalOpen} onclose={() => postModalOpen = false} {runtimes} />
   <ToastContainer />

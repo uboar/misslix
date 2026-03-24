@@ -124,6 +124,15 @@ export const DEFAULT_SETTINGS: SettingsType = {
   mediaDisplayMode: 'grid',
 };
 
+// ─── プリセット ───
+
+export type ColumnPreset = {
+  id: string;
+  name: string;
+  columns: ColumnConfig[];
+  createdAt: number;
+};
+
 // ─── APIエンドポイント情報 ───
 
 export type ChannelEndpointInfo = {

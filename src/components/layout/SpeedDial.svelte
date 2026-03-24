@@ -3,9 +3,12 @@
     onpost?: () => void;
     onadd?: () => void;
     onsettings?: () => void;
+    onsavepreset?: () => void;
+    onloadpreset?: () => void;
+    onclearcolumns?: () => void;
   };
 
-  let { onpost, onadd, onsettings }: Props = $props();
+  let { onpost, onadd, onsettings, onsavepreset, onloadpreset, onclearcolumns }: Props = $props();
 
   let open = $state(false);
 
@@ -78,6 +81,50 @@
       >
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- プリセット呼び出し -->
+    <div class="flex items-center gap-2">
+      <span class="bg-base-300 text-base-content text-xs px-2 py-1 rounded-lg shadow whitespace-nowrap select-none">プリセット</span>
+      <button
+        class="btn btn-circle btn-sm btn-ghost bg-base-200 shadow"
+        onclick={() => handleAction(onloadpreset)}
+        aria-label="プリセットを呼び出す"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round" />
+          <path d="M17 14l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- プリセット保存 -->
+    <div class="flex items-center gap-2">
+      <span class="bg-base-300 text-base-content text-xs px-2 py-1 rounded-lg shadow whitespace-nowrap select-none">レイアウト保存</span>
+      <button
+        class="btn btn-circle btn-sm btn-ghost bg-base-200 shadow"
+        onclick={() => handleAction(onsavepreset)}
+        aria-label="現在のレイアウトをプリセットとして保存"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M17 21v-8H7v8M7 3v5h8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- 全クリア -->
+    <div class="flex items-center gap-2">
+      <span class="bg-base-300 text-base-content text-xs px-2 py-1 rounded-lg shadow whitespace-nowrap select-none">全クリア</span>
+      <button
+        class="btn btn-circle btn-sm btn-ghost bg-base-200 shadow text-error"
+        onclick={() => handleAction(onclearcolumns)}
+        aria-label="全カラムをクリア"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </button>
     </div>
