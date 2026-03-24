@@ -108,6 +108,7 @@ export type MediaDisplayMode = 'grid' | 'carousel';
 
 export type SettingsType = {
   theme: string;
+  customThemeJson: string;
   emojiSpace: boolean;
   virtualScroll: boolean;
   autoFetch: boolean;
@@ -119,6 +120,7 @@ export type SettingsType = {
 
 export const DEFAULT_SETTINGS: SettingsType = {
   theme: 'dark',
+  customThemeJson: '',
   emojiSpace: true,
   virtualScroll: true,
   autoFetch: true,
