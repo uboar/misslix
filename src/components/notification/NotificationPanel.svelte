@@ -5,6 +5,7 @@
   import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
   import { getEmojiMap } from '$lib/emoji/cache';
   import { formatRelativeTime } from '$lib/utils/date';
+  import { X } from 'lucide-svelte';
 
   type Notification = entities.Notification;
 
@@ -133,9 +134,7 @@
         onclick={onclose}
         aria-label="閉じる"
       >
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <X class="w-3.5 h-3.5" aria-hidden="true" />
       </button>
     {/if}
   </div>

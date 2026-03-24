@@ -7,6 +7,7 @@
   import { accountStore } from '$lib/stores/accounts.svelte';
   import NoteCard from './NoteCard.svelte';
   import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
+  import { AlertCircle, AlignJustify } from 'lucide-svelte';
 
   type Props = {
     account: AccountRuntime;
@@ -236,11 +237,7 @@
   <!-- エラー -->
   {:else if error && notes.length === 0}
     <div class="flex flex-col items-center justify-center py-8 gap-2 px-4">
-      <svg class="w-5 h-5 text-error/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12" stroke-linecap="round"/>
-        <line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round"/>
-      </svg>
+      <AlertCircle class="w-5 h-5 text-error/60" aria-hidden="true" />
       <p class="text-xs text-error/70 text-center">{error}</p>
       <button
         class="btn btn-xs btn-ghost text-[0.65rem]"
@@ -253,9 +250,7 @@
   <!-- ノートなし -->
   {:else if notes.length === 0}
     <div class="flex flex-col items-center justify-center py-8 gap-2 opacity-40">
-      <svg class="w-6 h-6 text-base-content/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18M3 6h18M3 18h18"/>
-      </svg>
+      <AlignJustify class="w-6 h-6 text-base-content/30" aria-hidden="true" />
       <p class="text-xs text-base-content/40">ノートがありません</p>
     </div>
 

@@ -4,6 +4,7 @@
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import { showApiError } from '$lib/utils/error';
   import Modal from '../common/Modal.svelte';
+  import { ChevronRight, ChevronLeft, Check } from 'lucide-svelte';
 
   type Props = {
     open: boolean;
@@ -216,9 +217,7 @@
             {#if !account.ok}
               <span class="badge badge-error badge-xs">オフライン</span>
             {/if}
-            <svg class="w-4 h-4 text-base-content/30 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <ChevronRight class="w-4 h-4 text-base-content/30 shrink-0" aria-hidden="true" />
           </button>
         {/each}
       {/if}
@@ -228,9 +227,7 @@
   {:else if step === 2}
     <div>
       <button class="btn btn-ghost btn-xs gap-1 mb-3 -ml-1" onclick={goBack}>
-        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <ChevronLeft class="w-3 h-3" aria-hidden="true" />
         戻る
       </button>
 
@@ -282,9 +279,7 @@
   {:else if step === 3}
     <div>
       <button class="btn btn-ghost btn-xs gap-1 mb-3 -ml-1" onclick={goBack}>
-        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <ChevronLeft class="w-3 h-3" aria-hidden="true" />
         戻る
       </button>
 
@@ -347,9 +342,7 @@
                   <span class="flex-1 truncate">{item.name}</span>
                   <span class="text-xs text-base-content/30 font-mono shrink-0">{item.id.slice(0, 8)}</span>
                   {#if channelId === item.id}
-                    <svg class="w-4 h-4 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
+                    <Check class="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
                   {/if}
                 </button>
               {/each}

@@ -2,6 +2,7 @@
   import { presetStore } from '$lib/stores/presets.svelte';
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import { showToast } from '$lib/utils/error';
+  import { X, Trash2 } from 'lucide-svelte';
 
   type Props = {
     open: boolean;
@@ -79,9 +80,7 @@
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold">カラムプリセット</h3>
         <button class="btn btn-ghost btn-sm btn-circle" onclick={onclose} aria-label="閉じる">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" />
-          </svg>
+          <X class="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
 
@@ -170,9 +169,7 @@
                     onclick={() => confirmDeleteId = preset.id}
                     aria-label="削除"
                   >
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
+                    <Trash2 class="w-3.5 h-3.5" aria-hidden="true" />
                   </button>
                 {/if}
               </li>

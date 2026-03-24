@@ -3,6 +3,7 @@
   import NotificationPanel from '$components/notification/NotificationPanel.svelte';
   import QuickLinks from '$components/common/QuickLinks.svelte';
   import ColumnComposerPanel from '$components/composer/ColumnComposerPanel.svelte';
+  import { Bell, Link2, SquarePen } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
@@ -118,9 +119,7 @@
           title="通知"
           style={runtime.hasUnread ? `color: ${config.color};` : ''}
         >
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
-          </svg>
+          <Bell class="w-4 h-4" aria-hidden="true" />
           {#if runtime.hasUnread}
             <span
               class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-error"
@@ -148,10 +147,7 @@
           aria-label="クイックリンク"
           title="クイックリンク"
         >
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
-          </svg>
+          <Link2 class="w-4 h-4" aria-hidden="true" />
         </button>
 
         {#if linksPanelOpen}
@@ -179,17 +175,7 @@
           aria-label="ノートを投稿"
           title="ノートを投稿"
         >
-          <svg
-            class="w-3.5 h-3.5 shrink-0"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            aria-hidden="true"
-          >
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <SquarePen class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
           <span>ノート</span>
         </button>
 

@@ -2,6 +2,7 @@
   import type { AccountRuntime, Visibility } from '$lib/types';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
   import type { entities } from 'misskey-js';
+  import { MessageSquare, Repeat2, Eye, Send } from 'lucide-svelte';
 
   type Note = entities.Note;
 
@@ -177,9 +178,7 @@
   <!-- リプライ対象プレビュー -->
   {#if isReply && replyNote}
     <div class="flex items-start gap-1.5 bg-base-300 rounded px-2 py-1 text-xs text-base-content/60">
-      <svg class="w-3 h-3 mt-0.5 shrink-0 text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
+      <MessageSquare class="w-3 h-3 mt-0.5 shrink-0 text-info" aria-hidden="true" />
       <div class="min-w-0">
         <span class="font-semibold">@{replyNote.user?.username}</span> へのリプライ:
         <span class="opacity-70">{truncate(replyNote.text)}</span>
@@ -187,9 +186,7 @@
     </div>
   {:else if isReply}
     <div class="flex items-center gap-1 text-xs text-info">
-      <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
+      <MessageSquare class="w-3 h-3 shrink-0" aria-hidden="true" />
       <span>リプライ</span>
     </div>
   {/if}
@@ -197,9 +194,7 @@
   <!-- Renote対象プレビュー -->
   {#if isRenote && renoteNote}
     <div class="flex items-start gap-1.5 bg-base-300 rounded px-2 py-1 text-xs text-base-content/60">
-      <svg class="w-3 h-3 mt-0.5 shrink-0 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-        <path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3" />
-      </svg>
+      <Repeat2 class="w-3 h-3 mt-0.5 shrink-0 text-success" aria-hidden="true" />
       <div class="min-w-0">
         <span class="font-semibold">@{renoteNote.user?.username}</span> をRenote:
         <span class="opacity-70">{truncate(renoteNote.text)}</span>
@@ -207,9 +202,7 @@
     </div>
   {:else if isRenote}
     <div class="flex items-center gap-1 text-xs text-success">
-      <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-        <path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3" />
-      </svg>
+      <Repeat2 class="w-3 h-3 shrink-0" aria-hidden="true" />
       <span>引用Renote</span>
     </div>
   {/if}
@@ -298,10 +291,7 @@
         onclick={() => { previewMode = !previewMode; emojiPickerOpen = false; }}
         title="プレビュー"
       >
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3" />
-        </svg>
+        <Eye class="w-3.5 h-3.5" aria-hidden="true" />
       </button>
 
       <!-- 公開範囲 -->
@@ -342,9 +332,7 @@
         {#if posting}
           <span class="loading loading-spinner loading-xs"></span>
         {:else}
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
-          </svg>
+          <Send class="w-3 h-3" aria-hidden="true" />
         {/if}
         {isRenote && !text.trim() ? 'Renote' : '投稿'}
       </button>
