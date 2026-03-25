@@ -51,7 +51,7 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="note-user flex items-center gap-1.5 min-w-0 {onclick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}"
+  class="note-user flex items-center gap-1.5 min-w-0 w-fit max-w-full {onclick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}"
   onclick={handleClick}
 >
   <!-- アバター -->
