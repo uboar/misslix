@@ -104,7 +104,9 @@
   }
 
   function insertEmoji(emojiName: string) {
-    const insertion = `:${emojiName}: `;
+    // Unicodeデフォルト絵文字（非ASCII）はコロン不要、カスタム絵文字名はコロンで囲む
+    const isUnicodeEmoji = /[^\x00-\x7F]/.test(emojiName);
+    const insertion = isUnicodeEmoji ? `${emojiName} ` : `:${emojiName}: `;
     if (!textareaEl) {
       text += insertion;
       return;

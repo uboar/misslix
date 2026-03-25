@@ -86,7 +86,9 @@
   );
 
   function insertEmoji(name: string) {
-    const insertion = `:${name}: `;
+    // Unicodeデフォルト絵文字（非ASCII）はコロン不要、カスタム絵文字名はコロンで囲む
+    const isUnicodeEmoji = /[^\x00-\x7F]/.test(name);
+    const insertion = isUnicodeEmoji ? `${name} ` : `:${name}: `;
     if (!textareaEl) {
       text += insertion;
       emojiPickerOpen = false;
