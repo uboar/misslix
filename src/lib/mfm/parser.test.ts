@@ -91,7 +91,7 @@ describe('parseMfmPlain', () => {
   it('MFMの装飾構文 (**bold**) はシンプルモードではテキストとして扱われる', () => {
     // parseSimpleはブロック構文を解析しないため、boldノードは含まれない
     const result = parseMfmPlain('**bold**');
-    const hasBold = result.some((node) => node.type === 'bold');
+    const hasBold = result.some((node) => (node.type as string) === 'bold');
     // parseSimpleはboldを解析しないはず
     expect(hasBold).toBe(false);
   });

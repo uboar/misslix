@@ -129,7 +129,7 @@
     {/if}
 
     <!-- ユーザー基本情報 -->
-    <div class="flex items-start gap-3 {detail?.bannerUrl ? '-mt-10 relative z-10' : ''}">
+    <div class="flex items-start gap-3 {detail?.bannerUrl ? '-mt-10 relative z-10' : 'pr-8'}">
       <Avatar
         url={user.avatarUrl ?? null}
         size="4rem"

@@ -51,7 +51,7 @@
   );
 
   // ── 選択済みアカウントの絵文字マップ (プレビュー用: 最初の選択アカウントを使用) ──
-  const previewEmojis = $derived<Record<string, string>>(() => {
+  const previewEmojis = $derived.by<Record<string, string>>(() => {
     const firstId = [...selectedAccountIds][0];
     if (firstId == null) return {};
     const runtime = runtimes.get(firstId);
@@ -126,7 +126,7 @@
   }
 
   // 表示用の絵文字リスト (最初の選択アカウントのカスタム絵文字)
-  const pickerAccountEmojis = $derived(() => {
+  const pickerAccountEmojis = $derived.by(() => {
     const firstId = [...selectedAccountIds][0];
     if (firstId == null) return [];
     const runtime = runtimes.get(firstId);
@@ -135,7 +135,7 @@
   });
 
   // 絵文字URLマップ (最初の選択アカウント)
-  const pickerEmojiMap = $derived(() => {
+  const pickerEmojiMap = $derived.by(() => {
     const firstId = [...selectedAccountIds][0];
     if (firstId == null) return {} as Record<string, string>;
     const runtime = runtimes.get(firstId);
@@ -181,7 +181,7 @@
           params.fileIds = fileIds;
         }
 
-        await runtime.cli.request('notes/create', params as Parameters<typeof runtime.cli.request>[1]);
+        await (runtime.cli as any).request('notes/create', params);
         return account;
       })
     );
@@ -358,8 +358,8 @@
     <!-- 絵文字ピッカー -->
     {#if emojiPickerOpen}
       <EmojiPickerPopup
-        accountEmojis={pickerAccountEmojis()}
-        emojis={pickerEmojiMap()}
+        accountEmojis={pickerAccountEmojis}
+        emojis={pickerEmojiMap}
         onselect={(name) => insertEmoji(name)}
         onclose={() => { emojiPickerOpen = false; }}
       />
@@ -369,7 +369,7 @@
     {#if previewMode}
       <div class="border border-base-300 rounded-lg p-3 min-h-24 bg-base-200 text-sm break-words">
         {#if text.trim()}
-          <MfmRenderer text={text} emojis={previewEmojis()} />
+          <MfmRenderer text={text} emojis={previewEmojis} />
         {:else}
           <span class="text-base-content/40 italic">プレビューするテキストを入力してください</span>
         {/if}

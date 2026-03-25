@@ -67,7 +67,7 @@
   const charCount = $derived(text.length + (cwEnabled ? cwText.length : 0));
 
   // ── 絵文字マップ (プレビュー用 & ピッカー用) ──
-  const emojiMap = $derived<Record<string, string>>(() => {
+  const emojiMap = $derived.by<Record<string, string>>(() => {
     const result: Record<string, string> = {};
     for (const e of runtime.emojis) {
       result[e.name] = e.url;
@@ -146,7 +146,7 @@
         params.fileIds = fileIds;
       }
 
-      await runtime.cli.request('notes/create', params as Parameters<typeof runtime.cli.request>[1]);
+      await (runtime.cli as any).request('notes/create', params);
 
       // 成功: 設定を保存してリセット (visibility/localOnly/cwEnabled は引き継ぐ)
       saveToStorage(SETTINGS_KEY, { visibility, localOnly, cwEnabled });
@@ -267,7 +267,7 @@
   <!-- テキストエリア / プレビュー -->
   {#if previewMode && text.trim()}
     <div class="border border-base-300 rounded p-2 min-h-16 bg-base-100 text-sm break-words">
-      <MfmRenderer text={text} emojis={emojiMap()} />
+      <MfmRenderer text={text} emojis={emojiMap} />
     </div>
   {:else}
     <textarea
@@ -286,7 +286,7 @@
     <EmojiPickerPopup
       accountEmojis={runtime.emojis}
       deck={reactionDeck}
-      emojis={emojiMap()}
+      emojis={emojiMap}
       onselect={(name) => insertEmoji(name)}
       onclose={() => { emojiPickerOpen = false; }}
     />

@@ -41,7 +41,7 @@
   function openMobileModal(type: ModalType) {
     mobileModal = type;
     if (type === 'notif' && runtime) {
-      runtime.hasUnread = false;
+      runtime.notifState.hasUnread = false;
     }
   }
 
@@ -96,7 +96,7 @@
     composerPanelOpen = false;
     linksPanelOpen = false;
     if (runtime) {
-      runtime.hasUnread = false;
+      runtime.notifState.hasUnread = false;
     }
   }
 
@@ -239,14 +239,14 @@
         <button
           bind:this={notifBtnEl}
           class="flex items-center justify-center px-2.5 relative hover:bg-base-300 transition-colors {notifPanelOpen ? 'bg-base-300' : ''}"
-          class:opacity-60={!runtime.hasUnread}
+          class:opacity-60={!runtime.notifState.hasUnread}
           onclick={toggleNotifPanel}
-          aria-label="通知{runtime.hasUnread ? ' (未読あり)' : ''}"
+          aria-label="通知{runtime.notifState.hasUnread ? ' (未読あり)' : ''}"
           title="通知"
-          style={runtime.hasUnread ? `color: ${config.color};` : ''}
+          style={runtime.notifState.hasUnread ? `color: ${config.color};` : ''}
         >
           <Bell class="w-4 h-4" aria-hidden="true" />
-          {#if runtime.hasUnread}
+          {#if runtime.notifState.hasUnread}
             <span
               class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-error"
               aria-label="未読通知あり"

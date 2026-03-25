@@ -26,12 +26,13 @@ function makeNote(overrides: Record<string, unknown> = {}): entities.Note {
     reactionAcceptance: null,
     reactionEmojis: {},
     reactions: {},
+    reactionCount: 0,
     renoteCount: 0,
     repliesCount: 0,
     uri: undefined,
     url: undefined,
     ...overrides,
-  } as entities.Note;
+  } as unknown as entities.Note;
 }
 
 describe('checkMute', () => {

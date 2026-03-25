@@ -46,8 +46,7 @@ function makeRuntime(mockStream: ReturnType<typeof makeStreamMock>['mockStream']
     stream: mockStream as unknown as AccountRuntime['stream'],
     cli: {} as AccountRuntime['cli'],
     mainConnection: {} as AccountRuntime['mainConnection'],
-    notifications: [],
-    hasUnread: false,
+    notifState: { notifications: [], hasUnread: false } as unknown as AccountRuntime['notifState'],
     emojis: [],
     busy: false,
     userId: 'test-user-id',
@@ -97,10 +96,11 @@ function makeNote(overrides: Record<string, unknown> = {}): entities.Note {
     reactionAcceptance: null,
     reactionEmojis: {},
     reactions: {},
+    reactionCount: 0,
     renoteCount: 0,
     repliesCount: 0,
     ...overrides,
-  } as entities.Note;
+  } as unknown as entities.Note;
 }
 
 describe('connectTimeline', () => {

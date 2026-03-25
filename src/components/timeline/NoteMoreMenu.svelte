@@ -45,7 +45,7 @@
     if (busy) return;
     busy = true;
     try {
-      await runtime.cli.request('notes/favorites/create', { noteId } as Parameters<typeof runtime.cli.request>[1]);
+      await (runtime.cli as any).request('notes/favorites/create', { noteId });
       message = 'お気に入りに追加しました';
       setTimeout(() => { message = ''; onclose(); }, 800);
     } catch (err: unknown) {
@@ -53,7 +53,7 @@
       const errorMessage = err instanceof Error ? err.message : String(err);
       if (errorMessage.includes('ALREADY_FAVORITED') || errorMessage.includes('already')) {
         try {
-          await runtime.cli.request('notes/favorites/delete', { noteId } as Parameters<typeof runtime.cli.request>[1]);
+          await (runtime.cli as any).request('notes/favorites/delete', { noteId });
           message = 'お気に入りを解除しました';
           setTimeout(() => { message = ''; onclose(); }, 800);
         } catch {
@@ -77,7 +77,7 @@
     loadingClips = true;
     clipMode = true;
     try {
-      const res = await runtime.cli.request('clips/list', {} as Parameters<typeof runtime.cli.request>[1]);
+      const res = await (runtime.cli as any).request('clips/list', {});
       clips = (res as unknown as { id: string; name: string }[]);
     } catch {
       message = 'クリップ一覧の取得に失敗しました';
@@ -90,7 +90,7 @@
     if (busy) return;
     busy = true;
     try {
-      await runtime.cli.request('clips/add-note', { clipId, noteId } as Parameters<typeof runtime.cli.request>[1]);
+      await (runtime.cli as any).request('clips/add-note', { clipId, noteId });
       message = 'クリップに追加しました';
       setTimeout(() => { message = ''; onclose(); }, 800);
     } catch (err: unknown) {

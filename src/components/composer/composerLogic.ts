@@ -110,7 +110,7 @@ export async function postNote(cli: APIClient, params: PostParams): Promise<unkn
     body.fileIds = params.fileIds;
   }
 
-  return cli.request('notes/create', body as Parameters<APIClient['request']>[1]);
+  return (cli as any).request('notes/create', body);
 }
 
 /**
