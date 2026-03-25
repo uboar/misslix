@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import { initAccountRuntime } from '$lib/api/client';
   import type { AccountRuntime } from '$lib/types';
@@ -120,6 +121,34 @@
 
   // 初期化実行
   initRuntimes();
+
+  // 新規アカウント追加時にランタイムを更新
+  $effect(() => {
+    const accounts = accountStore.activeAccounts;
+    if (initializing) return;
+
+    const currentIds = untrack(() => new Set(runtimes.keys()));
+    const newAccounts = accounts.filter((a) => !currentIds.has(a.id));
+    if (newAccounts.length === 0) return;
+
+    Promise.allSettled(
+      newAccounts.map(async (account) => {
+        const runtime = await initAccountRuntime(account);
+        return [account.id, runtime] as const;
+      })
+    ).then((entries) => {
+      const newMap = untrack(() => new Map(runtimes));
+      for (let i = 0; i < entries.length; i++) {
+        const result = entries[i];
+        if (result.status === 'fulfilled') {
+          newMap.set(result.value[0], result.value[1]);
+        } else {
+          showApiError(result.reason, `@${newAccounts[i].userName} の初期化`);
+        }
+      }
+      runtimes = newMap;
+    });
+  });
 </script>
 
 <div class="h-full flex flex-col bg-base-100 text-base-content">
