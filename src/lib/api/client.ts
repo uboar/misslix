@@ -2,7 +2,6 @@ import { Stream, api } from 'misskey-js';
 import type { ChannelConnection, entities } from 'misskey-js';
 import type { Account, AccountRuntime } from '$lib/types';
 import { NotificationState } from '$lib/stores/notifications.svelte';
-import { showApiError } from '$lib/utils/error';
 import { settingsStore } from '$lib/stores/settings.svelte';
 
 const { APIClient } = api;
@@ -80,14 +79,6 @@ export async function initAccountRuntime(account: Account): Promise<AccountRunti
     const buffer = settingsStore.settings.notificationBuffer;
     notifState.notifications = [notification, ...notifState.notifications].slice(0, buffer);
     notifState.hasUnread = true;
-  });
-
-  // ストリーム切断時のエラーハンドリング
-  stream.on('_disconnected_', () => {
-    showApiError(
-      new Error('WebSocket接続が切断されました'),
-      `@${account.userName}`,
-    );
   });
 
   return runtime;
