@@ -1,5 +1,6 @@
 <script lang="ts">
   import { settingsStore } from '$lib/stores/settings.svelte';
+  import { Info } from 'lucide-svelte';
 
   const BUILTIN_THEMES = [
     'light', 'dark', 'cupcake', 'bumblebee', 'emerald', 'corporate', 'synthwave',
@@ -128,9 +129,7 @@
       </label>
       <!-- テーマクリエイター誘導バナー -->
       <div class="alert alert-info mb-2 py-2 px-3 text-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
-        </svg>
+        <Info class="h-4 w-4 shrink-0" aria-hidden="true" />
         <span>
           <a
             href="https://daisyui.com/theme-generator"

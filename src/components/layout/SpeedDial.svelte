@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plus, Settings, Trash2, Save } from 'lucide-svelte';
+  import { Plus, Settings, Trash2, Save, Columns2 } from 'lucide-svelte';
 
   type Props = {
     onpost?: () => void;
@@ -86,11 +86,7 @@
         onclick={() => handleAction(onadd)}
         aria-label="カラムを追加"
       >
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <rect x="3" y="3" width="7" height="18" rx="1" />
-          <rect x="14" y="3" width="7" height="18" rx="1" />
-          <path d="M17.5 7v10M12.5 12h10" stroke-width="1.5" />
-        </svg>
+        <Columns2 class="w-4 h-4" aria-hidden="true" />
       </button>
     </div>
 
