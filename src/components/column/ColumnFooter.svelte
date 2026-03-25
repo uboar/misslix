@@ -3,7 +3,7 @@
   import NotificationPanel from '$components/notification/NotificationPanel.svelte';
   import QuickLinks from '$components/common/QuickLinks.svelte';
   import ColumnComposerPanel from '$components/composer/ColumnComposerPanel.svelte';
-  import { Bell, Link2, MessageCircle } from 'lucide-svelte';
+  import { Bell, Link2, MessageCircle, X } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
@@ -12,6 +12,42 @@
   };
 
   let { config, runtime, account }: Props = $props();
+
+  // ── モバイル判定 ──
+  let isMobile = $state(false);
+
+  $effect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    isMobile = mq.matches;
+    const handler = (e: MediaQueryListEvent) => { isMobile = e.matches; };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  });
+
+  // ── モバイルモーダル ──
+  type ModalType = 'notif' | 'composer' | 'links' | null;
+  let mobileModal = $state<ModalType>(null);
+  let mobileModalEl = $state<HTMLDialogElement | null>(null);
+
+  $effect(() => {
+    if (!mobileModalEl) return;
+    if (mobileModal !== null) {
+      mobileModalEl.showModal();
+    } else {
+      mobileModalEl.close();
+    }
+  });
+
+  function openMobileModal(type: ModalType) {
+    mobileModal = type;
+    if (type === 'notif' && runtime) {
+      runtime.hasUnread = false;
+    }
+  }
+
+  function closeMobileModal() {
+    mobileModal = null;
+  }
 
   // ── 通知パネル ──
   let notifPanelOpen = $state(false);
@@ -69,6 +105,10 @@
   }
 
   function toggleNotifPanel() {
+    if (isMobile) {
+      openMobileModal('notif');
+      return;
+    }
     if (notifPanelOpen) {
       closeNotifPanel();
     } else {
@@ -88,6 +128,10 @@
   }
 
   function toggleComposerPanel() {
+    if (isMobile) {
+      openMobileModal('composer');
+      return;
+    }
     if (composerPanelOpen) {
       closeComposerPanel();
     } else {
@@ -96,6 +140,10 @@
   }
 
   function toggleLinksPanel() {
+    if (isMobile) {
+      openMobileModal('links');
+      return;
+    }
     if (linksPanelOpen) {
       linksPanelOpen = false;
     } else {
@@ -134,6 +182,50 @@
     };
   });
 </script>
+
+<!-- モバイル用モーダル -->
+<dialog
+  bind:this={mobileModalEl}
+  class="modal modal-bottom"
+  onclose={closeMobileModal}
+>
+  <div class="modal-box p-0 max-h-[85dvh] overflow-hidden flex flex-col rounded-t-2xl rounded-b-none w-full max-w-none">
+    <!-- モーダルヘッダー -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-base-300 shrink-0">
+      <h3 class="font-semibold text-base">
+        {#if mobileModal === 'notif'}
+          通知
+        {:else if mobileModal === 'composer'}
+          ノートを投稿
+        {:else if mobileModal === 'links'}
+          クイックリンク
+        {/if}
+      </h3>
+      <button
+        class="btn btn-ghost btn-sm btn-circle"
+        onclick={closeMobileModal}
+        aria-label="閉じる"
+      >
+        <X class="w-4 h-4" />
+      </button>
+    </div>
+
+    <!-- モーダルコンテンツ -->
+    <div class="overflow-y-auto flex-1 p-4">
+      {#if mobileModal === 'notif' && runtime}
+        <NotificationPanel {runtime} onclose={closeMobileModal} />
+      {:else if mobileModal === 'composer' && runtime}
+        <ColumnComposerPanel {config} {runtime} onclose={closeMobileModal} />
+      {:else if mobileModal === 'links' && account}
+        <QuickLinks {account} onclose={closeMobileModal} />
+      {/if}
+    </div>
+  </div>
+  <!-- バックドロップクリックで閉じる -->
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
 
 <!-- カラムフッター -->
 <div
