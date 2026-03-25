@@ -138,7 +138,7 @@
 <!-- カラムフッター -->
 <div
   class="column-footer shrink-0 relative flex items-stretch bg-base-200 border-t border-base-300"
-  style="--accent: {config.color}; min-height: 2rem;"
+  style="--accent: {config.color}; min-height: 4rem;"
 >
   <!-- 左: 通知ベルアイコン -->
   <div class="flex items-stretch" bind:this={notifWrapperEl}>
