@@ -11,6 +11,7 @@
   import SettingsModal from './components/settings/SettingsModal.svelte';
   import PostModal from './components/composer/PostModal.svelte';
   import ToastContainer from './components/common/ToastContainer.svelte';
+  import PwaUpdatePrompt from './components/common/PwaUpdatePrompt.svelte';
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import { showToast } from '$lib/utils/error';
 
@@ -158,4 +159,5 @@
   {/if}
 
   <ToastContainer />
+  <PwaUpdatePrompt />
 </div>
