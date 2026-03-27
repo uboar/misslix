@@ -5,6 +5,7 @@
   import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
   import { getEmojiMap } from '$lib/emoji/cache';
   import { formatRelativeTime } from '$lib/utils/date';
+  import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
   import {
     X, UserPlus, UserCheck, AtSign, Reply, Repeat2, Star, Quote, BarChart2, Bell,
     FileText, Clock, AlertCircle, Shield, MessageCircle, Trophy, Download, LogIn, Key, AppWindow, Users,
@@ -205,8 +206,25 @@
     return '';
   }
 
-  // 絵文字マップ (カスタム絵文字名 → URL)
+  // 絵文字マップ (カスタム絵文字名 → URL) — ローカルサーバーのカスタム絵文字
   const emojiMap = $derived(getEmojiMap('', runtime.emojis));
+
+  // ノートのreactionEmojisを取得 (リモートサーバー絵文字URLを含む)
+  function getNoteReactionEmojis(n: Notification): Record<string, string> {
+    if ('note' in n && n.note) {
+      const note = n.note as entities.Note & { reactionEmojis?: Record<string, string> };
+      return note.reactionEmojis ?? {};
+    }
+    return {};
+  }
+
+  // ユーザーの絵文字マップを取得 (ローカル + ユーザー固有)
+  function getUserEmojiMap(user: entities.UserLite | entities.UserDetailed): Record<string, string> {
+    return {
+      ...emojiMap,
+      ...(user.emojis as Record<string, string> | undefined ?? {}),
+    };
+  }
 
   function isCustomEmoji(reaction: string): boolean {
     return reaction.startsWith(':') && reaction.endsWith(':');
@@ -216,10 +234,20 @@
     return reaction.slice(1, -1).split('@')[0];
   }
 
-  function getEmojiUrl(reaction: string): string | null {
+  // リアクション絵文字URL取得 — ローカル絵文字マップ + ノートのreactionEmojis の順で解決
+  function getEmojiUrl(reaction: string, noteReactionEmojis: Record<string, string> = {}): string | null {
     const name = getCustomEmojiName(reaction);
     const fullName = reaction.slice(1, -1);
-    return emojiMap[name] ?? emojiMap[fullName] ?? emojiMap[reaction] ?? null;
+    // noteReactionEmojis を優先 (リモートサーバーの絵文字URLが含まれる)
+    return (
+      noteReactionEmojis[name] ??
+      noteReactionEmojis[fullName] ??
+      noteReactionEmojis[reaction] ??
+      emojiMap[name] ??
+      emojiMap[fullName] ??
+      emojiMap[reaction] ??
+      null
+    );
   }
 </script>
 
@@ -261,6 +289,7 @@
           {@const groupedReactions = getGroupedReactions(notification)}
           {@const groupedUsers = getGroupedRenoteUsers(notification)}
           {@const appNotif = getAppNotification(notification)}
+          {@const noteReactionEmojis = getNoteReactionEmojis(notification)}
           <li class="flex gap-2 px-3 py-2 hover:bg-base-100 transition-colors">
             <!-- 種別アイコン -->
             <div class="flex flex-col items-center shrink-0 gap-1 pt-0.5">
@@ -282,21 +311,21 @@
             <!-- 通知内容 -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-1 flex-wrap">
-                <!-- ユーザー名 -->
+                <!-- ユーザー名 (カスタム絵文字対応) -->
                 {#if user}
                   <span class="text-xs font-semibold text-base-content truncate max-w-[8rem]">
-                    {user.name || user.username}
+                    <MfmRenderer text={user.name || user.username} emojis={getUserEmojiMap(user)} isInline emojiHeight="1em" />
                   </span>
                 {:else if groupedUsers.length > 0}
                   <span class="text-xs font-semibold text-base-content truncate max-w-[8rem]">
-                    {groupedUsers[0].name || groupedUsers[0].username}
+                    <MfmRenderer text={groupedUsers[0].name || groupedUsers[0].username} emojis={getUserEmojiMap(groupedUsers[0])} isInline emojiHeight="1em" />
                   </span>
                   {#if groupedUsers.length > 1}
                     <span class="text-xs text-base-content/50">他{groupedUsers.length - 1}人</span>
                   {/if}
                 {:else if groupedReactions.length > 0}
                   <span class="text-xs font-semibold text-base-content truncate max-w-[8rem]">
-                    {groupedReactions[0].user.name || groupedReactions[0].user.username}
+                    <MfmRenderer text={groupedReactions[0].user.name || groupedReactions[0].user.username} emojis={getUserEmojiMap(groupedReactions[0].user)} isInline emojiHeight="1em" />
                   </span>
                   {#if groupedReactions.length > 1}
                     <span class="text-xs text-base-content/50">他{groupedReactions.length - 1}人</span>
@@ -306,11 +335,11 @@
                 <span class="text-xs text-base-content/60">{meta.label}</span>
               </div>
 
-              <!-- リアクション絵文字 (単体) -->
+              <!-- リアクション絵文字 (単体) — noteReactionEmojisでリモート絵文字URLも解決 -->
               {#if reaction}
                 <div class="text-sm mt-0.5" aria-label={reaction}>
                   {#if isCustomEmoji(reaction)}
-                    {@const emojiUrl = getEmojiUrl(reaction)}
+                    {@const emojiUrl = getEmojiUrl(reaction, noteReactionEmojis)}
                     {#if emojiUrl}
                       <EmojiRenderer name={getCustomEmojiName(reaction)} url={emojiUrl} height="1.25em" />
                     {:else}
@@ -322,13 +351,13 @@
                 </div>
               {/if}
 
-              <!-- グループ化リアクション絵文字一覧 -->
+              <!-- グループ化リアクション絵文字一覧 — noteReactionEmojisでリモート絵文字URLも解決 -->
               {#if groupedReactions.length > 0}
                 <div class="flex flex-wrap gap-0.5 mt-0.5">
                   {#each groupedReactions.slice(0, 5) as gr (gr.reaction + gr.user.id)}
                     <span class="text-sm" aria-label={gr.reaction}>
                       {#if isCustomEmoji(gr.reaction)}
-                        {@const emojiUrl = getEmojiUrl(gr.reaction)}
+                        {@const emojiUrl = getEmojiUrl(gr.reaction, noteReactionEmojis)}
                         {#if emojiUrl}
                           <EmojiRenderer name={getCustomEmojiName(gr.reaction)} url={emojiUrl} height="1.25em" />
                         {:else}
