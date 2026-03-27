@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { AccountRuntime, ColumnConfig, MergeSourceDef } from '$lib/types';
   import type { MergeNoteStore } from '$lib/stores/mergeNotes.svelte';
   import { settingsStore } from '$lib/stores/settings.svelte';
@@ -162,6 +163,10 @@
       loadingMore = false;
     }
   }
+
+  onMount(() => {
+    fetchInitial();
+  });
 
   // スクロールイベント (無限スクロール)
   function handleScroll(e: Event) {
