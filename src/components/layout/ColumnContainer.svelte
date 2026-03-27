@@ -2,6 +2,7 @@
   import type { AccountRuntime } from '$lib/types';
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import Column from '../column/Column.svelte';
+  import MergeColumn from '../column/MergeColumn.svelte';
   import { Plus, Columns2 } from 'lucide-svelte';
 
   type Props = {
@@ -115,16 +116,29 @@
           <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary z-50 rounded-full"></div>
         {/if}
 
-        <Column
-          {config}
-          runtime={runtimes.get(config.accountId)}
-          ondragstart={(e) => handleDragStart(index, e)}
-          ondragend={handleDragEnd}
-          ondragover={(e) => handleDragOver(index, e)}
-          ondragleave={(e) => handleDragLeave(index, e)}
-          ondrop={(e) => handleDrop(index, e)}
-          dropIndicator={dragFromIndex === index ? null : indicator}
-        />
+        {#if config.channel === 'mergeTimeline'}
+          <MergeColumn
+            {config}
+            {runtimes}
+            ondragstart={(e) => handleDragStart(index, e)}
+            ondragend={handleDragEnd}
+            ondragover={(e) => handleDragOver(index, e)}
+            ondragleave={(e) => handleDragLeave(index, e)}
+            ondrop={(e) => handleDrop(index, e)}
+            dropIndicator={dragFromIndex === index ? null : indicator}
+          />
+        {:else}
+          <Column
+            {config}
+            runtime={runtimes.get(config.accountId)}
+            ondragstart={(e) => handleDragStart(index, e)}
+            ondragend={handleDragEnd}
+            ondragover={(e) => handleDragOver(index, e)}
+            ondragleave={(e) => handleDragLeave(index, e)}
+            ondrop={(e) => handleDrop(index, e)}
+            dropIndicator={dragFromIndex === index ? null : indicator}
+          />
+        {/if}
 
         <!-- 右側ドロップインジケーター -->
         {#if indicator === 'right'}

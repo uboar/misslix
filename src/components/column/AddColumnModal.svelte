@@ -1,10 +1,12 @@
 <script lang="ts">
-  import type { ChannelType, ColumnConfig, AccountRuntime } from '$lib/types';
+  import type { ChannelType, ColumnConfig, AccountRuntime, MergeSourceDef } from '$lib/types';
+  import { DEFAULT_NOTE_DISPLAY } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import { timelineStore } from '$lib/stores/timelines.svelte';
+  import { presetStore } from '$lib/stores/presets.svelte';
   import { showApiError } from '$lib/utils/error';
   import Modal from '../common/Modal.svelte';
-  import { ChevronRight, ChevronLeft, Check } from 'lucide-svelte';
+  import { ChevronRight, ChevronLeft, Check, Layers, Plus, X } from 'lucide-svelte';
 
   type Props = {
     open: boolean;
@@ -14,8 +16,8 @@
 
   let { open, onclose, runtimes }: Props = $props();
 
-  // ステップ: 1=アカウント選択, 2=チャンネル種別選択, 3=追加パラメータ入力
-  let step = $state<1 | 2 | 3>(1);
+  // ステップ: 1=アカウント選択, 2=チャンネル種別選択, 3=追加パラメータ入力, 'merge'=マージTL作成
+  let step = $state<1 | 2 | 3 | 'merge'>(1);
   let selectedAccountId = $state<number | null>(null);
   let selectedChannel = $state<ChannelType | null>(null);
   let channelId = $state('');
@@ -29,6 +31,16 @@
   let listLoading = $state(false);
   let listError = $state<string | null>(null);
 
+  // マージTL用状態
+  type MergeMode = 'preset' | 'manual';
+  let mergeMode = $state<MergeMode>('preset');
+  let selectedPresetId = $state<string | null>(null);
+  let mergeSources = $state<MergeSourceDef[]>([]);
+  let mergeCustomName = $state('マージTL');
+  // マニュアル追加用
+  let manualAccountId = $state<number | null>(null);
+  let manualChannel = $state<ChannelType | null>(null);
+
   const CHANNEL_LABELS: Record<ChannelType, string> = {
     homeTimeline: 'ホーム',
     localTimeline: 'ローカル',
@@ -38,6 +50,7 @@
     antenna: 'アンテナ',
     userList: 'リスト',
     roleTimeline: 'ロール',
+    mergeTimeline: 'マージ',
   };
 
   const CHANNEL_DESCRIPTIONS: Record<ChannelType, string> = {
@@ -49,6 +62,7 @@
     antenna: 'アンテナで捕捉したノート',
     userList: 'リスト内ユーザーのノート',
     roleTimeline: '特定ロールのユーザーのノート',
+    mergeTimeline: '複数タイムラインを統合表示',
   };
 
   const CHANNEL_NEEDS_ID: ChannelType[] = ['channel', 'antenna', 'userList', 'roleTimeline'];
@@ -84,6 +98,12 @@
     listItems = [];
     listLoading = false;
     listError = null;
+    mergeMode = 'preset';
+    selectedPresetId = null;
+    mergeSources = [];
+    mergeCustomName = 'マージTL';
+    manualAccountId = null;
+    manualChannel = null;
   }
 
   function handleClose() {
@@ -182,23 +202,115 @@
       listError = null;
     } else if (step === 2) {
       step = 1;
+    } else if (step === 'merge') {
+      step = 1;
+      mergeSources = [];
+      selectedPresetId = null;
     }
+  }
+
+  // マージTL: プリセット選択時にソース生成
+  function selectPresetForMerge(presetId: string) {
+    selectedPresetId = presetId;
+    const preset = presetStore.getPreset(presetId);
+    if (!preset) return;
+    mergeSources = preset.columns
+      .filter(c => c.channel !== 'mergeTimeline')
+      .map(c => ({
+        accountId: c.accountId,
+        channel: c.channel,
+        channelId: c.channelId,
+        channelName: c.customName || c.channelName,
+        color: c.color,
+      }));
+    mergeCustomName = `${preset.name} (マージ)`;
+  }
+
+  // マニュアル: ソース追加
+  function addManualSource() {
+    if (manualAccountId === null || manualChannel === null) return;
+    if (manualChannel === 'mergeTimeline') return;
+    const account = accountStore.findById(manualAccountId);
+    const host = account?.hostUrl?.replace(/^https?:\/\//, '') ?? '?';
+    const color = account?.themeColor ?? ACCENT_COLORS[mergeSources.length % ACCENT_COLORS.length];
+    mergeSources = [...mergeSources, {
+      accountId: manualAccountId,
+      channel: manualChannel,
+      channelName: `${CHANNEL_LABELS[manualChannel]}@${host}`,
+      color,
+    }];
+    manualChannel = null;
+  }
+
+  // マニュアル: ソース削除
+  function removeSource(index: number) {
+    mergeSources = mergeSources.filter((_, i) => i !== index);
+  }
+
+  // マージTL: カラム追加
+  function handleAddMerge() {
+    if (mergeSources.length === 0) return;
+    const column: ColumnConfig = {
+      id: Date.now(),
+      accountId: -1,
+      channel: 'mergeTimeline',
+      channelName: 'マージTL',
+      customName: mergeCustomName || 'マージTL',
+      color: selectedColor,
+      width: 'lg',
+      maxNotes: 200,
+      bufferSize: 500,
+      collapsed: false,
+      autoCollapse: false,
+      lowRate: false,
+      reactionDeck: [],
+      noteDisplay: { ...DEFAULT_NOTE_DISPLAY },
+      sourceColumns: mergeSources,
+      sourcePresetId: selectedPresetId ?? undefined,
+    };
+    timelineStore.addColumn(column);
+    handleClose();
   }
 </script>
 
 <Modal open={open} onclose={handleClose} title="カラムを追加">
   <!-- ステップインジケーター -->
-  <ul class="steps steps-horizontal w-full mb-5 text-xs">
-    <li class="step" class:step-primary={step >= 1}>アカウント</li>
-    <li class="step" class:step-primary={step >= 2}>タイムライン</li>
-    {#if needsId || step === 3}
-      <li class="step" class:step-primary={step >= 3}>詳細</li>
-    {/if}
-  </ul>
+  {#if step === 'merge'}
+    <ul class="steps steps-horizontal w-full mb-5 text-xs">
+      <li class="step step-primary">モード</li>
+      <li class="step step-primary">ソース設定</li>
+    </ul>
+  {:else}
+    <ul class="steps steps-horizontal w-full mb-5 text-xs">
+      <li class="step" class:step-primary={step >= 1}>アカウント</li>
+      <li class="step" class:step-primary={step >= 2}>タイムライン</li>
+      {#if needsId || step === 3}
+        <li class="step" class:step-primary={step >= 3}>詳細</li>
+      {/if}
+    </ul>
+  {/if}
 
   <!-- ステップ 1: アカウント選択 -->
   {#if step === 1}
     <div class="space-y-2">
+      <!-- マージTL作成ボタン -->
+      {#if accountStore.accounts.length > 0}
+        <button
+          class="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-primary/50 hover:border-primary hover:bg-primary/5 transition-colors text-left mb-3"
+          onclick={() => { step = 'merge'; }}
+        >
+          <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <Layers class="w-4 h-4 text-primary" aria-hidden="true" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-primary">マージタイムライン</p>
+            <p class="text-xs text-base-content/50">複数のタイムラインを統合して表示</p>
+          </div>
+          <ChevronRight class="w-4 h-4 text-primary/50 shrink-0" aria-hidden="true" />
+        </button>
+        <div class="divider text-xs text-base-content/30 my-2">または通常カラム</div>
+      {/if}
+
       {#if accountStore.accounts.length === 0}
         <div class="text-center py-8 text-base-content/50">
           <p class="text-sm">アカウントが登録されていません。</p>
@@ -240,7 +352,7 @@
       <p class="text-xs text-base-content/60 mb-3">タイムラインの種類を選択してください</p>
 
       <div class="grid grid-cols-2 gap-2">
-        {#each Object.entries(CHANNEL_LABELS) as [ch, label]}
+        {#each Object.entries(CHANNEL_LABELS).filter(([k]) => k !== 'mergeTimeline') as [ch, label]}
           {@const channelType = ch as ChannelType}
           <button
             class="flex flex-col items-start gap-1 p-3 rounded-lg border border-base-300 hover:border-primary hover:bg-base-200 transition-colors text-left"
@@ -440,6 +552,172 @@
           追加する
         </button>
       </div>
+    </div>
+
+  <!-- マージタイムライン作成ステップ -->
+  {:else if step === 'merge'}
+    <div>
+      <button class="btn btn-ghost btn-xs gap-1 mb-3 -ml-1" onclick={goBack}>
+        <ChevronLeft class="w-3 h-3" aria-hidden="true" />
+        戻る
+      </button>
+
+      <!-- モード切替 -->
+      <div role="tablist" class="tabs tabs-box tabs-sm mb-4">
+        <button
+          role="tab"
+          class="tab"
+          class:tab-active={mergeMode === 'preset'}
+          onclick={() => { mergeMode = 'preset'; mergeSources = []; selectedPresetId = null; }}
+        >プリセットから</button>
+        <button
+          role="tab"
+          class="tab"
+          class:tab-active={mergeMode === 'manual'}
+          onclick={() => { mergeMode = 'manual'; mergeSources = []; selectedPresetId = null; }}
+        >マニュアル</button>
+      </div>
+
+      {#if mergeMode === 'preset'}
+        <!-- プリセット選択 -->
+        {#if presetStore.presets.length === 0}
+          <div class="text-center py-6 text-base-content/50">
+            <p class="text-sm">保存済みプリセットがありません</p>
+            <p class="text-xs mt-1">まずカラムを配置してプリセットに保存してください</p>
+          </div>
+        {:else}
+          <p class="text-xs text-base-content/60 mb-3">統合するプリセットを選択</p>
+          <div class="space-y-2 max-h-40 overflow-y-auto">
+            {#each presetStore.presets as preset (preset.id)}
+              <button
+                class="w-full flex items-center gap-2 p-2.5 rounded-lg border transition-colors text-left"
+                class:border-primary={selectedPresetId === preset.id}
+                class:bg-base-200={selectedPresetId === preset.id}
+                class:border-base-300={selectedPresetId !== preset.id}
+                onclick={() => selectPresetForMerge(preset.id)}
+              >
+                <Layers class="w-4 h-4 shrink-0 text-base-content/40" aria-hidden="true" />
+                <div class="flex-1 min-w-0">
+                  <span class="text-sm font-medium truncate block">{preset.name}</span>
+                  <span class="text-[0.6rem] text-base-content/40">{preset.columns.length}カラム</span>
+                </div>
+                {#if selectedPresetId === preset.id}
+                  <Check class="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+                {/if}
+              </button>
+            {/each}
+          </div>
+        {/if}
+      {:else}
+        <!-- マニュアル追加 -->
+        <p class="text-xs text-base-content/60 mb-3">ソースを追加してください</p>
+
+        <div class="flex gap-2 items-end mb-3">
+          <div class="flex-1">
+            <label class="text-[0.6rem] text-base-content/50 mb-0.5 block">アカウント</label>
+            <select
+              class="select select-bordered select-xs w-full"
+              bind:value={manualAccountId}
+            >
+              <option value={null}>選択...</option>
+              {#each accountStore.accounts as account (account.id)}
+                <option value={account.id}>
+                  @{account.userName}@{account.hostUrl.replace(/^https?:\/\//, '')}
+                </option>
+              {/each}
+            </select>
+          </div>
+          <div class="flex-1">
+            <label class="text-[0.6rem] text-base-content/50 mb-0.5 block">タイムライン</label>
+            <select
+              class="select select-bordered select-xs w-full"
+              bind:value={manualChannel}
+            >
+              <option value={null}>選択...</option>
+              {#each Object.entries(CHANNEL_LABELS).filter(([k]) => k !== 'mergeTimeline') as [ch, label]}
+                <option value={ch}>{label}</option>
+              {/each}
+            </select>
+          </div>
+          <button
+            class="btn btn-primary btn-xs btn-square shrink-0"
+            disabled={manualAccountId === null || manualChannel === null}
+            onclick={addManualSource}
+            title="追加"
+          >
+            <Plus class="w-3 h-3" aria-hidden="true" />
+          </button>
+        </div>
+      {/if}
+
+      <!-- 選択されたソース一覧 -->
+      {#if mergeSources.length > 0}
+        <div class="mt-3 pt-3 border-t border-base-300">
+          <p class="text-xs text-base-content/60 mb-2">ソース ({mergeSources.length})</p>
+          <div class="space-y-1 max-h-32 overflow-y-auto">
+            {#each mergeSources as source, i}
+              <div class="flex items-center gap-2 px-2 py-1.5 rounded bg-base-200/60 text-xs">
+                <span
+                  class="w-2.5 h-2.5 rounded-full shrink-0"
+                  style="background-color: {source.color};"
+                  aria-hidden="true"
+                ></span>
+                <span class="flex-1 truncate">{source.channelName}</span>
+                <button
+                  class="btn btn-ghost btn-xs btn-square opacity-50 hover:opacity-100"
+                  onclick={() => removeSource(i)}
+                  title="削除"
+                >
+                  <X class="w-3 h-3" aria-hidden="true" />
+                </button>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/if}
+
+      <!-- 表示名・カラー・追加ボタン -->
+      {#if mergeSources.length > 0}
+        <div class="mt-4 space-y-3">
+          <div class="form-control">
+            <label class="label py-1" for="merge-name-input">
+              <span class="label-text text-xs">表示名</span>
+            </label>
+            <input
+              id="merge-name-input"
+              type="text"
+              class="input input-bordered input-sm w-full"
+              placeholder="マージTL"
+              bind:value={mergeCustomName}
+            />
+          </div>
+
+          <div class="form-control">
+            <div class="label py-1">
+              <span class="label-text text-xs">アクセントカラー</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {#each ACCENT_COLORS as color}
+                <button
+                  class="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110"
+                  class:border-base-content={selectedColor === color}
+                  class:border-transparent={selectedColor !== color}
+                  style="background-color: {color};"
+                  onclick={() => selectedColor = color}
+                  aria-label="カラー {color}"
+                ></button>
+              {/each}
+            </div>
+          </div>
+
+          <button
+            class="btn btn-primary w-full btn-sm mt-2"
+            onclick={handleAddMerge}
+          >
+            マージTLを追加
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
 </Modal>

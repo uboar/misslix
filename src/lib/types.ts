@@ -41,7 +41,8 @@ export type ChannelType =
   | 'channel'
   | 'antenna'
   | 'userList'
-  | 'roleTimeline';
+  | 'roleTimeline'
+  | 'mergeTimeline';
 
 export type ColumnWidth = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
@@ -85,6 +86,10 @@ export type ColumnConfig = {
   defaultVisibility?: Visibility;
   /** カラムから投稿する際のデフォルトローカル限定設定 */
   defaultLocalOnly?: boolean;
+  /** マージタイムライン: ソースカラム定義 */
+  sourceColumns?: MergeSourceDef[];
+  /** マージタイムライン: 元にしたプリセットのID (参考情報) */
+  sourcePresetId?: string;
 };
 
 export const DEFAULT_NOTE_DISPLAY: NoteDisplayConfig = {
@@ -145,6 +150,26 @@ export type ChannelEndpointInfo = {
   streamChannel: string;
   restEndpoint: string;
   paramKey?: string;
+};
+
+// ─── マージタイムライン ───
+
+/** マージタイムラインのソース定義 */
+export type MergeSourceDef = {
+  accountId: number;
+  channel: ChannelType;
+  channelId?: string;
+  channelName: string;
+  color: string;
+};
+
+/** マージ表示用ノートラッパー */
+export type MergedNoteWrapper = {
+  note: entities.Note;
+  sourceLabel: string;
+  sourceAccountId: number;
+  sourceColor: string;
+  dedupKey: string;
 };
 
 // ─── ノート表示 (Phase 4) ───

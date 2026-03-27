@@ -2,7 +2,7 @@
   import type { ColumnConfig, ChannelType } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import ColumnSettings from './ColumnSettings.svelte';
-  import { GripVertical, Settings, ChevronLeft, CircleDotDashed, Globe, Home, Users, Hash, Radio, List, ShieldCheck } from 'lucide-svelte';
+  import { GripVertical, Settings, ChevronLeft, CircleDotDashed, Globe, Home, Users, Hash, Radio, List, ShieldCheck, Layers } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
@@ -15,11 +15,14 @@
 
   let { config, onremove, ontoggle, ondragstart, ondragend, emojis = {} }: Props = $props();
 
-  const account = $derived(accountStore.findById(config.accountId));
+  const isMerge = $derived(config.channel === 'mergeTimeline');
+  const account = $derived(isMerge ? null : accountStore.findById(config.accountId));
   const accountLabel = $derived(
-    account
-      ? `@${account.userName}@${account.hostUrl.replace(/^https?:\/\//, '')}`
-      : null
+    isMerge
+      ? `${config.sourceColumns?.length ?? 0}個のソース`
+      : account
+        ? `@${account.userName}@${account.hostUrl.replace(/^https?:\/\//, '')}`
+        : null
   );
 
   let settingsOpen = $state(false);
@@ -59,7 +62,9 @@
     <GripVertical class="w-3 h-3 shrink-0 opacity-40 cursor-grab active:cursor-grabbing" aria-hidden="true" />
 
     <!-- チャンネルアイコン -->
-    {#if config.channel === 'hybridTimeline'}
+    {#if config.channel === 'mergeTimeline'}
+      <Layers class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+    {:else if config.channel === 'hybridTimeline'}
       <CircleDotDashed class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
     {:else if config.channel === 'globalTimeline'}
       <Globe class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />

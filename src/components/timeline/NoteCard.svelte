@@ -15,6 +15,8 @@
   import NoteMoreMenu from './NoteMoreMenu.svelte';
   import InlineComposer from '$components/composer/InlineComposer.svelte';
   import UserDetailModal from '$components/user/UserDetailModal.svelte';
+  import ReactionAccountPicker from '$components/reaction/ReactionAccountPicker.svelte';
+  import { accountStore } from '$lib/stores/accounts.svelte';
   import { EyeOff, Repeat2, MessageSquare, Loader2, MoreHorizontal } from 'lucide-svelte';
 
   type Props = {
@@ -26,6 +28,10 @@
     muteWords?: string[];
     depth?: number;
     runtime?: AccountRuntime;
+    sourceLabel?: string;
+    sourceColor?: string;
+    availableRuntimes?: Map<number, AccountRuntime>;
+    sourceAccountId?: number;
   };
 
   let {
@@ -37,9 +43,26 @@
     muteWords = [],
     depth = 0,
     runtime,
+    sourceLabel,
+    sourceColor,
+    availableRuntimes,
+    sourceAccountId,
   }: Props = $props();
 
   const maxDepth = 2;  // 再帰上限
+
+  // マージTL: リアクション送信用アカウント選択
+  let selectedReactionAccountId = $state<number | undefined>(sourceAccountId);
+  const effectiveRuntime = $derived(
+    availableRuntimes && selectedReactionAccountId != null
+      ? availableRuntimes.get(selectedReactionAccountId) ?? runtime
+      : runtime
+  );
+  const effectiveHostUrl = $derived(
+    availableRuntimes && selectedReactionAccountId != null
+      ? accountStore.findById(selectedReactionAccountId)?.hostUrl?.replace(/^https?:\/\//, '') ?? hostUrl
+      : hostUrl
+  );
 
   // 純Renote判定: renoteがあり、自分のテキストがない
   const isPureRenote = $derived(!!note.renote && !note.text && !note.cw);
@@ -219,6 +242,18 @@
     ></div>
   {/if}
 
+  <!-- マージTL: ソースラベルバッジ -->
+  {#if sourceLabel && depth === 0}
+    <div class="mb-1">
+      <span
+        class="inline-block text-[0.55rem] leading-tight px-1.5 py-0.5 rounded-full text-white/90 font-medium"
+        style="background-color: {sourceColor ?? config.color};"
+      >
+        {sourceLabel}
+      </span>
+    </div>
+  {/if}
+
   <!-- ミュート折り畳み表示 -->
   {#if isMuted && !muteExpanded}
     <div class="flex items-center gap-2 text-base-content/30">
@@ -324,7 +359,7 @@
     {/if}
 
     <!-- ツールバー (depth=0のみ) -->
-    {#if depth === 0 && runtime}
+    {#if depth === 0 && (runtime || effectiveRuntime)}
       <div class="note-tabs flex items-center gap-1 mt-1.5 pt-1 border-t border-base-300/30">
         <!-- リプライボタン -->
         <button
@@ -359,14 +394,34 @@
         </button>
 
         <!-- リアクションボタン -->
-        <ReactionButton
-          noteId={displayNote.id}
-          {myReaction}
-          {runtime}
-          reactionDeck={config.reactionDeck}
-          emojis={reactionEmojis}
-          onreacted={handleReacted}
-        />
+        {#if effectiveRuntime}
+          <ReactionButton
+            noteId={displayNote.id}
+            {myReaction}
+            runtime={effectiveRuntime}
+            reactionDeck={config.reactionDeck}
+            emojis={reactionEmojis}
+            onreacted={handleReacted}
+          />
+        {:else if runtime}
+          <ReactionButton
+            noteId={displayNote.id}
+            {myReaction}
+            {runtime}
+            reactionDeck={config.reactionDeck}
+            emojis={reactionEmojis}
+            onreacted={handleReacted}
+          />
+        {/if}
+
+        <!-- マージTL: アカウント選択ピッカー -->
+        {#if availableRuntimes && availableRuntimes.size > 1}
+          <ReactionAccountPicker
+            runtimes={availableRuntimes}
+            selectedAccountId={selectedReactionAccountId ?? sourceAccountId ?? config.accountId}
+            onselect={(id) => { selectedReactionAccountId = id; }}
+          />
+        {/if}
 
         <!-- スペーサー -->
         <div class="flex-1"></div>
@@ -422,7 +477,7 @@
           noteId={displayNote.id}
           noteText={displayNote.text ?? null}
           hostUrl={hostUrl ?? ''}
-          {runtime}
+          runtime={(effectiveRuntime ?? runtime)!}
           positionStyle={moreMenuStyle}
           onclose={() => { moreMenuVisible = false; }}
         />
@@ -432,7 +487,7 @@
       {#if composerMode === 'reply'}
         <div class="mt-1.5">
           <InlineComposer
-            {runtime}
+            runtime={(effectiveRuntime ?? runtime)!}
             replyId={displayNote.id}
             replyNote={displayNote}
             oncomplete={handleComposerComplete}
@@ -442,7 +497,7 @@
       {:else if composerMode === 'quote'}
         <div class="mt-1.5">
           <InlineComposer
-            {runtime}
+            runtime={(effectiveRuntime ?? runtime)!}
             renoteId={displayNote.id}
             renoteNote={displayNote}
             oncomplete={handleComposerComplete}

@@ -12,12 +12,19 @@ describe('CHANNEL_ENDPOINTS', () => {
       'antenna',
       'userList',
       'roleTimeline',
+      'mergeTimeline',
     ];
     expect(Object.keys(CHANNEL_ENDPOINTS)).toEqual(expectedKeys);
   });
 
-  it('every entry has streamChannel and restEndpoint', () => {
+  it('every entry has streamChannel and restEndpoint (except mergeTimeline)', () => {
     for (const [key, info] of Object.entries(CHANNEL_ENDPOINTS)) {
+      if (key === 'mergeTimeline') {
+        // mergeTimeline is a placeholder with empty strings
+        expect(info.streamChannel).toBe('');
+        expect(info.restEndpoint).toBe('');
+        continue;
+      }
       expect(info.streamChannel, `${key}.streamChannel`).toBeTruthy();
       expect(info.restEndpoint, `${key}.restEndpoint`).toBeTruthy();
     }
