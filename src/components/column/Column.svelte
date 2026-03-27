@@ -215,7 +215,7 @@
     </div>
   {:else}
     <!-- 通常表示 -->
-    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} emojis={emojiMap} />
+    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} onrefresh={() => noteList?.refresh()} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} emojis={emojiMap} />
 
     <!-- メインエリア -->
     {#if runtime}

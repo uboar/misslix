@@ -268,20 +268,6 @@
     {/if}
   </div>
 
-  <!-- 更新ボタン -->
-  <div class="flex justify-end px-1.5 py-0.5 shrink-0 border-b border-base-300/50">
-    <button
-      class="btn btn-ghost btn-xs gap-1 text-[0.65rem] opacity-40 hover:opacity-80 h-6 min-h-6"
-      onclick={refresh}
-      disabled={loading}
-      aria-label="タイムラインを更新"
-      title="タイムラインを更新"
-    >
-      <RefreshCw class="w-3 h-3 {loading && isRefreshing ? 'animate-spin' : ''}" />
-      更新
-    </button>
-  </div>
-
   <!-- スクロールコンテナ -->
   <div
     bind:this={scrollContainer}

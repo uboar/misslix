@@ -242,7 +242,7 @@
       </div>
     </div>
   {:else}
-    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} />
+    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} onrefresh={() => noteList?.refresh()} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} />
 
     <MergeNoteList
       bind:this={noteList}

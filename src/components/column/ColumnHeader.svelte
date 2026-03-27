@@ -2,18 +2,19 @@
   import type { ColumnConfig, ChannelType } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import ColumnSettings from './ColumnSettings.svelte';
-  import { GripVertical, Settings, ChevronLeft, CircleDotDashed, Globe, Home, Users, Hash, Radio, List, ShieldCheck, Layers } from 'lucide-svelte';
+  import { GripVertical, Settings, ChevronLeft, CircleDotDashed, Globe, Home, Users, Hash, Radio, List, ShieldCheck, Layers, RefreshCw } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
     onremove?: () => void;
     ontoggle?: () => void;
+    onrefresh?: () => void;
     ondragstart?: (e: DragEvent) => void;
     ondragend?: (e: DragEvent) => void;
     emojis?: Record<string, string>;
   };
 
-  let { config, onremove, ontoggle, ondragstart, ondragend, emojis = {} }: Props = $props();
+  let { config, onremove, ontoggle, onrefresh, ondragstart, ondragend, emojis = {} }: Props = $props();
 
   const isMerge = $derived(config.channel === 'mergeTimeline');
   const account = $derived(isMerge ? null : accountStore.findById(config.accountId));
@@ -100,6 +101,19 @@
         </span>
       {/if}
     </button>
+
+    <!-- 更新ボタン -->
+    {#if onrefresh}
+      <button
+        class="btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100"
+        style="color: {headerTextColor};"
+        onclick={onrefresh}
+        aria-label="タイムラインを更新"
+        title="タイムラインを更新"
+      >
+        <RefreshCw class="w-3 h-3" aria-hidden="true" />
+      </button>
+    {/if}
 
     <!-- 設定ボタン -->
     <button
