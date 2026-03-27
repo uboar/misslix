@@ -4,9 +4,10 @@
   type Props = {
     account: Account;
     onclose?: () => void;
+    hideHeader?: boolean;
   };
 
-  let { account, onclose }: Props = $props();
+  let { account, onclose, hideHeader = false }: Props = $props();
 
   let hostUrl = $derived(
     account.hostUrl.endsWith('/')
@@ -27,9 +28,11 @@
 </script>
 
 <div class="space-y-1">
-  <h4 class="text-xs font-semibold text-base-content/60 mb-2">
-    @{account.userName} — クイックリンク
-  </h4>
+  {#if !hideHeader}
+    <h4 class="text-xs font-semibold text-base-content/60 mb-2">
+      @{account.userName} — クイックリンク
+    </h4>
+  {/if}
   {#each links as link}
     <a
       href="{hostUrl}{link.path}"

@@ -186,10 +186,10 @@
 <!-- モバイル用モーダル -->
 <dialog
   bind:this={mobileModalEl}
-  class="modal modal-bottom"
+  class="modal modal-middle"
   onclose={closeMobileModal}
 >
-  <div class="modal-box p-0 max-h-[85dvh] overflow-hidden flex flex-col rounded-t-2xl rounded-b-none w-full max-w-none">
+  <div class="modal-box p-0 max-h-[85dvh] overflow-hidden flex flex-col rounded-xl w-full max-w-md">
     <!-- モーダルヘッダー -->
     <div class="flex items-center justify-between px-4 py-3 border-b border-base-300 shrink-0">
       <h3 class="font-semibold text-base">
@@ -213,11 +213,11 @@
     <!-- モーダルコンテンツ -->
     <div class="overflow-y-auto flex-1 p-4">
       {#if mobileModal === 'notif' && runtime}
-        <NotificationPanel {runtime} onclose={closeMobileModal} />
+        <NotificationPanel {runtime} onclose={closeMobileModal} hideHeader={true} />
       {:else if mobileModal === 'composer' && runtime}
-        <ColumnComposerPanel {config} {runtime} onclose={closeMobileModal} />
+        <ColumnComposerPanel {config} {runtime} onclose={closeMobileModal} hideHeader={true} />
       {:else if mobileModal === 'links' && account}
-        <QuickLinks {account} onclose={closeMobileModal} />
+        <QuickLinks {account} onclose={closeMobileModal} hideHeader={true} />
       {/if}
     </div>
   </div>

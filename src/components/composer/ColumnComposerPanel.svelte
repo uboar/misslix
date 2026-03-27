@@ -7,9 +7,10 @@
     config: ColumnConfig;
     runtime: AccountRuntime;
     onclose?: () => void;
+    hideHeader?: boolean;
   };
 
-  let { config, runtime, onclose }: Props = $props();
+  let { config, runtime, onclose, hideHeader = false }: Props = $props();
 
   // カラム設定からデフォルト公開範囲を決定
   // channel タイプのカラムならチャンネルへの投稿を初期化、
@@ -31,12 +32,13 @@
 
 <!-- 投稿コンポーザーパネル本体 -->
 <div
-  class="column-composer-panel flex flex-col bg-base-200 border border-base-300 rounded-lg shadow-xl overflow-hidden"
-  style="width: 22rem; max-width: min(22rem, calc(100vw - 1rem)); max-height: 32rem;"
+  class="column-composer-panel flex flex-col overflow-hidden {hideHeader ? '' : 'bg-base-200 border border-base-300 rounded-lg shadow-xl'}"
+  style={hideHeader ? '' : 'width: 22rem; max-width: min(22rem, calc(100vw - 1rem)); max-height: 32rem;'}
   role="dialog"
   aria-label="ノート投稿"
 >
   <!-- パネルヘッダー -->
+  {#if !hideHeader}
   <div class="flex items-center justify-between px-3 py-2 bg-base-300 shrink-0">
     <div class="flex items-center gap-1.5">
       <!-- ペンアイコン -->
@@ -59,6 +61,7 @@
       </button>
     {/if}
   </div>
+  {/if}
 
   <!-- チャンネル表示バッジ (チャンネルカラムの場合) -->
   {#if isChannelColumn && config.channelId}

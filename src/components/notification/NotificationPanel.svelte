@@ -16,9 +16,10 @@
   type Props = {
     runtime: AccountRuntime;
     onclose?: () => void;
+    hideHeader?: boolean;
   };
 
-  let { runtime, onclose }: Props = $props();
+  let { runtime, onclose, hideHeader = false }: Props = $props();
 
   // 通知種別ごとのラベルとアイコンコンポーネント
   type NotificationMeta = {
@@ -259,18 +260,20 @@
   aria-label="通知パネル"
 >
   <!-- パネルヘッダー -->
-  <div class="flex items-center justify-between px-3 py-2 bg-base-300 shrink-0">
-    <span class="text-sm font-semibold text-base-content">通知</span>
-    {#if onclose}
-      <button
-        class="btn btn-ghost btn-xs btn-square"
-        onclick={onclose}
-        aria-label="閉じる"
-      >
-        <X class="w-3.5 h-3.5" aria-hidden="true" />
-      </button>
-    {/if}
-  </div>
+  {#if !hideHeader}
+    <div class="flex items-center justify-between px-3 py-2 bg-base-300 shrink-0">
+      <span class="text-sm font-semibold text-base-content">通知</span>
+      {#if onclose}
+        <button
+          class="btn btn-ghost btn-xs btn-square"
+          onclick={onclose}
+          aria-label="閉じる"
+        >
+          <X class="w-3.5 h-3.5" aria-hidden="true" />
+        </button>
+      {/if}
+    </div>
+  {/if}
 
   <!-- 通知リスト -->
   <div class="flex-1 overflow-y-auto">
