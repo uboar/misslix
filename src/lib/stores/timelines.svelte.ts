@@ -1,5 +1,6 @@
 import { type ColumnConfig, DEFAULT_NOTE_DISPLAY } from '$lib/types';
 import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
+import { migrateColumns } from '$lib/utils/migration';
 
 const STORAGE_KEY = 'timelines';
 
@@ -11,7 +12,7 @@ class TimelineStore {
   }
 
   restore() {
-    this.columns = loadFromStorage<ColumnConfig[]>(STORAGE_KEY, []);
+    this.columns = migrateColumns(loadFromStorage<unknown>(STORAGE_KEY, null));
   }
 
   persist() {

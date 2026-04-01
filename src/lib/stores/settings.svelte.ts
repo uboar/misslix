@@ -1,5 +1,6 @@
 import { type SettingsType, DEFAULT_SETTINGS } from '$lib/types';
 import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
+import { migrateSettings } from '$lib/utils/migration';
 
 const STORAGE_KEY = 'settings';
 
@@ -11,7 +12,7 @@ class SettingsStore {
   }
 
   restore() {
-    this.settings = loadFromStorage<SettingsType>(STORAGE_KEY, DEFAULT_SETTINGS);
+    this.settings = migrateSettings(loadFromStorage<unknown>(STORAGE_KEY, null));
   }
 
   persist() {

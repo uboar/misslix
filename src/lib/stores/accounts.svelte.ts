@@ -1,5 +1,6 @@
 import type { Account } from '$lib/types';
 import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
+import { migrateAccounts } from '$lib/utils/migration';
 
 const STORAGE_KEY = 'accounts';
 
@@ -15,7 +16,7 @@ class AccountStore {
   }
 
   restore() {
-    this.accounts = loadFromStorage<Account[]>(STORAGE_KEY, []);
+    this.accounts = migrateAccounts(loadFromStorage<unknown>(STORAGE_KEY, null));
   }
 
   persist() {

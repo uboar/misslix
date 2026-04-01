@@ -1,5 +1,6 @@
 import { type ColumnPreset } from '$lib/types';
 import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
+import { migratePresets } from '$lib/utils/migration';
 
 const STORAGE_KEY = 'column_presets';
 
@@ -11,7 +12,7 @@ class PresetStore {
   }
 
   restore() {
-    this.presets = loadFromStorage<ColumnPreset[]>(STORAGE_KEY, []);
+    this.presets = migratePresets(loadFromStorage<unknown>(STORAGE_KEY, null));
   }
 
   persist() {
