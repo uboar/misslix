@@ -48,10 +48,11 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_tabindex -->
 <div
   class="note-user flex items-center gap-1.5 min-w-0 w-fit max-w-full {onclick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}"
+  role={onclick ? 'button' : undefined}
+  tabindex={onclick ? 0 : undefined}
   onclick={handleClick}
 >
   <!-- アバター -->

@@ -29,3 +29,50 @@ html, body, #app {
   margin: 0;
   overflow: hidden;
 }
+
+/* ── モバイルタッチ改善 ── */
+
+/* タップハイライトを無効化 (スワイプ中に要素がフォーカスされたように見える問題を防止) */
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ダブルタップズームを無効化し、タッチ操作の300ms遅延を除去 */
+a,
+button,
+[role="button"],
+input,
+select,
+textarea,
+label {
+  touch-action: manipulation;
+}
+
+/* スクロールコンテナ: 子要素がスクロールを阻害しないようにする */
+.note-list-wrapper > [role="feed"],
+.merge-note-list-wrapper > [role="feed"] {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* カラムコンテナ: 水平スクロール最適化 */
+.column-container {
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ノートカード内のインタラクティブ要素: スワイプを妨げない */
+.note-card button,
+.note-card a,
+.note-card [role="button"] {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* リアクションバッジ: 横スクロールとの共存 */
+.note-reactions {
+  touch-action: pan-y;
+}
