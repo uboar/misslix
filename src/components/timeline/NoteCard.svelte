@@ -518,6 +518,7 @@
       {runtime}
       {hostUrl}
       emojis={noteEmojis}
+      accountId={sourceAccountId ?? (config.accountId >= 0 ? config.accountId : undefined)}
     />
   {/if}
 </article>

@@ -12,17 +12,18 @@ describe('CHANNEL_ENDPOINTS', () => {
       'antenna',
       'userList',
       'roleTimeline',
+      'userTimeline',
       'mergeTimeline',
     ];
     expect(Object.keys(CHANNEL_ENDPOINTS)).toEqual(expectedKeys);
   });
 
-  it('every entry has streamChannel and restEndpoint (except mergeTimeline)', () => {
+  it('every entry has streamChannel and restEndpoint (except mergeTimeline and REST-only channels)', () => {
+    // Channels with no WebSocket stream (REST-only or placeholder)
+    const noStreamChannels = new Set(['mergeTimeline', 'userTimeline']);
     for (const [key, info] of Object.entries(CHANNEL_ENDPOINTS)) {
-      if (key === 'mergeTimeline') {
-        // mergeTimeline is a placeholder with empty strings
-        expect(info.streamChannel).toBe('');
-        expect(info.restEndpoint).toBe('');
+      if (noStreamChannels.has(key)) {
+        expect(info.streamChannel, `${key}.streamChannel should be empty`).toBe('');
         continue;
       }
       expect(info.streamChannel, `${key}.streamChannel`).toBeTruthy();
@@ -30,8 +31,17 @@ describe('CHANNEL_ENDPOINTS', () => {
     }
   });
 
+  it('mergeTimeline has no restEndpoint', () => {
+    expect(CHANNEL_ENDPOINTS.mergeTimeline.restEndpoint).toBe('');
+  });
+
+  it('userTimeline uses users/notes REST endpoint', () => {
+    expect(CHANNEL_ENDPOINTS.userTimeline.restEndpoint).toBe('users/notes');
+    expect(CHANNEL_ENDPOINTS.userTimeline.paramKey).toBe('userId');
+  });
+
   it('entries requiring paramKey have it defined', () => {
-    const needsParam = ['channel', 'antenna', 'userList', 'roleTimeline'] as const;
+    const needsParam = ['channel', 'antenna', 'userList', 'roleTimeline', 'userTimeline'] as const;
     for (const key of needsParam) {
       expect(CHANNEL_ENDPOINTS[key].paramKey, `${key} should have paramKey`).toBeDefined();
     }

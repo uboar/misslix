@@ -42,6 +42,7 @@ export type ChannelType =
   | 'antenna'
   | 'userList'
   | 'roleTimeline'
+  | 'userTimeline'
   | 'mergeTimeline';
 
 export type ColumnWidth = 'sm' | 'md' | 'lg' | 'xl' | 'full';

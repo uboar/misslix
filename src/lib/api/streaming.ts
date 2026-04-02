@@ -49,6 +49,34 @@ export function connectTimeline(
   const endpointInfo = CHANNEL_ENDPOINTS[config.channel];
   const channelName = endpointInfo.streamChannel;
 
+  // ストリーミングチャンネルが存在しない場合 (userTimeline等のREST専用タイムライン)
+  // subNote/unsubNote によるリアクション更新のみサポートする
+  if (!channelName) {
+    const noteUpdatedHandler = (data: NoteUpdatedData) => {
+      callbacks.onNoteUpdated?.(data);
+    };
+    if (callbacks.onNoteUpdated) {
+      (runtime.stream as any).on('noteUpdated', noteUpdatedHandler);
+    }
+    if (callbacks.onStateChange) {
+      callbacks.onStateChange(false);
+    }
+    return {
+      disconnect() {
+        if (callbacks.onNoteUpdated) {
+          (runtime.stream as any).off('noteUpdated', noteUpdatedHandler);
+        }
+      },
+      subNote(noteId: string) {
+        (runtime.stream as any).send('subNote', { id: noteId });
+      },
+      unsubNote(noteId: string) {
+        (runtime.stream as any).send('unsubNote', { id: noteId });
+      },
+      reconnect() {},
+    };
+  }
+
   // チャンネル接続パラメータを構築
   // paramKey が定義されており、channelId が存在する場合はパラメータを付与する
   let params: Record<string, string> | undefined;

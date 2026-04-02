@@ -31,6 +31,13 @@
   let listLoading = $state(false);
   let listError = $state<string | null>(null);
 
+  // ユーザーTL用ユーザー検索
+  let userSearchQuery = $state('');
+  let userSearchResults = $state<ListItem[]>([]);
+  let userSearchLoading = $state(false);
+  let userSearchError = $state<string | null>(null);
+  let userSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
   // マージTL用状態
   type MergeMode = 'preset' | 'manual';
   let mergeMode = $state<MergeMode>('preset');
@@ -50,6 +57,7 @@
     antenna: 'アンテナ',
     userList: 'リスト',
     roleTimeline: 'ロール',
+    userTimeline: 'ユーザー',
     mergeTimeline: 'マージ',
   };
 
@@ -62,10 +70,11 @@
     antenna: 'アンテナで捕捉したノート',
     userList: 'リスト内ユーザーのノート',
     roleTimeline: '特定ロールのユーザーのノート',
+    userTimeline: '特定ユーザーのノート一覧',
     mergeTimeline: '複数タイムラインを統合表示',
   };
 
-  const CHANNEL_NEEDS_ID: ChannelType[] = ['channel', 'antenna', 'userList', 'roleTimeline'];
+  const CHANNEL_NEEDS_ID: ChannelType[] = ['channel', 'antenna', 'userList', 'roleTimeline', 'userTimeline'];
 
   const ACCENT_COLORS = [
     '#86b300', '#0095f6', '#ff6b35', '#9b59b6',
@@ -98,6 +107,11 @@
     listItems = [];
     listLoading = false;
     listError = null;
+    userSearchQuery = '';
+    userSearchResults = [];
+    userSearchLoading = false;
+    userSearchError = null;
+    if (userSearchTimer) { clearTimeout(userSearchTimer); userSearchTimer = null; }
     mergeMode = 'preset';
     selectedPresetId = null;
     mergeSources = [];
@@ -173,6 +187,36 @@
   function selectListItem(item: ListItem) {
     channelId = item.id;
     channelName = item.name;
+  }
+
+  async function searchUsers(query: string) {
+    if (!query.trim() || selectedAccountId === null) {
+      userSearchResults = [];
+      return;
+    }
+    const runtime = runtimes.get(selectedAccountId);
+    if (!runtime) return;
+
+    userSearchLoading = true;
+    userSearchError = null;
+    try {
+      const res = await runtime.cli.request('users/search', { query: query.trim(), limit: 20, origin: 'local' });
+      userSearchResults = (res as any[]).map((u: any) => ({
+        id: u.id,
+        name: u.name ? `${u.name} (@${u.username})` : `@${u.username}`,
+      }));
+    } catch (e) {
+      userSearchError = 'ユーザーの検索に失敗しました';
+    } finally {
+      userSearchLoading = false;
+    }
+  }
+
+  function handleUserSearchInput(e: Event) {
+    const query = (e.target as HTMLInputElement).value;
+    userSearchQuery = query;
+    if (userSearchTimer) clearTimeout(userSearchTimer);
+    userSearchTimer = setTimeout(() => searchUsers(query), 400);
   }
 
   function handleAdd() {
@@ -423,50 +467,94 @@
 
       {#if inputMode === 'list'}
         <!-- リスト選択モード -->
-        <div class="space-y-2">
-          {#if listLoading}
-            <div class="flex items-center justify-center py-6">
-              <span class="loading loading-spinner loading-sm text-primary"></span>
-              <span class="text-xs text-base-content/50 ml-2">読み込み中...</span>
-            </div>
-          {:else if listError}
-            <div class="text-center py-4">
-              <p class="text-xs text-error">{listError}</p>
-              <button class="btn btn-ghost btn-xs mt-2" onclick={fetchList}>再試行</button>
-            </div>
-          {:else if listItems.length === 0}
-            <div class="text-center py-4">
-              <p class="text-xs text-base-content/50">
-                {#if selectedChannel === 'channel'}お気に入りチャンネルがありません
-                {:else if selectedChannel === 'antenna'}アンテナがありません
-                {:else if selectedChannel === 'userList'}リストがありません
-                {:else if selectedChannel === 'roleTimeline'}ロールがありません
-                {/if}
-              </p>
-              <p class="text-xs text-base-content/40 mt-1">ID直接入力タブから追加できます</p>
-            </div>
-          {:else}
-            <div class="max-h-48 overflow-y-auto space-y-1">
-              {#each listItems as item (item.id)}
-                <button
-                  class="w-full flex items-center gap-2 p-2 rounded-lg border transition-colors text-left text-sm"
-                  class:border-primary={channelId === item.id}
-                  class:bg-base-200={channelId === item.id}
-                  class:border-base-300={channelId !== item.id}
-                  class:hover:border-primary={channelId !== item.id}
-                  class:hover:bg-base-200={channelId !== item.id}
-                  onclick={() => selectListItem(item)}
-                >
-                  <span class="flex-1 truncate">{item.name}</span>
-                  <span class="text-xs text-base-content/30 font-mono shrink-0">{item.id.slice(0, 8)}</span>
-                  {#if channelId === item.id}
-                    <Check class="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+        {#if selectedChannel === 'userTimeline'}
+          <!-- ユーザー検索 -->
+          <div class="space-y-2">
+            <input
+              type="search"
+              class="input input-bordered input-sm w-full"
+              placeholder="ユーザー名で検索..."
+              value={userSearchQuery}
+              oninput={handleUserSearchInput}
+            />
+            {#if userSearchLoading}
+              <div class="flex items-center justify-center py-4">
+                <span class="loading loading-spinner loading-sm text-primary"></span>
+                <span class="text-xs text-base-content/50 ml-2">検索中...</span>
+              </div>
+            {:else if userSearchError}
+              <p class="text-xs text-error text-center py-2">{userSearchError}</p>
+            {:else if userSearchResults.length > 0}
+              <div class="max-h-48 overflow-y-auto space-y-1">
+                {#each userSearchResults as item (item.id)}
+                  <button
+                    class="w-full flex items-center gap-2 p-2 rounded-lg border transition-colors text-left text-sm"
+                    class:border-primary={channelId === item.id}
+                    class:bg-base-200={channelId === item.id}
+                    class:border-base-300={channelId !== item.id}
+                    class:hover:border-primary={channelId !== item.id}
+                    class:hover:bg-base-200={channelId !== item.id}
+                    onclick={() => selectListItem(item)}
+                  >
+                    <span class="flex-1 truncate">{item.name}</span>
+                    {#if channelId === item.id}
+                      <Check class="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+                    {/if}
+                  </button>
+                {/each}
+              </div>
+            {:else if userSearchQuery.trim()}
+              <p class="text-xs text-base-content/50 text-center py-2">ユーザーが見つかりません</p>
+            {:else}
+              <p class="text-xs text-base-content/40 text-center py-2">ユーザー名を入力して検索</p>
+            {/if}
+          </div>
+        {:else}
+          <div class="space-y-2">
+            {#if listLoading}
+              <div class="flex items-center justify-center py-6">
+                <span class="loading loading-spinner loading-sm text-primary"></span>
+                <span class="text-xs text-base-content/50 ml-2">読み込み中...</span>
+              </div>
+            {:else if listError}
+              <div class="text-center py-4">
+                <p class="text-xs text-error">{listError}</p>
+                <button class="btn btn-ghost btn-xs mt-2" onclick={fetchList}>再試行</button>
+              </div>
+            {:else if listItems.length === 0}
+              <div class="text-center py-4">
+                <p class="text-xs text-base-content/50">
+                  {#if selectedChannel === 'channel'}お気に入りチャンネルがありません
+                  {:else if selectedChannel === 'antenna'}アンテナがありません
+                  {:else if selectedChannel === 'userList'}リストがありません
+                  {:else if selectedChannel === 'roleTimeline'}ロールがありません
                   {/if}
-                </button>
-              {/each}
-            </div>
-          {/if}
-        </div>
+                </p>
+                <p class="text-xs text-base-content/40 mt-1">ID直接入力タブから追加できます</p>
+              </div>
+            {:else}
+              <div class="max-h-48 overflow-y-auto space-y-1">
+                {#each listItems as item (item.id)}
+                  <button
+                    class="w-full flex items-center gap-2 p-2 rounded-lg border transition-colors text-left text-sm"
+                    class:border-primary={channelId === item.id}
+                    class:bg-base-200={channelId === item.id}
+                    class:border-base-300={channelId !== item.id}
+                    class:hover:border-primary={channelId !== item.id}
+                    class:hover:bg-base-200={channelId !== item.id}
+                    onclick={() => selectListItem(item)}
+                  >
+                    <span class="flex-1 truncate">{item.name}</span>
+                    <span class="text-xs text-base-content/30 font-mono shrink-0">{item.id.slice(0, 8)}</span>
+                    {#if channelId === item.id}
+                      <Check class="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+                    {/if}
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
 
         <!-- 選択済み表示名編集 -->
         {#if channelId}
@@ -493,6 +581,7 @@
                 {:else if selectedChannel === 'antenna'}アンテナID
                 {:else if selectedChannel === 'userList'}リストID
                 {:else if selectedChannel === 'roleTimeline'}ロールID
+                {:else if selectedChannel === 'userTimeline'}ユーザーID
                 {:else}ID
                 {/if}
               </span>

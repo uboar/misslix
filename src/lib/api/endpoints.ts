@@ -40,6 +40,11 @@ export const CHANNEL_ENDPOINTS: Record<ChannelType, ChannelEndpointInfo> = {
     restEndpoint: 'roles/notes',
     paramKey: 'roleId',
   },
+  userTimeline: {
+    streamChannel: '',
+    restEndpoint: 'users/notes',
+    paramKey: 'userId',
+  },
   mergeTimeline: {
     streamChannel: '',
     restEndpoint: '',

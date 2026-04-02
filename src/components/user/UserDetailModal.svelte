@@ -1,9 +1,11 @@
 <script lang="ts">
   import type { entities } from 'misskey-js';
   import type { AccountRuntime } from '$lib/types';
+  import { timelineStore } from '$lib/stores/timelines.svelte';
   import Modal from '$components/common/Modal.svelte';
   import Avatar from '$components/common/Avatar.svelte';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
+  import { Columns } from 'lucide-svelte';
 
   type Props = {
     open: boolean;
@@ -12,9 +14,26 @@
     runtime?: AccountRuntime;
     emojis?: Record<string, string>;
     hostUrl?: string;
+    accountId?: number;
   };
 
-  let { open, onclose, user, runtime, emojis = {}, hostUrl }: Props = $props();
+  let { open, onclose, user, runtime, emojis = {}, hostUrl, accountId }: Props = $props();
+
+  let addedTimeline = $state(false);
+
+  function handleAddUserTimeline() {
+    if (accountId == null || accountId < 0) return;
+    const displayName = user.name ? `${user.name} (@${user.username})` : `@${user.username}`;
+    const column = timelineStore.createDefaultColumn(
+      accountId,
+      'userTimeline',
+      displayName,
+      { channelId: user.id },
+    );
+    timelineStore.addColumn(column);
+    addedTimeline = true;
+    setTimeout(() => { addedTimeline = false; }, 2000);
+  }
 
   // ユーザー詳細情報 (APIから取得)
   let detail = $state<entities.UserDetailed | null>(null);
@@ -216,8 +235,8 @@
         </div>
       {/if}
 
-      <!-- プロフィールリンク -->
-      <div class="pt-2 border-t border-base-300/60">
+      <!-- アクション -->
+      <div class="pt-2 border-t border-base-300/60 flex items-center justify-between gap-2 flex-wrap">
         <a
           href={detail.url ?? `${hostUrl ?? (user.host ? `https://${user.host}` : 'https://misskey.io')}/@${user.username}`}
           target="_blank"
@@ -226,6 +245,16 @@
         >
           プロフィールページを開く
         </a>
+        {#if accountId != null && accountId >= 0}
+          <button
+            class="btn btn-xs btn-outline btn-primary gap-1"
+            onclick={handleAddUserTimeline}
+            disabled={addedTimeline}
+          >
+            <Columns class="w-3 h-3" aria-hidden="true" />
+            {addedTimeline ? '追加しました' : 'タイムラインを追加'}
+          </button>
+        {/if}
       </div>
     {/if}
   </div>

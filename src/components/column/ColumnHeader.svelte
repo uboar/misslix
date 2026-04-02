@@ -2,7 +2,7 @@
   import type { ColumnConfig, ChannelType } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import ColumnSettings from './ColumnSettings.svelte';
-  import { GripVertical, Settings, ChevronLeft, CircleDotDashed, Globe, Home, Users, Hash, Radio, List, ShieldCheck, Layers, RefreshCw } from 'lucide-svelte';
+  import { GripVertical, Settings, ChevronLeft, CircleDotDashed, Globe, Home, Users, Hash, Radio, List, ShieldCheck, Layers, RefreshCw, UserRound } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
@@ -79,6 +79,8 @@
       <List class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
     {:else if config.channel === 'roleTimeline'}
       <ShieldCheck class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+    {:else if config.channel === 'userTimeline'}
+      <UserRound class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
     {:else}
       <Home class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
     {/if}
