@@ -34,8 +34,16 @@
 
   // カスタム絵文字URL取得
   function getEmojiUrl(reaction: string): string | null {
-    const name = getCustomEmojiName(reaction);   // 'neko' (サーバー名strip)
     const fullName = reaction.slice(1, -1);       // 'neko@misskey.io' (コロンなし・サーバー名つき)
+    const name = fullName.split('@')[0];           // 'neko' (サーバー名strip)
+    const server = fullName.split('@')[1];         // 'misskey.io' or '.' or undefined
+
+    // リモート絵文字 (:name@server: で server が '.' でない場合) は
+    // サーバー付き名前を優先し、ローカル絵文字より先に解決する
+    if (server && server !== '.') {
+      return emojis[fullName] ?? emojis[name] ?? null;
+    }
+    // ローカル絵文字 (:name: or :name@.:) はローカル名で解決
     return emojis[name] ?? emojis[fullName] ?? emojis[reaction] ?? null;
   }
 
