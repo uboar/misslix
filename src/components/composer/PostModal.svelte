@@ -1,11 +1,17 @@
 <script lang="ts">
-  import type { Account, AccountRuntime, Visibility } from '$lib/types';
+  import type { Account, AccountRuntime, Visibility, ComposerSettings } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import Modal from '../common/Modal.svelte';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
   import EmojiPickerPopup from './EmojiPickerPopup.svelte';
   import FileAttachmentArea from './FileAttachmentArea.svelte';
-  import { uploadFileToDrive } from './composerLogic';
+  import {
+    uploadFileToDrive,
+    postNote,
+    VISIBILITY_OPTIONS,
+    insertEmojiAtCursor,
+    extractImageFilesFromClipboard,
+  } from './composerLogic';
   import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
   import { Check, X, Eye, Send } from 'lucide-svelte';
 
@@ -63,7 +69,6 @@
     return result;
   });
 
-  type ComposerSettings = { visibility: Visibility; localOnly: boolean; cwEnabled: boolean };
   const SETTINGS_KEY = 'composer-last-settings';
 
   // モーダルが開いたとき: アカウントを全選択し状態リセット、前回の設定を復元
@@ -104,25 +109,17 @@
   }
 
   function insertEmoji(emojiName: string) {
-    // Unicodeデフォルト絵文字（非ASCII）はコロン不要、カスタム絵文字名はコロンで囲む
-    const isUnicodeEmoji = /[^\x00-\x7F]/.test(emojiName);
-    const insertion = isUnicodeEmoji ? `${emojiName} ` : `:${emojiName}: `;
-    if (!textareaEl) {
-      text += insertion;
-      return;
-    }
-    const start = textareaEl.selectionStart ?? text.length;
-    const end = textareaEl.selectionEnd ?? text.length;
-    text = text.slice(0, start) + insertion + text.slice(end);
+    const { text: newText, cursorPos } = insertEmojiAtCursor(emojiName, text, textareaEl);
+    text = newText;
     emojiPickerOpen = false;
-    // カーソルを挿入位置の末尾に移動
-    requestAnimationFrame(() => {
-      if (textareaEl) {
-        const pos = start + insertion.length;
-        textareaEl.setSelectionRange(pos, pos);
-        textareaEl.focus();
-      }
-    });
+    if (cursorPos >= 0) {
+      requestAnimationFrame(() => {
+        if (textareaEl) {
+          textareaEl.setSelectionRange(cursorPos, cursorPos);
+          textareaEl.focus();
+        }
+      });
+    }
   }
 
   // 表示用の絵文字リスト (最初の選択アカウントのカスタム絵文字)
@@ -169,19 +166,13 @@
           );
         }
 
-        const params: Record<string, unknown> = {
-          text: text || undefined,
+        await postNote(runtime.cli, {
+          text: text.trim(),
+          cw: cwEnabled && cwText.trim() ? cwText.trim() : null,
           visibility,
           localOnly,
-        };
-        if (cwEnabled && cwText.trim()) {
-          params.cw = cwText.trim();
-        }
-        if (fileIds.length > 0) {
-          params.fileIds = fileIds;
-        }
-
-        await (runtime.cli as any).request('notes/create', params);
+          fileIds: fileIds.length > 0 ? fileIds : undefined,
+        });
         return account;
       })
     );
@@ -233,26 +224,12 @@
   }
 
   function handlePaste(e: ClipboardEvent) {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    const imageFiles: File[] = [];
-    for (const item of Array.from(items)) {
-      if (item.kind === 'file' && item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) imageFiles.push(file);
-      }
-    }
+    const imageFiles = extractImageFilesFromClipboard(e);
     if (imageFiles.length > 0) {
       e.preventDefault();
       attachedFiles = [...attachedFiles, ...imageFiles].slice(0, 16);
     }
   }
-
-  const visibilityOptions: { value: Visibility; label: string; icon: string }[] = [
-    { value: 'public', label: 'パブリック', icon: '🌐' },
-    { value: 'home', label: 'ホーム', icon: '🏠' },
-    { value: 'followers', label: 'フォロワー', icon: '🔒' },
-  ];
 
   const canPost = $derived(
     (text.trim().length > 0 || (cwEnabled && cwText.trim().length > 0) || attachedFiles.length > 0) &&
@@ -400,7 +377,7 @@
           class="select select-bordered select-xs"
           bind:value={visibility}
         >
-          {#each visibilityOptions as opt (opt.value)}
+          {#each VISIBILITY_OPTIONS as opt (opt.value)}
             <option value={opt.value}>{opt.icon} {opt.label}</option>
           {/each}
         </select>

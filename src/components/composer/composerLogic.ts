@@ -20,6 +20,7 @@ export type PostParams = {
   localOnly: boolean;
   replyId?: string | null;
   renoteId?: string | null;
+  channelId?: string | null;
   fileIds?: string[];
 };
 
@@ -106,6 +107,9 @@ export async function postNote(cli: APIClient, params: PostParams): Promise<unkn
   if (params.renoteId) {
     body.renoteId = params.renoteId;
   }
+  if (params.channelId) {
+    body.channelId = params.channelId;
+  }
   if (params.fileIds && params.fileIds.length > 0) {
     body.fileIds = params.fileIds;
   }
@@ -179,6 +183,54 @@ export async function uploadFileToDrive(
   }
   const data = (await res.json()) as { id: string };
   return data.id;
+}
+
+// ─── UI用定数 ───
+
+export const VISIBILITY_OPTIONS: { value: Visibility; label: string; icon: string }[] = [
+  { value: 'public', label: 'パブリック', icon: '🌐' },
+  { value: 'home', label: 'ホーム', icon: '🏠' },
+  { value: 'followers', label: 'フォロワー', icon: '🔒' },
+];
+
+/**
+ * テキストエリアのカーソル位置に絵文字を挿入する。
+ * textareaEl が null の場合はテキスト末尾に追記する。
+ * 戻り値: 新テキストとカーソル位置 (cursorPos が -1 の場合はカーソル更新不要)
+ */
+export function insertEmojiAtCursor(
+  name: string,
+  text: string,
+  textareaEl: HTMLTextAreaElement | null,
+): { text: string; cursorPos: number } {
+  const isUnicodeEmoji = /[^\x00-\x7F]/.test(name);
+  const insertion = isUnicodeEmoji ? `${name} ` : `:${name}: `;
+  if (!textareaEl) {
+    return { text: text + insertion, cursorPos: -1 };
+  }
+  const start = textareaEl.selectionStart ?? text.length;
+  const end = textareaEl.selectionEnd ?? text.length;
+  return {
+    text: text.slice(0, start) + insertion + text.slice(end),
+    cursorPos: start + insertion.length,
+  };
+}
+
+/**
+ * ClipboardEvent から画像ファイルを抽出する。
+ * 画像がなければ空配列を返す。
+ */
+export function extractImageFilesFromClipboard(e: ClipboardEvent): File[] {
+  const items = e.clipboardData?.items;
+  if (!items) return [];
+  const imageFiles: File[] = [];
+  for (const item of Array.from(items)) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) imageFiles.push(file);
+    }
+  }
+  return imageFiles;
 }
 
 // ─── 可視性ラベル ───

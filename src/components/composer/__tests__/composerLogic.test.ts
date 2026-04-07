@@ -18,6 +18,9 @@ import {
   postToMultipleAccounts,
   uploadFileToDrive,
   VISIBILITY_LABELS,
+  VISIBILITY_OPTIONS,
+  insertEmojiAtCursor,
+  extractImageFilesFromClipboard,
 } from '../composerLogic';
 
 type APIClient = api.APIClient;
@@ -492,5 +495,110 @@ describe('VISIBILITY_LABELS', () => {
     visibilities.forEach((v) => {
       expect(VISIBILITY_LABELS[v]).toBeTruthy();
     });
+  });
+});
+
+// ─── VISIBILITY_OPTIONS ───
+
+describe('VISIBILITY_OPTIONS', () => {
+  it('public / home / followers の3件が含まれる', () => {
+    const values = VISIBILITY_OPTIONS.map((o) => o.value);
+    expect(values).toContain('public');
+    expect(values).toContain('home');
+    expect(values).toContain('followers');
+    expect(VISIBILITY_OPTIONS).toHaveLength(3);
+  });
+
+  it('各エントリに value / label / icon が存在する', () => {
+    VISIBILITY_OPTIONS.forEach((o) => {
+      expect(o.value).toBeTruthy();
+      expect(o.label).toBeTruthy();
+      expect(o.icon).toBeTruthy();
+    });
+  });
+});
+
+// ─── insertEmojiAtCursor ───
+
+describe('insertEmojiAtCursor', () => {
+  it('textareaEl が null のときテキスト末尾に追記し cursorPos が -1', () => {
+    const result = insertEmojiAtCursor('😀', 'hello ', null);
+    expect(result.text).toBe('hello 😀 ');
+    expect(result.cursorPos).toBe(-1);
+  });
+
+  it('カスタム絵文字名はコロンで囲まれる', () => {
+    const result = insertEmojiAtCursor('custom_emoji', 'hello ', null);
+    expect(result.text).toBe('hello :custom_emoji: ');
+  });
+
+  it('Unicode絵文字（非ASCII）はコロンなしで追記される', () => {
+    const result = insertEmojiAtCursor('🎉', '', null);
+    expect(result.text).toBe('🎉 ');
+  });
+
+  it('textareaEl があるときカーソル位置に挿入し cursorPos が正の値', () => {
+    const textarea = { selectionStart: 3, selectionEnd: 3 } as HTMLTextAreaElement;
+    const result = insertEmojiAtCursor('hi', 'abcdef', textarea);
+    expect(result.text).toBe('abc:hi: def');
+    expect(result.cursorPos).toBe(3 + ':hi: '.length);
+  });
+
+  it('選択範囲がある場合は選択テキストを置換する', () => {
+    const textarea = { selectionStart: 2, selectionEnd: 4 } as HTMLTextAreaElement;
+    const result = insertEmojiAtCursor('🌟', 'abXXef', textarea);
+    expect(result.text).toBe('ab🌟 ef');
+  });
+});
+
+// ─── extractImageFilesFromClipboard ───
+
+describe('extractImageFilesFromClipboard', () => {
+  function makeClipboardEvent(items: { kind: string; type: string; file: File | null }[]): ClipboardEvent {
+    return {
+      clipboardData: {
+        items: items.map((i) => ({
+          kind: i.kind,
+          type: i.type,
+          getAsFile: () => i.file,
+        })),
+      },
+    } as unknown as ClipboardEvent;
+  }
+
+  it('画像ファイルのみ返す', () => {
+    const imgFile = new File([''], 'photo.png', { type: 'image/png' });
+    const txtFile = new File([''], 'note.txt', { type: 'text/plain' });
+    const e = makeClipboardEvent([
+      { kind: 'file', type: 'image/png', file: imgFile },
+      { kind: 'file', type: 'text/plain', file: txtFile },
+      { kind: 'string', type: 'text/plain', file: null },
+    ]);
+    const result = extractImageFilesFromClipboard(e);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toBe(imgFile);
+  });
+
+  it('clipboardData が null のとき空配列を返す', () => {
+    const e = { clipboardData: null } as unknown as ClipboardEvent;
+    expect(extractImageFilesFromClipboard(e)).toHaveLength(0);
+  });
+
+  it('画像がなければ空配列を返す', () => {
+    const e = makeClipboardEvent([
+      { kind: 'string', type: 'text/plain', file: null },
+    ]);
+    expect(extractImageFilesFromClipboard(e)).toHaveLength(0);
+  });
+
+  it('複数画像があれば全て返す', () => {
+    const f1 = new File([''], 'a.png', { type: 'image/png' });
+    const f2 = new File([''], 'b.jpg', { type: 'image/jpeg' });
+    const e = makeClipboardEvent([
+      { kind: 'file', type: 'image/png', file: f1 },
+      { kind: 'file', type: 'image/jpeg', file: f2 },
+    ]);
+    const result = extractImageFilesFromClipboard(e);
+    expect(result).toHaveLength(2);
   });
 });

@@ -1,9 +1,15 @@
 <script lang="ts">
-  import type { AccountRuntime, Visibility } from '$lib/types';
+  import type { AccountRuntime, Visibility, ComposerSettings } from '$lib/types';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
   import EmojiPickerPopup from './EmojiPickerPopup.svelte';
   import FileAttachmentArea from './FileAttachmentArea.svelte';
-  import { uploadFileToDrive } from './composerLogic';
+  import {
+    uploadFileToDrive,
+    postNote,
+    VISIBILITY_OPTIONS,
+    insertEmojiAtCursor,
+    extractImageFilesFromClipboard,
+  } from './composerLogic';
   import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
   import type { entities } from 'misskey-js';
   import { MessageSquare, Repeat2, Eye, Send, Paperclip } from 'lucide-svelte';
@@ -48,7 +54,6 @@
   }: Props = $props();
 
   // ── 前回の投稿設定を復元 (カラムIDでタイムラインごとに分離) ──
-  type ComposerSettings = { visibility: Visibility; localOnly: boolean; cwEnabled: boolean };
   const SETTINGS_KEY = columnId != null ? `composer-last-settings-${columnId}` : 'composer-last-settings';
   const savedSettings = loadFromStorage<ComposerSettings | null>(SETTINGS_KEY, null);
 
@@ -90,25 +95,17 @@
   );
 
   function insertEmoji(name: string) {
-    // Unicodeデフォルト絵文字（非ASCII）はコロン不要、カスタム絵文字名はコロンで囲む
-    const isUnicodeEmoji = /[^\x00-\x7F]/.test(name);
-    const insertion = isUnicodeEmoji ? `${name} ` : `:${name}: `;
-    if (!textareaEl) {
-      text += insertion;
-      emojiPickerOpen = false;
-      return;
-    }
-    const start = textareaEl.selectionStart ?? text.length;
-    const end = textareaEl.selectionEnd ?? text.length;
-    text = text.slice(0, start) + insertion + text.slice(end);
+    const { text: newText, cursorPos } = insertEmojiAtCursor(name, text, textareaEl);
+    text = newText;
     emojiPickerOpen = false;
-    requestAnimationFrame(() => {
-      if (textareaEl) {
-        const pos = start + insertion.length;
-        textareaEl.setSelectionRange(pos, pos);
-        textareaEl.focus();
-      }
-    });
+    if (cursorPos >= 0) {
+      requestAnimationFrame(() => {
+        if (textareaEl) {
+          textareaEl.setSelectionRange(cursorPos, cursorPos);
+          textareaEl.focus();
+        }
+      });
+    }
   }
 
   async function post() {
@@ -126,31 +123,16 @@
         );
       }
 
-      const params: Record<string, unknown> = {
+      await postNote(runtime.cli, {
+        text: text.trim(),
+        cw: cwEnabled && cwText.trim() ? cwText.trim() : null,
         visibility,
         localOnly,
-      };
-
-      if (text.trim()) {
-        params.text = text.trim();
-      }
-      if (cwEnabled && cwText.trim()) {
-        params.cw = cwText.trim();
-      }
-      if (replyId) {
-        params.replyId = replyId;
-      }
-      if (renoteId) {
-        params.renoteId = renoteId;
-      }
-      if (channelId) {
-        params.channelId = channelId;
-      }
-      if (fileIds.length > 0) {
-        params.fileIds = fileIds;
-      }
-
-      await (runtime.cli as any).request('notes/create', params);
+        replyId: replyId ?? null,
+        renoteId: renoteId ?? null,
+        channelId: channelId ?? null,
+        fileIds: fileIds.length > 0 ? fileIds : undefined,
+      });
 
       // 成功: 設定を保存してリセット (visibility/localOnly/cwEnabled は引き継ぐ)
       saveToStorage(SETTINGS_KEY, { visibility, localOnly, cwEnabled });
@@ -176,15 +158,7 @@
   }
 
   function handlePaste(e: ClipboardEvent) {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    const imageFiles: File[] = [];
-    for (const item of Array.from(items)) {
-      if (item.kind === 'file' && item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) imageFiles.push(file);
-      }
-    }
+    const imageFiles = extractImageFilesFromClipboard(e);
     if (imageFiles.length > 0) {
       e.preventDefault();
       attachedFiles = [...attachedFiles, ...imageFiles].slice(0, 16);
@@ -200,12 +174,6 @@
     error = '';
     oncancel?.();
   }
-
-  const visibilityOptions: { value: Visibility; label: string; icon: string }[] = [
-    { value: 'public', label: 'パブリック', icon: '🌐' },
-    { value: 'home', label: 'ホーム', icon: '🏠' },
-    { value: 'followers', label: 'フォロワー', icon: '🔒' },
-  ];
 
   // ── 引用/リプライ対象の本文を短縮表示 ──
   function truncate(str: string | null | undefined, len = 60): string {
@@ -348,7 +316,7 @@
       class="select select-bordered select-xs text-xs"
       bind:value={visibility}
     >
-      {#each visibilityOptions as opt (opt.value)}
+      {#each VISIBILITY_OPTIONS as opt (opt.value)}
         <option value={opt.value}>{opt.icon}</option>
       {/each}
     </select>

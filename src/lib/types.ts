@@ -108,6 +108,14 @@ export const DEFAULT_NOTE_DISPLAY: NoteDisplayConfig = {
 
 export type Visibility = 'public' | 'home' | 'followers' | 'specified';
 
+// ─── コンポーザー設定 ───
+
+export type ComposerSettings = {
+  visibility: Visibility;
+  localOnly: boolean;
+  cwEnabled: boolean;
+};
+
 // ─── 設定 ───
 
 export type MediaDisplayMode = 'grid' | 'carousel';
