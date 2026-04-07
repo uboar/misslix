@@ -157,7 +157,7 @@
       <span class="loading loading-spinner loading-lg text-primary"></span>
     </main>
   {:else}
-    <ColumnContainer onadd={() => addColumnOpen = true} {runtimes} />
+    <ColumnContainer onadd={() => addColumnOpen = true} {runtimes} onpost={() => postModalOpen = true} />
   {/if}
 
   <SpeedDial

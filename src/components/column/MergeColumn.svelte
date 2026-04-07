@@ -21,9 +21,10 @@
     ondragleave?: (e: DragEvent) => void;
     ondrop?: (e: DragEvent) => void;
     dropIndicator?: 'left' | 'right' | null;
+    onpost?: () => void;
   };
 
-  let { config, runtimes, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null }: Props = $props();
+  let { config, runtimes, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null, onpost }: Props = $props();
 
   // マージノートストア
   const mergeStore = new MergeNoteStore(config.bufferSize);
@@ -249,6 +250,7 @@
       store={mergeStore}
       {config}
       {runtimes}
+      {onpost}
       onnotesloaded={(noteIds) => {
         for (const conn of connections) {
           for (const id of noteIds) {

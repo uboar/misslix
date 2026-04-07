@@ -8,9 +8,10 @@
   type Props = {
     onadd?: () => void;
     runtimes?: Map<number, AccountRuntime>;
+    onpost?: () => void;
   };
 
-  let { onadd, runtimes = new Map() }: Props = $props();
+  let { onadd, runtimes = new Map(), onpost }: Props = $props();
 
   let columns = $derived(timelineStore.columns);
 
@@ -120,6 +121,7 @@
           <MergeColumn
             {config}
             {runtimes}
+            {onpost}
             ondragstart={(e) => handleDragStart(index, e)}
             ondragend={handleDragEnd}
             ondragover={(e) => handleDragOver(index, e)}

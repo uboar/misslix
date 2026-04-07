@@ -47,6 +47,14 @@
     return emojis[name] ?? emojis[fullName] ?? emojis[reaction] ?? null;
   }
 
+  // リモートサーバーのリアクションかどうか判定 (:name@server: で server が '.' でない)
+  function isRemoteReaction(reaction: string): boolean {
+    if (!isCustomEmoji(reaction)) return false;
+    const inner = reaction.slice(1, -1);
+    const server = inner.split('@')[1];
+    return !!server && server !== '.';
+  }
+
   function handleClick(reaction: string) {
     onreact?.(reaction);
   }
@@ -57,16 +65,19 @@
     {#each sortedReactions as [reaction, count]}
       {@const isMine = myReaction === reaction}
       {@const emojiUrl = isCustomEmoji(reaction) ? getEmojiUrl(reaction) : null}
+      {@const isRemote = isRemoteReaction(reaction)}
 
       <button
         class="reaction-badge inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[0.6rem] font-medium transition-all duration-150 border
           {isMine
             ? 'bg-primary/20 border-primary/50 text-primary hover:bg-primary/30'
             : 'bg-base-200/80 border-base-300/50 text-base-content/70 hover:bg-base-300 hover:border-base-400/50'
-          }"
+          }
+          {isRemote ? 'opacity-60 cursor-not-allowed' : ''}"
         onclick={() => handleClick(reaction)}
-        aria-label="{reaction} {count}件{isMine ? ' (自分がリアクション済み)' : ''}"
+        aria-label="{reaction} {count}件{isMine ? ' (自分がリアクション済み)' : ''}{isRemote ? ' (リモートサーバーのリアクション)' : ''}"
         aria-pressed={isMine}
+        disabled={isRemote}
       >
         <!-- 絵文字表示 -->
         <span class="reaction-emoji shrink-0" aria-hidden="true">

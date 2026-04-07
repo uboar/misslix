@@ -226,7 +226,7 @@
         <div class="space-y-1">
           {#each detail.fields as field}
             <div class="flex gap-2 text-xs">
-              <span class="font-semibold text-base-content/60 shrink-0">{field.name}</span>
+              <span class="font-semibold text-base-content/60 shrink-0"><MfmRenderer text={field.name} emojis={mergedEmojis} isInline /></span>
               <span class="text-base-content/80 break-all min-w-0">
                 <MfmRenderer text={field.value} emojis={mergedEmojis} />
               </span>

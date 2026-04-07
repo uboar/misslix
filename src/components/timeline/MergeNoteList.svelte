@@ -8,16 +8,17 @@
   import type { entities } from 'misskey-js';
   import NoteCard from './NoteCard.svelte';
   import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
-  import { AlertCircle, AlignJustify, RefreshCw } from 'lucide-svelte';
+  import { AlertCircle, AlignJustify, RefreshCw, Pencil } from 'lucide-svelte';
 
   type Props = {
     store: MergeNoteStore;
     config: ColumnConfig;
     runtimes: Map<number, AccountRuntime>;
     onnotesloaded?: (noteIds: string[]) => void;
+    onpost?: () => void;
   };
 
-  let { store, config, runtimes, onnotesloaded }: Props = $props();
+  let { store, config, runtimes, onnotesloaded, onpost }: Props = $props();
 
   const muteUsers = $derived(settingsStore.settings.muteUsers);
   const muteWords = $derived(settingsStore.settings.muteWords);
@@ -250,7 +251,7 @@
   }
 </script>
 
-<div class="merge-note-list-wrapper flex flex-col flex-1 min-h-0">
+<div class="merge-note-list-wrapper flex flex-col flex-1 min-h-0 relative">
   <!-- プルリフレッシュインジケーター -->
   <div
     class="flex items-center justify-center gap-1.5 overflow-hidden shrink-0 text-xs text-base-content/50"
@@ -271,7 +272,7 @@
   <!-- スクロールコンテナ -->
   <div
     bind:this={scrollContainer}
-    class="flex-1 overflow-y-auto overflow-x-hidden"
+    class="flex-1 overflow-y-auto overflow-x-hidden {onpost ? 'pb-12' : ''}"
     onscroll={handleScroll}
     ontouchstart={handleTouchStart}
     ontouchend={handleTouchEnd}
@@ -341,4 +342,16 @@
       {/if}
     {/if}
   </div>
+
+  <!-- 投稿ボタン (onpost が渡された場合のみ表示) -->
+  {#if onpost}
+    <button
+      class="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1.5 h-10 bg-primary hover:bg-primary/90 active:bg-primary/80 text-primary-content text-xs font-medium transition-colors z-10"
+      onclick={onpost}
+      aria-label="新規投稿"
+    >
+      <Pencil class="w-3.5 h-3.5" aria-hidden="true" />
+      投稿
+    </button>
+  {/if}
 </div>
