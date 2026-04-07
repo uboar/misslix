@@ -23,7 +23,8 @@
     "dayjs": "latest",
     "lucide-svelte": "^1.0.1",
     "mfm-js": "^0.25.0",
-    "misskey-js": "latest"
+    "misskey-js": "latest",
+    "unicode-emoji-json": "^0.8.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.0.0",

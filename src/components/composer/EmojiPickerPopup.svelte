@@ -2,6 +2,7 @@
   import type { entities } from 'misskey-js';
   import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
   import { getReactionHistory, addReactionHistory } from '$lib/utils/reactionHistory';
+  import { unicodeEmojiGroups, allUnicodeEmojis } from '$lib/emoji/unicodeEmojiData';
 
   type EmojiDetailed = entities.EmojiDetailed;
 
@@ -12,7 +13,7 @@
     deck?: string[];
     /** 絵文字URLマップ (カスタム絵文字名 -> URL) */
     emojis?: Record<string, string>;
-    /** 絵文字選択時コールバック (絵文字名のみ、コロンなし) */
+    /** 絵文字選択時コールバック (絵文字名のみ、コロンなし。Unicode絵文字はそのまま文字) */
     onselect: (name: string) => void;
     /** 閉じる時コールバック */
     onclose?: () => void;
@@ -28,6 +29,11 @@
 
   let searchQuery = $state('');
   let searchInputEl = $state<HTMLInputElement | null>(null);
+
+  // タブ切り替え: 'custom' | 'unicode'
+  let activeTab = $state<'custom' | 'unicode'>('custom');
+  // Unicode絵文字カテゴリ
+  let activeGroupIndex = $state(0);
 
   // 無限スクロール用
   const PAGE_SIZE = 60;
@@ -53,8 +59,8 @@
     return emojis[name] ?? emojis[reaction] ?? null;
   }
 
-  // 検索結果 (searchQueryが空なら空配列、そうでなければフィルタ + 完全一致を先頭に)
-  const searchResults = $derived(
+  // カスタム絵文字の検索結果
+  const customSearchResults = $derived(
     searchQuery.trim().length === 0
       ? []
       : (() => {
@@ -76,10 +82,25 @@
         })()
   );
 
-  // 完全一致する絵文字があるか (Enterキー送信判定用)
+  // Unicode絵文字の検索結果
+  const unicodeSearchResults = $derived(
+    searchQuery.trim().length === 0
+      ? []
+      : (() => {
+          const q = searchQuery.trim().toLowerCase();
+          return allUnicodeEmojis
+            .filter((e) => e.name.includes(q) || e.slug.includes(q))
+            .slice(0, 50);
+        })()
+  );
+
+  // 後方互換: searchResults は customSearchResults を指す (既存ロジック用)
+  const searchResults = $derived(customSearchResults);
+
+  // 完全一致する絵文字があるか (Enterキー送信判定用) - カスタム絵文字のみ
   const exactMatch = $derived(
-    searchResults.length > 0 &&
-      searchResults[0].name.toLowerCase() === searchQuery.trim().toLowerCase()
+    customSearchResults.length > 0 &&
+      customSearchResults[0].name.toLowerCase() === searchQuery.trim().toLowerCase()
   );
 
   const isSearching = $derived(searchQuery.trim().length > 0);
@@ -88,10 +109,21 @@
   const displayedEmojis = $derived(accountEmojis.slice(0, displayCount));
   const hasMore = $derived(displayCount < accountEmojis.length);
 
+  // 現在のUnicodeカテゴリの絵文字 (無限スクロール対応)
+  const currentGroup = $derived(unicodeEmojiGroups[activeGroupIndex]);
+  const displayedUnicodeEmojis = $derived(currentGroup?.emojis.slice(0, displayCount) ?? []);
+  const hasMoreUnicode = $derived(displayCount < (currentGroup?.emojis.length ?? 0));
+
   function handleSelect(name: string) {
     // 履歴に追加 (:name: 形式で保存)
     addReactionHistory(`:${name}:`);
     onselect(name);
+  }
+
+  function handleUnicodeSelect(char: string) {
+    // Unicode絵文字は文字そのままで保存・送信
+    addReactionHistory(char);
+    onselect(char);
   }
 
   function handleDeckSelect(reaction: string) {
@@ -116,14 +148,18 @@
   function handleScroll() {
     if (!scrollEl) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollEl;
-    if (scrollHeight - scrollTop - clientHeight < 100 && hasMore) {
-      displayCount = Math.min(displayCount + PAGE_SIZE, accountEmojis.length);
+    if (scrollHeight - scrollTop - clientHeight < 100) {
+      if (activeTab === 'custom' && hasMore) {
+        displayCount = Math.min(displayCount + PAGE_SIZE, accountEmojis.length);
+      } else if (activeTab === 'unicode' && hasMoreUnicode) {
+        displayCount = Math.min(displayCount + PAGE_SIZE, currentGroup.emojis.length);
+      }
     }
   }
 
-  // 検索クエリが変わったらスクロール位置をリセット
+  // 検索クエリ/タブ/カテゴリが変わったらスクロール位置をリセット
   $effect(() => {
-    searchQuery; // 依存
+    searchQuery; activeTab; activeGroupIndex; // 依存
     displayCount = PAGE_SIZE;
     if (scrollEl) scrollEl.scrollTop = 0;
   });
@@ -138,16 +174,20 @@
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       onclose?.();
-    } else if (e.key === 'Enter' && exactMatch) {
+    } else if (e.key === 'Enter' && exactMatch && activeTab === 'custom') {
       e.preventDefault();
       handleSelect(searchResults[0].name);
     }
+  }
+
+  function switchGroup(index: number) {
+    activeGroupIndex = index;
   }
 </script>
 
 <div
   class="emoji-picker-popup flex flex-col border border-base-300 rounded-lg bg-base-100 shadow-xl"
-  style="width: 100%; max-width: min(22rem, calc(100vw - 1rem)); max-height: 20rem;"
+  style="width: 100%; max-width: min(22rem, calc(100vw - 1rem)); max-height: 22rem;"
   role="dialog"
   aria-label="絵文字ピッカー"
   onkeydown={handleKeydown}
@@ -164,6 +204,24 @@
     />
   </div>
 
+  <!-- タブ (検索中は非表示) -->
+  {#if !isSearching}
+    <div class="flex shrink-0 border-b border-base-300 px-2">
+      <button
+        class="px-3 py-1 text-xs font-medium border-b-2 transition-colors {activeTab === 'custom' ? 'border-primary text-primary' : 'border-transparent text-base-content/50 hover:text-base-content/80'}"
+        onclick={() => { activeTab = 'custom'; }}
+      >
+        カスタム
+      </button>
+      <button
+        class="px-3 py-1 text-xs font-medium border-b-2 transition-colors {activeTab === 'unicode' ? 'border-primary text-primary' : 'border-transparent text-base-content/50 hover:text-base-content/80'}"
+        onclick={() => { activeTab = 'unicode'; }}
+      >
+        Unicode
+      </button>
+    </div>
+  {/if}
+
   <!-- スクロール領域 -->
   <div
     bind:this={scrollEl}
@@ -171,36 +229,60 @@
     onscroll={handleScroll}
   >
     {#if isSearching}
-      <!-- 検索結果 -->
-      {#if searchResults.length === 0}
+      <!-- 検索結果: カスタム絵文字 -->
+      {#if customSearchResults.length === 0 && unicodeSearchResults.length === 0}
         <div class="text-xs text-base-content/40 text-center py-4">
           一致する絵文字がありません
         </div>
       {:else}
-        <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5 pt-1 flex items-center gap-1">
-          <span>検索結果 ({searchResults.length}件)</span>
-          {#if exactMatch}
-            <span class="text-primary/70">· Enterで送信</span>
-          {/if}
-        </div>
-        <div class="flex flex-wrap gap-0.5">
-          {#each searchResults as emoji, i (emoji.name)}
-            <button
-              class="emoji-btn flex items-center justify-center w-8 h-8 rounded transition-colors duration-100 {i === 0 && exactMatch ? 'bg-primary/20 hover:bg-primary/30 ring-1 ring-primary/50' : 'hover:bg-base-200'}"
-              title="{i === 0 && exactMatch ? '↵ ' : ''}:{emoji.name}:"
-              aria-label=":{emoji.name}:"
-              onclick={() => handleSelect(emoji.name)}
-            >
-              {#if emoji.url}
-                <EmojiRenderer name={emoji.name} url={emoji.url} height="1.4em" />
-              {:else}
-                <span class="text-[0.6rem] truncate px-0.5">{emoji.name}</span>
-              {/if}
-            </button>
-          {/each}
-        </div>
+        {#if customSearchResults.length > 0}
+          <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5 pt-1 flex items-center gap-1">
+            <span>カスタム絵文字 ({customSearchResults.length}件)</span>
+            {#if exactMatch}
+              <span class="text-primary/70">· Enterで送信</span>
+            {/if}
+          </div>
+          <div class="flex flex-wrap gap-0.5 mb-2">
+            {#each customSearchResults as emoji, i (emoji.name)}
+              <button
+                class="emoji-btn flex items-center justify-center w-8 h-8 rounded transition-colors duration-100 {i === 0 && exactMatch ? 'bg-primary/20 hover:bg-primary/30 ring-1 ring-primary/50' : 'hover:bg-base-200'}"
+                title="{i === 0 && exactMatch ? '↵ ' : ''}:{emoji.name}:"
+                aria-label=":{emoji.name}:"
+                onclick={() => handleSelect(emoji.name)}
+              >
+                {#if emoji.url}
+                  <EmojiRenderer name={emoji.name} url={emoji.url} height="1.4em" />
+                {:else}
+                  <span class="text-[0.6rem] truncate px-0.5">{emoji.name}</span>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        {/if}
+
+        <!-- 検索結果: Unicode絵文字 -->
+        {#if unicodeSearchResults.length > 0}
+          <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5 pt-1">
+            Unicode絵文字 ({unicodeSearchResults.length}件)
+          </div>
+          <div class="flex flex-wrap gap-0.5">
+            {#each unicodeSearchResults as entry (entry.emoji)}
+              <button
+                class="emoji-btn flex items-center justify-center w-8 h-8 rounded hover:bg-base-200 transition-colors duration-100"
+                title={entry.name}
+                aria-label={entry.name}
+                onclick={() => handleUnicodeSelect(entry.emoji)}
+              >
+                <EmojiRenderer emoji={entry.emoji} height="1.4em" />
+              </button>
+            {/each}
+          </div>
+        {/if}
       {/if}
-    {:else}
+
+    {:else if activeTab === 'custom'}
+      <!-- カスタム絵文字タブ -->
+
       <!-- デッキ -->
       {#if deck.length > 0}
         <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5 pt-1">デッキ</div>
@@ -280,6 +362,47 @@
           カスタム絵文字がありません
         </div>
       {/if}
+
+    {:else}
+      <!-- Unicode絵文字タブ -->
+
+      <!-- カテゴリ選択バー -->
+      <div class="flex gap-0.5 py-1 shrink-0 overflow-x-auto scrollbar-none">
+        {#each unicodeEmojiGroups as group, i (group.slug)}
+          <button
+            class="flex-none flex items-center justify-center w-7 h-7 rounded text-base transition-colors duration-100 {activeGroupIndex === i ? 'bg-primary/20 ring-1 ring-primary/40' : 'hover:bg-base-200'}"
+            title={group.name}
+            aria-label={group.name}
+            onclick={() => switchGroup(i)}
+          >
+            {group.icon}
+          </button>
+        {/each}
+      </div>
+
+      <!-- カテゴリ名 -->
+      <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5">
+        {currentGroup?.name ?? ''}
+      </div>
+
+      <!-- Unicode絵文字グリッド (無限スクロール) -->
+      <div class="flex flex-wrap gap-0.5">
+        {#each displayedUnicodeEmojis as entry (entry.emoji)}
+          <button
+            class="emoji-btn flex items-center justify-center w-8 h-8 rounded hover:bg-base-200 transition-colors duration-100"
+            title={entry.name}
+            aria-label={entry.name}
+            onclick={() => handleUnicodeSelect(entry.emoji)}
+          >
+            <EmojiRenderer emoji={entry.emoji} height="1.4em" />
+          </button>
+        {/each}
+        {#if hasMoreUnicode}
+          <div class="w-full text-center py-1">
+            <span class="text-[0.6rem] text-base-content/30">スクロールして続きを表示...</span>
+          </div>
+        {/if}
+      </div>
     {/if}
   </div>
 </div>
@@ -287,5 +410,12 @@
 <style>
   .emoji-btn {
     cursor: pointer;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 </style>
