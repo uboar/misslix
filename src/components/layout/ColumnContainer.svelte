@@ -144,7 +144,7 @@
         {:else if config.channel === 'accountUtility'}
           <AccountUtilityColumn
             {config}
-            {runtimes}
+            runtime={runtimes.get(config.accountId)}
             ondragstart={(e) => handleDragStart(index, e)}
             ondragend={handleDragEnd}
             ondragover={(e) => handleDragOver(index, e)}

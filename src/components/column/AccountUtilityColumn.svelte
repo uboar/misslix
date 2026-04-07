@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ColumnConfig, AccountRuntime, Account } from '$lib/types';
+  import type { ColumnConfig, AccountRuntime } from '$lib/types';
   import { COLUMN_WIDTH_MAP } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import { timelineStore } from '$lib/stores/timelines.svelte';
@@ -7,11 +7,11 @@
   import InlineComposer from '../composer/InlineComposer.svelte';
   import NotificationItem from '../notification/NotificationItem.svelte';
   import QuickLinks from '../common/QuickLinks.svelte';
-  import { ChevronRight, X, Bell, MessageCircle, Link2 } from 'lucide-svelte';
+  import { ChevronRight, X } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
-    runtimes: Map<number, AccountRuntime>;
+    runtime?: AccountRuntime;
     ondragstart?: (e: DragEvent) => void;
     ondragend?: (e: DragEvent) => void;
     ondragover?: (e: DragEvent) => void;
@@ -20,24 +20,9 @@
     dropIndicator?: 'left' | 'right' | null;
   };
 
-  let { config, runtimes, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null }: Props = $props();
+  let { config, runtime, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null }: Props = $props();
 
-  type TabType = 'compose' | 'notif' | 'links';
-  let activeTabs = $state<Record<number, TabType>>({});
-
-  function getActiveTab(accountId: number): TabType {
-    return activeTabs[accountId] ?? 'compose';
-  }
-
-  function setActiveTab(accountId: number, tab: TabType) {
-    activeTabs = { ...activeTabs, [accountId]: tab };
-    if (tab === 'notif') {
-      const runtime = runtimes.get(accountId);
-      if (runtime) runtime.notifState.hasUnread = false;
-    }
-  }
-
-  let accounts = $derived(accountStore.activeAccounts);
+  let account = $derived(accountStore.findById(config.accountId));
 
   let collapsed = $derived(config.collapsed);
   const COLLAPSED_WIDTH = '3rem';
@@ -175,126 +160,60 @@
       ondragend={handleDragEndWrapper}
     />
 
-    <!-- アカウント一覧 -->
-    <div class="flex-1 overflow-y-auto">
-      {#if accounts.length === 0}
-        <div class="flex items-center justify-center h-20 text-base-content/40 text-sm px-4 text-center">
-          アカウントが登録されていません
+    <div class="flex-1 flex flex-col overflow-hidden">
+      {#if !runtime || !account}
+        <div class="flex items-center justify-center flex-1 text-base-content/40 text-sm">
+          オフライン
         </div>
       {:else}
-        {#each accounts as account (account.id)}
-          {@const runtime = runtimes.get(account.id)}
-          {@const activeTab = getActiveTab(account.id)}
-          {@const hasUnread = runtime?.notifState.hasUnread ?? false}
-
-          <div class="border-b border-base-300">
-            <!-- アカウントヘッダー -->
-            <div
-              class="flex items-center gap-2 px-3 py-2 bg-base-200 sticky top-0 z-10"
-              style="border-left: 3px solid {account.themeColor ?? config.color};"
-            >
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-semibold truncate">@{account.userName}</p>
-                <p class="text-[10px] text-base-content/50 truncate">{account.hostUrl.replace(/^https?:\/\//, '')}</p>
-              </div>
-              {#if hasUnread}
-                <span
-                  class="w-2 h-2 rounded-full bg-error shrink-0"
-                  aria-label="未読通知あり"
-                ></span>
-              {/if}
-            </div>
-
-            <!-- タブバー -->
-            <div class="flex border-b border-base-300 bg-base-100">
-              <button
-                class="flex-1 flex items-center justify-center gap-1 py-2 text-xs transition-colors
-                  {activeTab === 'compose'
-                    ? 'text-primary border-b-2 border-primary font-semibold'
-                    : 'text-base-content/50 hover:text-base-content hover:bg-base-200'}"
-                onclick={() => setActiveTab(account.id, 'compose')}
-                aria-label="投稿"
-                title="投稿"
-              >
-                <MessageCircle class="w-3.5 h-3.5" aria-hidden="true" />
-                <span>投稿</span>
-              </button>
-              <button
-                class="flex-1 flex items-center justify-center gap-1 py-2 text-xs transition-colors relative
-                  {activeTab === 'notif'
-                    ? 'text-primary border-b-2 border-primary font-semibold'
-                    : 'text-base-content/50 hover:text-base-content hover:bg-base-200'}"
-                onclick={() => setActiveTab(account.id, 'notif')}
-                aria-label="通知{hasUnread ? ' (未読あり)' : ''}"
-                title="通知"
-                style={activeTab !== 'notif' && hasUnread ? `color: ${account.themeColor ?? config.color};` : ''}
-              >
-                <Bell class="w-3.5 h-3.5" aria-hidden="true" />
-                <span>通知</span>
-                {#if hasUnread && activeTab !== 'notif'}
-                  <span class="absolute top-1.5 right-2 w-1.5 h-1.5 rounded-full bg-error" aria-hidden="true"></span>
-                {/if}
-              </button>
-              <button
-                class="flex-1 flex items-center justify-center gap-1 py-2 text-xs transition-colors
-                  {activeTab === 'links'
-                    ? 'text-primary border-b-2 border-primary font-semibold'
-                    : 'text-base-content/50 hover:text-base-content hover:bg-base-200'}"
-                onclick={() => setActiveTab(account.id, 'links')}
-                aria-label="クイックリンク"
-                title="クイックリンク"
-              >
-                <Link2 class="w-3.5 h-3.5" aria-hidden="true" />
-                <span>リンク</span>
-              </button>
-            </div>
-
-            <!-- タブコンテンツ -->
-            <div class="bg-base-100">
-              {#if activeTab === 'compose'}
-                {#if runtime}
-                  <div class="p-2">
-                    <InlineComposer
-                      {runtime}
-                      columnId={config.id}
-                      defaultVisibility={config.defaultVisibility}
-                      defaultLocalOnly={config.defaultLocalOnly}
-                      reactionDeck={config.reactionDeck}
-                    />
-                  </div>
-                {:else}
-                  <div class="flex items-center justify-center h-12 text-base-content/40 text-xs">
-                    オフライン
-                  </div>
-                {/if}
-
-              {:else if activeTab === 'notif'}
-                {#if runtime}
-                  {#if runtime.notifState.notifications.length === 0}
-                    <div class="flex items-center justify-center h-12 text-base-content/40 text-xs">
-                      通知はありません
-                    </div>
-                  {:else}
-                    <ul class="divide-y divide-base-300 max-h-64 overflow-y-auto">
-                      {#each runtime.notifState.notifications as notification (notification.id)}
-                        <NotificationItem {notification} {runtime} />
-                      {/each}
-                    </ul>
-                  {/if}
-                {:else}
-                  <div class="flex items-center justify-center h-12 text-base-content/40 text-xs">
-                    オフライン
-                  </div>
-                {/if}
-
-              {:else if activeTab === 'links'}
-                <div class="p-3">
-                  <QuickLinks {account} hideHeader={true} />
-                </div>
-              {/if}
-            </div>
+        <!-- 投稿エリア -->
+        <div class="shrink-0 border-b border-base-300">
+          <div class="px-2 py-1 bg-base-200 border-b border-base-300">
+            <span class="text-[10px] font-semibold text-base-content/50 uppercase tracking-wide">投稿</span>
           </div>
-        {/each}
+          <div class="p-2">
+            <InlineComposer
+              {runtime}
+              columnId={config.id}
+              defaultVisibility={config.defaultVisibility}
+              defaultLocalOnly={config.defaultLocalOnly}
+              reactionDeck={config.reactionDeck}
+            />
+          </div>
+        </div>
+
+        <!-- 通知エリア -->
+        <div class="flex-1 flex flex-col overflow-hidden border-b border-base-300">
+          <div class="px-2 py-1 bg-base-200 border-b border-base-300 shrink-0 flex items-center gap-2">
+            <span class="text-[10px] font-semibold text-base-content/50 uppercase tracking-wide">通知</span>
+            {#if runtime.notifState.hasUnread}
+              <span class="w-1.5 h-1.5 rounded-full bg-error" aria-label="未読通知あり"></span>
+            {/if}
+          </div>
+          <div class="flex-1 overflow-y-auto">
+            {#if runtime.notifState.notifications.length === 0}
+              <div class="flex items-center justify-center h-16 text-base-content/40 text-xs">
+                通知はありません
+              </div>
+            {:else}
+              <ul class="divide-y divide-base-300">
+                {#each runtime.notifState.notifications as notification (notification.id)}
+                  <NotificationItem {notification} {runtime} />
+                {/each}
+              </ul>
+            {/if}
+          </div>
+        </div>
+
+        <!-- リンク集 -->
+        <div class="shrink-0">
+          <div class="px-2 py-1 bg-base-200 border-b border-base-300">
+            <span class="text-[10px] font-semibold text-base-content/50 uppercase tracking-wide">クイックリンク</span>
+          </div>
+          <div class="p-2">
+            <QuickLinks {account} hideHeader={true} />
+          </div>
+        </div>
       {/if}
     </div>
   {/if}
