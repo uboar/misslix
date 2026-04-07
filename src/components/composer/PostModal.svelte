@@ -40,6 +40,7 @@
   let selectedAccountIds = $state<Set<number>>(new Set());
   let previewMode = $state(false);
   let emojiPickerOpen = $state(false);
+  let emojiPickerAccountId = $state<number | null>(null);
   let posting = $state(false);
   let attachedFiles = $state<File[]>([]);
   let postResults = $state<PostResult[]>([]);
@@ -71,11 +72,11 @@
 
   const SETTINGS_KEY = 'composer-last-settings';
 
-  // モーダルが開いたとき: アカウントを全選択し状態リセット、前回の設定を復元
+  // モーダルが開いたとき: アカウント未選択で状態リセット、前回の設定を復元
   $effect(() => {
     if (open) {
-      // 全アカウント選択
-      selectedAccountIds = new Set(availableAccounts.map((a) => a.id));
+      // アカウント未選択 (ユーザーが明示的に選択する)
+      selectedAccountIds = new Set();
       postResults = [];
       showResults = false;
       previewMode = false;
@@ -122,20 +123,27 @@
     }
   }
 
-  // 表示用の絵文字リスト (最初の選択アカウントのカスタム絵文字)
+  // 絵文字ピッカーで使うアカウントID (未選択なら最初の利用可能アカウント)
+  const effectiveEmojiAccountId = $derived(
+    emojiPickerAccountId != null && availableAccounts.some((a) => a.id === emojiPickerAccountId)
+      ? emojiPickerAccountId
+      : (availableAccounts[0]?.id ?? null)
+  );
+
+  // 表示用の絵文字リスト (絵文字ピッカー選択アカウント)
   const pickerAccountEmojis = $derived.by(() => {
-    const firstId = [...selectedAccountIds][0];
-    if (firstId == null) return [];
-    const runtime = runtimes.get(firstId);
+    const id = effectiveEmojiAccountId;
+    if (id == null) return [];
+    const runtime = runtimes.get(id);
     if (!runtime) return [];
     return runtime.emojis;
   });
 
-  // 絵文字URLマップ (最初の選択アカウント)
+  // 絵文字URLマップ (絵文字ピッカー選択アカウント)
   const pickerEmojiMap = $derived.by(() => {
-    const firstId = [...selectedAccountIds][0];
-    if (firstId == null) return {} as Record<string, string>;
-    const runtime = runtimes.get(firstId);
+    const id = effectiveEmojiAccountId;
+    if (id == null) return {} as Record<string, string>;
+    const runtime = runtimes.get(id);
     if (!runtime) return {} as Record<string, string>;
     const result: Record<string, string> = {};
     for (const e of runtime.emojis) {
@@ -334,6 +342,22 @@
 
     <!-- 絵文字ピッカー -->
     {#if emojiPickerOpen}
+      {#if availableAccounts.length > 1}
+        <div class="flex gap-1 flex-wrap">
+          {#each availableAccounts as account (account.id)}
+            <button
+              class="btn btn-xs {effectiveEmojiAccountId === account.id ? 'btn-primary' : 'btn-ghost opacity-60 hover:opacity-90'}"
+              onclick={() => { emojiPickerAccountId = account.id; }}
+              title="このアカウントの絵文字を表示"
+            >
+              {#if account.themeColor}
+                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {account.themeColor};"></span>
+              {/if}
+              <span class="text-xs">@{account.userName}</span>
+            </button>
+          {/each}
+        </div>
+      {/if}
       <EmojiPickerPopup
         accountEmojis={pickerAccountEmojis}
         emojis={pickerEmojiMap}
