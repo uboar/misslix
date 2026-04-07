@@ -72,6 +72,15 @@
   let textareaEl = $state<HTMLTextAreaElement | null>(null);
   let fileAreaComp = $state<FileAttachmentArea | null>(null);
 
+  // テキストエリアがマウントされたら自動フォーカス
+  $effect(() => {
+    const el = textareaEl;
+    if (el) {
+      const id = requestAnimationFrame(() => el.focus());
+      return () => cancelAnimationFrame(id);
+    }
+  });
+
   // ── 文字数 ──
   const charCount = $derived(text.length + (cwEnabled ? cwText.length : 0));
 
