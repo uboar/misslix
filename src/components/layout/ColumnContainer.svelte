@@ -122,7 +122,6 @@
           <MergeColumn
             {config}
             {runtimes}
-            {onpost}
             ondragstart={(e) => handleDragStart(index, e)}
             ondragend={handleDragEnd}
             ondragover={(e) => handleDragOver(index, e)}

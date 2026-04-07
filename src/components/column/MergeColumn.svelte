@@ -8,7 +8,7 @@
   import type { TimelineConnection, NoteUpdatedData } from '$lib/api/streaming';
   import { MergeNoteStore } from '$lib/stores/mergeNotes.svelte';
   import ColumnHeader from './ColumnHeader.svelte';
-  import ColumnFooter from './ColumnFooter.svelte';
+  import MergeColumnFooter from './MergeColumnFooter.svelte';
   import MergeNoteList from '../timeline/MergeNoteList.svelte';
   import { ChevronRight, X } from 'lucide-svelte';
 
@@ -21,16 +21,22 @@
     ondragleave?: (e: DragEvent) => void;
     ondrop?: (e: DragEvent) => void;
     dropIndicator?: 'left' | 'right' | null;
-    onpost?: () => void;
   };
 
-  let { config, runtimes, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null, onpost }: Props = $props();
+  let { config, runtimes, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null }: Props = $props();
 
   // マージノートストア
   const mergeStore = new MergeNoteStore(config.bufferSize);
 
   // ソースカラム定義
   const sourceColumns = $derived(config.sourceColumns ?? []);
+
+  // タイムライン共通のリアクション・投稿アカウント
+  const firstAccountId = $derived(sourceColumns[0]?.accountId);
+  let selectedAccountId = $state<number | undefined>(undefined);
+  const effectiveSelectedAccountId = $derived(
+    selectedAccountId !== undefined ? selectedAccountId : firstAccountId
+  );
 
   // 全ソースのアカウントuserIdリスト (リアクション判定用)
   const accountUserIds = $derived(
@@ -250,7 +256,7 @@
       store={mergeStore}
       {config}
       {runtimes}
-      {onpost}
+      timelineAccountId={effectiveSelectedAccountId}
       onnotesloaded={(noteIds) => {
         for (const conn of connections) {
           for (const id of noteIds) {
@@ -260,7 +266,12 @@
       }}
     />
 
-    <ColumnFooter {config} />
+    <MergeColumnFooter
+      {config}
+      {runtimes}
+      selectedAccountId={effectiveSelectedAccountId}
+      onselect={(id) => { selectedAccountId = id; }}
+    />
   {/if}
 
   <!-- リサイズハンドル -->

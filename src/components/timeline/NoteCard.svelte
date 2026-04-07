@@ -32,6 +32,7 @@
     sourceColor?: string;
     availableRuntimes?: Map<number, AccountRuntime>;
     sourceAccountId?: number;
+    timelineAccountId?: number;
   };
 
   let {
@@ -47,12 +48,17 @@
     sourceColor,
     availableRuntimes,
     sourceAccountId,
+    timelineAccountId,
   }: Props = $props();
 
   const maxDepth = 2;  // 再帰上限
 
   // マージTL: リアクション送信用アカウント選択
-  let selectedReactionAccountId = $state<number | undefined>(sourceAccountId);
+  // timelineAccountId が渡された場合はタイムライン共通設定を使用、なければノートごとのローカル状態
+  let localSelectedAccountId = $state<number | undefined>(sourceAccountId);
+  const selectedReactionAccountId = $derived(
+    timelineAccountId !== undefined ? timelineAccountId : localSelectedAccountId
+  );
   const effectiveRuntime = $derived(
     availableRuntimes && selectedReactionAccountId != null
       ? availableRuntimes.get(selectedReactionAccountId) ?? runtime
@@ -360,7 +366,7 @@
 
     <!-- ツールバー (depth=0のみ) -->
     {#if depth === 0 && (runtime || effectiveRuntime)}
-      <div class="note-tabs flex items-center gap-1 mt-1.5 pt-1 border-t border-base-300/30">
+      <div class="note-tabs flex items-center justify-evenly mt-1.5 pt-1 border-t border-base-300/30">
         <!-- リプライボタン -->
         <button
           class="toolbar-btn inline-flex items-center justify-center w-6 h-6 rounded
@@ -414,17 +420,14 @@
           />
         {/if}
 
-        <!-- マージTL: アカウント選択ピッカー -->
-        {#if availableRuntimes && availableRuntimes.size > 1}
+        <!-- マージTL: ノートごとのアカウント選択ピッカー (タイムライン共通設定がない場合のみ) -->
+        {#if availableRuntimes && availableRuntimes.size > 1 && timelineAccountId === undefined}
           <ReactionAccountPicker
             runtimes={availableRuntimes}
             selectedAccountId={selectedReactionAccountId ?? sourceAccountId ?? config.accountId}
-            onselect={(id) => { selectedReactionAccountId = id; }}
+            onselect={(id) => { localSelectedAccountId = id; }}
           />
         {/if}
-
-        <!-- スペーサー -->
-        <div class="flex-1"></div>
 
         <!-- その他ボタン -->
         <button

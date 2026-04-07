@@ -8,17 +8,17 @@
   import type { entities } from 'misskey-js';
   import NoteCard from './NoteCard.svelte';
   import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
-  import { AlertCircle, AlignJustify, RefreshCw, Pencil } from 'lucide-svelte';
+  import { AlertCircle, AlignJustify, RefreshCw } from 'lucide-svelte';
 
   type Props = {
     store: MergeNoteStore;
     config: ColumnConfig;
     runtimes: Map<number, AccountRuntime>;
     onnotesloaded?: (noteIds: string[]) => void;
-    onpost?: () => void;
+    timelineAccountId?: number;
   };
 
-  let { store, config, runtimes, onnotesloaded, onpost }: Props = $props();
+  let { store, config, runtimes, onnotesloaded, timelineAccountId }: Props = $props();
 
   const muteUsers = $derived(settingsStore.settings.muteUsers);
   const muteWords = $derived(settingsStore.settings.muteWords);
@@ -272,7 +272,7 @@
   <!-- スクロールコンテナ -->
   <div
     bind:this={scrollContainer}
-    class="flex-1 overflow-y-auto overflow-x-hidden {onpost ? 'pb-12' : ''}"
+    class="flex-1 overflow-y-auto overflow-x-hidden"
     onscroll={handleScroll}
     ontouchstart={handleTouchStart}
     ontouchend={handleTouchEnd}
@@ -314,6 +314,7 @@
           sourceColor={wrapper.sourceColor}
           availableRuntimes={runtimes}
           sourceAccountId={wrapper.sourceAccountId}
+          {timelineAccountId}
         />
       {/each}
 
@@ -343,15 +344,4 @@
     {/if}
   </div>
 
-  <!-- 投稿ボタン (onpost が渡された場合のみ表示) -->
-  {#if onpost}
-    <button
-      class="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1.5 h-10 bg-primary hover:bg-primary/90 active:bg-primary/80 text-primary-content text-xs font-medium transition-colors z-10"
-      onclick={onpost}
-      aria-label="新規投稿"
-    >
-      <Pencil class="w-3.5 h-3.5" aria-hidden="true" />
-      投稿
-    </button>
-  {/if}
 </div>
