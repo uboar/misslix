@@ -44,7 +44,8 @@ export type ChannelType =
   | 'roleTimeline'
   | 'userTimeline'
   | 'mergeTimeline'
-  | 'mergeNotificationTimeline';
+  | 'mergeNotificationTimeline'
+  | 'accountUtility';
 
 export type ColumnWidth = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 

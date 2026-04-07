@@ -4,6 +4,7 @@
   import Column from '../column/Column.svelte';
   import MergeColumn from '../column/MergeColumn.svelte';
   import MergeNotificationColumn from '../column/MergeNotificationColumn.svelte';
+  import AccountUtilityColumn from '../column/AccountUtilityColumn.svelte';
   import { Plus, Columns2 } from 'lucide-svelte';
 
   type Props = {
@@ -131,6 +132,17 @@
           />
         {:else if config.channel === 'mergeNotificationTimeline'}
           <MergeNotificationColumn
+            {config}
+            {runtimes}
+            ondragstart={(e) => handleDragStart(index, e)}
+            ondragend={handleDragEnd}
+            ondragover={(e) => handleDragOver(index, e)}
+            ondragleave={(e) => handleDragLeave(index, e)}
+            ondrop={(e) => handleDrop(index, e)}
+            dropIndicator={dragFromIndex === index ? null : indicator}
+          />
+        {:else if config.channel === 'accountUtility'}
+          <AccountUtilityColumn
             {config}
             {runtimes}
             ondragstart={(e) => handleDragStart(index, e)}

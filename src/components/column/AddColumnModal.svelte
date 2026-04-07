@@ -6,7 +6,7 @@
   import { presetStore } from '$lib/stores/presets.svelte';
   import { showApiError } from '$lib/utils/error';
   import Modal from '../common/Modal.svelte';
-  import { ChevronRight, ChevronLeft, Check, Layers, Plus, X, Bell } from 'lucide-svelte';
+  import { ChevronRight, ChevronLeft, Check, Layers, Plus, X, Bell, LayoutDashboard } from 'lucide-svelte';
 
   type Props = {
     open: boolean;
@@ -60,6 +60,7 @@
     userTimeline: 'ユーザー',
     mergeTimeline: 'マージ',
     mergeNotificationTimeline: 'マージ通知',
+    accountUtility: 'アカウントユーティリティ',
   };
 
   const CHANNEL_DESCRIPTIONS: Record<ChannelType, string> = {
@@ -74,6 +75,7 @@
     userTimeline: '特定ユーザーのノート一覧',
     mergeTimeline: '複数タイムラインを統合表示',
     mergeNotificationTimeline: '全アカウントの通知を一つに集約',
+    accountUtility: '投稿・通知・リンクを全アカウント分まとめて表示',
   };
 
   const CHANNEL_NEEDS_ID: ChannelType[] = ['channel', 'antenna', 'userList', 'roleTimeline', 'userTimeline'];
@@ -339,6 +341,28 @@
     timelineStore.addColumn(column);
     handleClose();
   }
+
+  // アカウントユーティリティ: カラム追加 (アカウント選択不要)
+  function handleAddAccountUtility() {
+    const column: ColumnConfig = {
+      id: Date.now(),
+      accountId: -1,
+      channel: 'accountUtility',
+      channelName: 'アカウントユーティリティ',
+      customName: 'アカウントユーティリティ',
+      color: selectedColor,
+      width: 'md',
+      maxNotes: 200,
+      bufferSize: 500,
+      collapsed: false,
+      autoCollapse: false,
+      lowRate: false,
+      reactionDeck: [],
+      noteDisplay: { ...DEFAULT_NOTE_DISPLAY },
+    };
+    timelineStore.addColumn(column);
+    handleClose();
+  }
 </script>
 
 <Modal open={open} onclose={handleClose} title="カラムを追加">
@@ -377,7 +401,7 @@
           <ChevronRight class="w-4 h-4 text-primary/50 shrink-0" aria-hidden="true" />
         </button>
         <button
-          class="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-secondary/50 hover:border-secondary hover:bg-secondary/5 transition-colors text-left mb-3"
+          class="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-secondary/50 hover:border-secondary hover:bg-secondary/5 transition-colors text-left"
           onclick={handleAddMergeNotification}
         >
           <div class="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
@@ -388,6 +412,19 @@
             <p class="text-xs text-base-content/50">全アカウントの通知を一つに集約</p>
           </div>
           <ChevronRight class="w-4 h-4 text-secondary/50 shrink-0" aria-hidden="true" />
+        </button>
+        <button
+          class="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-accent/50 hover:border-accent hover:bg-accent/5 transition-colors text-left mb-3"
+          onclick={handleAddAccountUtility}
+        >
+          <div class="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+            <LayoutDashboard class="w-4 h-4 text-accent" aria-hidden="true" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-accent">アカウントユーティリティ</p>
+            <p class="text-xs text-base-content/50">投稿・通知・リンクを全アカウント分まとめて表示</p>
+          </div>
+          <ChevronRight class="w-4 h-4 text-accent/50 shrink-0" aria-hidden="true" />
         </button>
         <div class="divider text-xs text-base-content/30 my-2">または通常カラム</div>
       {/if}

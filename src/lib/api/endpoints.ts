@@ -53,6 +53,10 @@ export const CHANNEL_ENDPOINTS: Record<ChannelType, ChannelEndpointInfo> = {
     streamChannel: '',
     restEndpoint: 'i/notifications',
   },
+  accountUtility: {
+    streamChannel: '',
+    restEndpoint: '',
+  },
 };
 
 /**
