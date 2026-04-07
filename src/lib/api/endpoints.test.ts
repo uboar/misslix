@@ -14,13 +14,15 @@ describe('CHANNEL_ENDPOINTS', () => {
       'roleTimeline',
       'userTimeline',
       'mergeTimeline',
+      'mergeNotificationTimeline',
+      'accountUtility',
     ];
     expect(Object.keys(CHANNEL_ENDPOINTS)).toEqual(expectedKeys);
   });
 
   it('every entry has streamChannel and restEndpoint (except mergeTimeline and REST-only channels)', () => {
     // Channels with no WebSocket stream (REST-only or placeholder)
-    const noStreamChannels = new Set(['mergeTimeline', 'userTimeline']);
+    const noStreamChannels = new Set(['mergeTimeline', 'userTimeline', 'mergeNotificationTimeline', 'accountUtility']);
     for (const [key, info] of Object.entries(CHANNEL_ENDPOINTS)) {
       if (noStreamChannels.has(key)) {
         expect(info.streamChannel, `${key}.streamChannel should be empty`).toBe('');

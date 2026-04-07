@@ -16,6 +16,7 @@ function makeColumn(overrides: Partial<ColumnConfig> = {}): ColumnConfig {
     lowRate: false,
     reactionDeck: [],
     noteDisplay: { ...DEFAULT_NOTE_DISPLAY },
+    fetchOptions: { withReplies: false, withRenotes: true, onlyMedia: false },
     ...overrides,
   };
 }

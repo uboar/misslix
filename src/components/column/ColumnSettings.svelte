@@ -1,5 +1,7 @@
 <script lang="ts">
-  import type { ColumnConfig, ColumnWidth, NoteDisplayConfig, Visibility } from '$lib/types';
+  import type { ColumnConfig, ColumnWidth, NoteDisplayConfig, TimelineFetchOptions, Visibility } from '$lib/types';
+  import { DEFAULT_FETCH_OPTIONS } from '$lib/types';
+  import { FETCH_OPTION_SUPPORT } from '$lib/api/endpoints';
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
 
@@ -25,6 +27,13 @@
   // 投稿設定
   let defaultVisibility = $state<Visibility>(config.defaultVisibility ?? 'public');
   let defaultLocalOnly = $state(config.defaultLocalOnly ?? false);
+
+  // 取得オプション
+  const fetchSupport = $derived(FETCH_OPTION_SUPPORT[config.channel]);
+  const hasFetchOptions = $derived(fetchSupport.withReplies || fetchSupport.withRenotes || fetchSupport.onlyMedia);
+  let withReplies = $state((config.fetchOptions ?? DEFAULT_FETCH_OPTIONS).withReplies);
+  let withRenotes = $state((config.fetchOptions ?? DEFAULT_FETCH_OPTIONS).withRenotes);
+  let onlyMedia   = $state((config.fetchOptions ?? DEFAULT_FETCH_OPTIONS).onlyMedia);
 
   // noteDisplay
   let mediaHidden = $state(config.noteDisplay.mediaHidden);
@@ -80,6 +89,12 @@
       collapseHeight,
     };
 
+    const fetchOptions: TimelineFetchOptions = {
+      withReplies,
+      withRenotes,
+      onlyMedia,
+    };
+
     timelineStore.updateColumn(config.id, {
       customName: customName.trim() || undefined,
       width,
@@ -90,6 +105,7 @@
       lowRate,
       reactionDeck,
       noteDisplay,
+      fetchOptions,
       defaultVisibility,
       defaultLocalOnly,
     });
@@ -360,6 +376,29 @@
       </div>
     {/if}
   </section>
+
+  <!-- タイムライン取得オプション -->
+  {#if hasFetchOptions}
+    <div class="divider my-1"></div>
+    <section class="space-y-3">
+      <h5 class="font-semibold text-base-content/70 uppercase text-xs tracking-wide">取得オプション</h5>
+      <div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-0">
+        {#if fetchSupport.withRenotes}
+          <label class="label-text py-1.5 cursor-pointer select-none" for="col-with-renotes">リノートを含める</label>
+          <input id="col-with-renotes" type="checkbox" class="toggle toggle-sm toggle-primary" bind:checked={withRenotes} />
+        {/if}
+        {#if fetchSupport.withReplies}
+          <label class="label-text py-1.5 cursor-pointer select-none" for="col-with-replies">返信を含める</label>
+          <input id="col-with-replies" type="checkbox" class="toggle toggle-sm toggle-primary" bind:checked={withReplies} />
+        {/if}
+        {#if fetchSupport.onlyMedia}
+          <label class="label-text py-1.5 cursor-pointer select-none" for="col-only-media">メディアのみ</label>
+          <input id="col-only-media" type="checkbox" class="toggle toggle-sm toggle-primary" bind:checked={onlyMedia} />
+        {/if}
+      </div>
+      <p class="text-[0.65rem] text-base-content/40">変更は保存後に反映されます。</p>
+    </section>
+  {/if}
 
   <!-- 操作ボタン -->
   <div class="flex gap-2 pt-2">

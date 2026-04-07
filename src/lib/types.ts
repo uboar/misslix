@@ -68,6 +68,22 @@ export type NoteDisplayConfig = {
   collapseHeight: number;
 };
 
+/** タイムライン取得オプション */
+export type TimelineFetchOptions = {
+  /** 返信を含める (homeTimeline, hybridTimeline のみ有効) */
+  withReplies: boolean;
+  /** リノートを含める */
+  withRenotes: boolean;
+  /** メディアのみ表示 (withFiles=true に対応) */
+  onlyMedia: boolean;
+};
+
+export const DEFAULT_FETCH_OPTIONS: TimelineFetchOptions = {
+  withReplies: false,
+  withRenotes: true,
+  onlyMedia: false,
+};
+
 export type ColumnConfig = {
   id: number;
   accountId: number;
@@ -93,6 +109,8 @@ export type ColumnConfig = {
   sourceColumns?: MergeSourceDef[];
   /** マージタイムライン: 元にしたプリセットのID (参考情報) */
   sourcePresetId?: string;
+  /** タイムライン取得オプション */
+  fetchOptions: TimelineFetchOptions;
 };
 
 export const DEFAULT_NOTE_DISPLAY: NoteDisplayConfig = {

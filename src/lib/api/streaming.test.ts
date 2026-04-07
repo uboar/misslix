@@ -68,6 +68,7 @@ function makeColumnConfig(overrides: Partial<ColumnConfig> = {}): ColumnConfig {
     lowRate: false,
     reactionDeck: [],
     noteDisplay: { ...DEFAULT_NOTE_DISPLAY },
+    fetchOptions: { withReplies: false, withRenotes: true, onlyMedia: false },
     ...overrides,
   };
 }
@@ -116,7 +117,11 @@ describe('connectTimeline', () => {
 
     connectTimeline(runtime, config, { onNote: vi.fn() });
 
-    expect(mockSetup.mockStream.useChannel).toHaveBeenCalledWith('homeTimeline', undefined);
+    expect(mockSetup.mockStream.useChannel).toHaveBeenCalledWith('homeTimeline', {
+      withReplies: false,
+      withRenotes: true,
+      withFiles: false,
+    });
   });
 
   it('localTimeline チャンネルに接続するとき useChannel が正しいチャンネル名で呼ばれる', () => {
@@ -125,7 +130,10 @@ describe('connectTimeline', () => {
 
     connectTimeline(runtime, config, { onNote: vi.fn() });
 
-    expect(mockSetup.mockStream.useChannel).toHaveBeenCalledWith('localTimeline', undefined);
+    expect(mockSetup.mockStream.useChannel).toHaveBeenCalledWith('localTimeline', {
+      withRenotes: true,
+      withFiles: false,
+    });
   });
 
   it('channel タイプのとき channelId がパラメータとして渡される', () => {
@@ -134,7 +142,10 @@ describe('connectTimeline', () => {
 
     connectTimeline(runtime, config, { onNote: vi.fn() });
 
-    expect(mockSetup.mockStream.useChannel).toHaveBeenCalledWith('channel', { channelId: 'ch123' });
+    expect(mockSetup.mockStream.useChannel).toHaveBeenCalledWith('channel', {
+      channelId: 'ch123',
+      withRenotes: true,
+    });
   });
 
   it('antenna タイプのとき antennaId がパラメータとして渡される', () => {
@@ -146,13 +157,13 @@ describe('connectTimeline', () => {
     expect(mockSetup.mockStream.useChannel).toHaveBeenCalledWith('antenna', { antennaId: 'ant456' });
   });
 
-  it('channelId が未定義の場合、paramKey があってもパラメータは undefined になる', () => {
+  it('channelId が未定義の場合、fetch オプションのみパラメータとして渡される', () => {
     const runtime = makeRuntime(mockSetup.mockStream);
     const config = makeColumnConfig({ channel: 'channel', channelId: undefined });
 
     connectTimeline(runtime, config, { onNote: vi.fn() });
 
-    expect(mockSetup.mockStream.useChannel).toHaveBeenCalledWith('channel', undefined);
+    expect(mockSetup.mockStream.useChannel).toHaveBeenCalledWith('channel', { withRenotes: true });
   });
 
   it('note イベントが発生したとき onNote コールバックが呼ばれる', () => {

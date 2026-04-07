@@ -1,4 +1,4 @@
-import { type ColumnConfig, DEFAULT_NOTE_DISPLAY } from '$lib/types';
+import { type ColumnConfig, DEFAULT_NOTE_DISPLAY, DEFAULT_FETCH_OPTIONS } from '$lib/types';
 import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
 import { migrateColumns } from '$lib/utils/migration';
 
@@ -65,6 +65,7 @@ class TimelineStore {
       lowRate: false,
       reactionDeck: [],
       noteDisplay: { ...DEFAULT_NOTE_DISPLAY },
+      fetchOptions: { ...DEFAULT_FETCH_OPTIONS },
       ...opts,
     };
   }

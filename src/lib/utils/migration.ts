@@ -1,5 +1,5 @@
-import type { Account, ColumnConfig, ColumnPreset, MergeSourceDef, NoteDisplayConfig, SettingsType } from '$lib/types';
-import { DEFAULT_NOTE_DISPLAY, DEFAULT_SETTINGS } from '$lib/types';
+import type { Account, ColumnConfig, ColumnPreset, MergeSourceDef, NoteDisplayConfig, SettingsType, TimelineFetchOptions } from '$lib/types';
+import { DEFAULT_NOTE_DISPLAY, DEFAULT_SETTINGS, DEFAULT_FETCH_OPTIONS } from '$lib/types';
 
 /**
  * Settings: 既存データに不足フィールドがあればデフォルト値で補完する。
@@ -17,6 +17,16 @@ export function migrateSettings(raw: unknown): SettingsType {
     }
   }
   return result as SettingsType;
+}
+
+/**
+ * TimelineFetchOptions: 不足フィールドをデフォルト値で補完する。
+ */
+export function migrateFetchOptions(raw: unknown): TimelineFetchOptions {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return { ...DEFAULT_FETCH_OPTIONS };
+  }
+  return { ...DEFAULT_FETCH_OPTIONS, ...(raw as Partial<TimelineFetchOptions>) };
 }
 
 /**
@@ -86,6 +96,7 @@ export function migrateColumn(raw: unknown): ColumnConfig | null {
       ? (c.sourceColumns as unknown[]).filter(isValidMergeSourceDef)
       : undefined,
     sourcePresetId: typeof c.sourcePresetId === 'string' ? c.sourcePresetId : undefined,
+    fetchOptions: migrateFetchOptions(c.fetchOptions),
   };
 }
 

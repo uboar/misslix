@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ChannelType, ColumnConfig, AccountRuntime, MergeSourceDef } from '$lib/types';
-  import { DEFAULT_NOTE_DISPLAY } from '$lib/types';
+  import { DEFAULT_NOTE_DISPLAY, DEFAULT_FETCH_OPTIONS } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import { presetStore } from '$lib/stores/presets.svelte';
@@ -313,6 +313,7 @@
       lowRate: false,
       reactionDeck: [],
       noteDisplay: { ...DEFAULT_NOTE_DISPLAY },
+      fetchOptions: { ...DEFAULT_FETCH_OPTIONS },
       sourceColumns: mergeSources,
       sourcePresetId: selectedPresetId ?? undefined,
     };
@@ -337,6 +338,7 @@
       lowRate: false,
       reactionDeck: [],
       noteDisplay: { ...DEFAULT_NOTE_DISPLAY },
+      fetchOptions: { ...DEFAULT_FETCH_OPTIONS },
     };
     timelineStore.addColumn(column);
     handleClose();

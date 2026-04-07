@@ -7,7 +7,7 @@
 
 import type { entities } from 'misskey-js';
 import type { AccountRuntime, ColumnConfig } from '$lib/types';
-import { CHANNEL_ENDPOINTS } from '$lib/api/endpoints';
+import { CHANNEL_ENDPOINTS, FETCH_OPTION_SUPPORT } from '$lib/api/endpoints';
 
 export type NoteUpdatedData = {
   id: string;
@@ -78,15 +78,23 @@ export function connectTimeline(
   }
 
   // チャンネル接続パラメータを構築
-  // paramKey が定義されており、channelId が存在する場合はパラメータを付与する
-  let params: Record<string, string> | undefined;
+  const params: Record<string, unknown> = {};
+
+  // channelId パラメータ
   if (endpointInfo.paramKey && config.channelId) {
-    params = { [endpointInfo.paramKey]: config.channelId };
+    params[endpointInfo.paramKey] = config.channelId;
   }
+
+  // タイムライン取得オプション
+  const support = FETCH_OPTION_SUPPORT[config.channel];
+  const opts = config.fetchOptions;
+  if (support.withReplies) params.withReplies = opts.withReplies;
+  if (support.withRenotes) params.withRenotes = opts.withRenotes;
+  if (support.onlyMedia)   params.withFiles   = opts.onlyMedia;
 
   // misskey-js の Stream.useChannel は型パラメータが厳格なため、
   // 動的なチャンネル名を扱うために型アサーションを使用する
-  const connection = (runtime.stream as any).useChannel(channelName, params);
+  const connection = (runtime.stream as any).useChannel(channelName, Object.keys(params).length > 0 ? params : undefined);
 
   // ノートイベントのハンドラ
   connection.on('note', (note: entities.Note) => {

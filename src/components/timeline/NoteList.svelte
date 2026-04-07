@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import type { entities } from 'misskey-js';
   import type { AccountRuntime, ColumnConfig } from '$lib/types';
-  import { CHANNEL_ENDPOINTS } from '$lib/api/endpoints';
+  import { CHANNEL_ENDPOINTS, FETCH_OPTION_SUPPORT } from '$lib/api/endpoints';
   import { settingsStore } from '$lib/stores/settings.svelte';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import NoteCard from './NoteCard.svelte';
@@ -53,6 +53,13 @@
     if (endpointInfo.paramKey && config.channelId) {
       params[endpointInfo.paramKey] = config.channelId;
     }
+
+    // タイムライン取得オプション
+    const support = FETCH_OPTION_SUPPORT[config.channel];
+    const opts = config.fetchOptions;
+    if (support.withReplies) params.withReplies = opts.withReplies;
+    if (support.withRenotes) params.withRenotes = opts.withRenotes;
+    if (support.onlyMedia)   params.withFiles   = opts.onlyMedia;
 
     if (untilId) {
       params.untilId = untilId;
