@@ -6,6 +6,7 @@
   import type { NoteUpdatedData } from '$lib/api/streaming';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import ColumnHeader from './ColumnHeader.svelte';
+  import ColumnSettings from './ColumnSettings.svelte';
   import { getEmojiMap } from '$lib/emoji/cache';
   import ColumnFooter from './ColumnFooter.svelte';
   import NoteList from '../timeline/NoteList.svelte';
@@ -116,6 +117,8 @@
 
   const emojiMap = $derived(runtime ? getEmojiMap('', runtime.emojis) : {});
 
+  let settingsOpen = $state(false);
+
   // ストリーミング接続
   import type { TimelineConnection } from '$lib/api/streaming';
   let connection = $state<TimelineConnection | null>(null);
@@ -215,7 +218,7 @@
     </div>
   {:else}
     <!-- 通常表示 -->
-    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} onrefresh={() => noteList?.refresh()} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} emojis={emojiMap} />
+    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} onrefresh={() => noteList?.refresh()} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} onsettingstoggle={() => (settingsOpen = !settingsOpen)} emojis={emojiMap} />
 
     <!-- メインエリア -->
     {#if runtime}
@@ -237,6 +240,13 @@
     {/if}
 
     <ColumnFooter {config} {runtime} {account} />
+
+    <!-- カラム設定パネル (カラム全体を覆うオーバーレイ) -->
+    {#if settingsOpen}
+      <div class="absolute inset-0 z-50 bg-base-100 overflow-y-auto flex flex-col">
+        <ColumnSettings {config} onclose={() => (settingsOpen = false)} onremove={handleRemove} emojis={emojiMap} />
+      </div>
+    {/if}
   {/if}
 
   <!-- リサイズハンドル -->

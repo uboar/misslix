@@ -248,16 +248,6 @@
 </script>
 
 <li class="flex gap-2 px-3 py-2 hover:bg-base-100 transition-colors">
-  <!-- マージ通知: アカウントカラーインジケーター -->
-  {#if sourceColor}
-    <div
-      class="w-0.5 rounded-full shrink-0 self-stretch"
-      style="background-color: {sourceColor};"
-      title={sourceLabel}
-      aria-hidden="true"
-    ></div>
-  {/if}
-
   <!-- 種別アイコン -->
   <div class="flex flex-col items-center shrink-0 gap-1 pt-0.5">
     {#if appNotif?.icon}

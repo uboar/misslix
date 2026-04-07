@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { ColumnConfig, ChannelType } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
-  import ColumnSettings from './ColumnSettings.svelte';
   import { GripVertical, Settings, ChevronLeft, CircleDotDashed, Globe, Home, Users, Hash, Radio, List, ShieldCheck, Layers, RefreshCw, UserRound } from 'lucide-svelte';
 
   type Props = {
@@ -11,10 +10,11 @@
     onrefresh?: () => void;
     ondragstart?: (e: DragEvent) => void;
     ondragend?: (e: DragEvent) => void;
+    onsettingstoggle?: () => void;
     emojis?: Record<string, string>;
   };
 
-  let { config, onremove, ontoggle, onrefresh, ondragstart, ondragend, emojis = {} }: Props = $props();
+  let { config, onremove, ontoggle, onrefresh, ondragstart, ondragend, onsettingstoggle, emojis = {} }: Props = $props();
 
   const isMerge = $derived(config.channel === 'mergeTimeline');
   const account = $derived(isMerge ? null : accountStore.findById(config.accountId));
@@ -25,8 +25,6 @@
         ? `@${account.userName}@${account.hostUrl.replace(/^https?:\/\//, '')}`
         : null
   );
-
-  let settingsOpen = $state(false);
 
   /**
    * HEX カラー文字列から相対輝度を計算し、
@@ -121,7 +119,7 @@
     <button
       class="flex items-center justify-center px-1.5 opacity-60 hover:opacity-100 transition-opacity"
       style="color: {headerTextColor};"
-      onclick={() => (settingsOpen = !settingsOpen)}
+      onclick={onsettingstoggle}
       aria-label="カラム設定"
       title="カラム設定"
     >
@@ -141,10 +139,4 @@
 
   </div>
 
-  <!-- カラム設定パネル (インラインドロップダウン) -->
-  {#if settingsOpen}
-    <div class="bg-base-100 border-b border-base-300 px-3 py-3 overflow-y-auto max-h-[80vh] shadow-lg z-10">
-      <ColumnSettings {config} onclose={() => (settingsOpen = false)} {onremove} {emojis} />
-    </div>
-  {/if}
 </div>
