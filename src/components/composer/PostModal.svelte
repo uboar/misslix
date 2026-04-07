@@ -294,7 +294,7 @@
                   style="background-color: {account.themeColor};"
                 ></span>
               {/if}
-              <span class="max-w-28 truncate text-xs">@{account.userName}</span>
+              <span class="max-w-44 truncate text-xs">@{account.userName}@{account.hostUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
               {#if selected}
                 <Check class="w-3 h-3 shrink-0" aria-hidden="true" />
               {/if}
@@ -437,11 +437,8 @@
 
     <!-- アクションボタン -->
     <div class="flex justify-end gap-2 mt-1">
-      <button class="btn btn-ghost btn-sm" onclick={handleClose} disabled={posting}>
-        キャンセル
-      </button>
       <button
-        class="btn btn-primary btn-sm gap-1.5"
+        class="btn btn-primary gap-1.5"
         onclick={post}
         disabled={!canPost}
       >

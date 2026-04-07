@@ -238,7 +238,7 @@
       <div class="relative flex items-stretch">
         <button
           bind:this={notifBtnEl}
-          class="flex items-center justify-center px-2.5 relative hover:bg-base-300 transition-colors {notifPanelOpen ? 'bg-base-300' : ''}"
+          class="flex items-center justify-center px-5 relative hover:bg-base-300 transition-colors {notifPanelOpen ? 'bg-base-300' : ''}"
           class:opacity-60={!runtime.notifState.hasUnread}
           onclick={toggleNotifPanel}
           aria-label="通知{runtime.notifState.hasUnread ? ' (未読あり)' : ''}"
@@ -295,7 +295,7 @@
       <div class="relative flex items-stretch">
         <button
           bind:this={linksBtnEl}
-          class="flex items-center justify-center px-2.5 hover:bg-base-300 transition-colors text-base-content/60 hover:text-base-content {linksPanelOpen ? 'bg-base-300' : ''}"
+          class="flex items-center justify-center px-5 hover:bg-base-300 transition-colors text-base-content/60 hover:text-base-content {linksPanelOpen ? 'bg-base-300' : ''}"
           onclick={toggleLinksPanel}
           aria-label="クイックリンク"
           title="クイックリンク"

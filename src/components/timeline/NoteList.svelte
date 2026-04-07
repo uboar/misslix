@@ -294,7 +294,7 @@
   <!-- スクロールコンテナ -->
   <div
     bind:this={scrollContainer}
-    class="flex-1 overflow-y-auto overflow-x-hidden"
+    class="flex-1 overflow-y-auto overflow-x-clip"
     onscroll={handleScroll}
     ontouchstart={handleTouchStart}
     ontouchend={handleTouchEnd}

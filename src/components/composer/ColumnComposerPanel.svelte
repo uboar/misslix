@@ -82,7 +82,6 @@
       defaultLocalOnly={initialLocalOnly}
       reactionDeck={config.reactionDeck}
       oncomplete={onclose}
-      oncancel={onclose}
     />
   </div>
 </div>
