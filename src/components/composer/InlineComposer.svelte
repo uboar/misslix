@@ -6,7 +6,7 @@
   import { uploadFileToDrive } from './composerLogic';
   import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
   import type { entities } from 'misskey-js';
-  import { MessageSquare, Repeat2, Eye, Send } from 'lucide-svelte';
+  import { MessageSquare, Repeat2, Eye, Send, Paperclip } from 'lucide-svelte';
 
   type Note = entities.Note;
 
@@ -24,6 +24,8 @@
     defaultLocalOnly?: boolean;
     /** リアクションデッキ (絵文字ピッカーに表示) */
     reactionDeck?: string[];
+    /** タイムラインごとに設定を分離するためのカラムID */
+    columnId?: number;
     /** 投稿完了時コールバック */
     oncomplete?: () => void;
     /** キャンセル時コールバック */
@@ -40,13 +42,14 @@
     defaultVisibility = 'public',
     defaultLocalOnly = false,
     reactionDeck = [],
+    columnId,
     oncomplete,
     oncancel,
   }: Props = $props();
 
-  // ── 前回の投稿設定を復元 ──
+  // ── 前回の投稿設定を復元 (カラムIDでタイムラインごとに分離) ──
   type ComposerSettings = { visibility: Visibility; localOnly: boolean; cwEnabled: boolean };
-  const SETTINGS_KEY = 'composer-last-settings';
+  const SETTINGS_KEY = columnId != null ? `composer-last-settings-${columnId}` : 'composer-last-settings';
   const savedSettings = loadFromStorage<ComposerSettings | null>(SETTINGS_KEY, null);
 
   // ── フォーム状態 ──
@@ -62,6 +65,7 @@
   let attachedFiles = $state<File[]>([]);
 
   let textareaEl = $state<HTMLTextAreaElement | null>(null);
+  let fileAreaComp = $state<FileAttachmentArea | null>(null);
 
   // ── 文字数 ──
   const charCount = $derived(text.length + (cwEnabled ? cwText.length : 0));
@@ -292,11 +296,13 @@
     />
   {/if}
 
-  <!-- ファイル添付 -->
+  <!-- ファイル添付プレビュー (ボタンは下のアクションバーへ移動) -->
   <FileAttachmentArea
+    bind:this={fileAreaComp}
     files={attachedFiles}
     onchange={(f) => { attachedFiles = f; }}
     disabled={posting}
+    showButton={false}
   />
 
   <!-- エラー表示 -->
@@ -304,70 +310,82 @@
     <p class="text-xs text-error">{error}</p>
   {/if}
 
-  <!-- アクションバー -->
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-1">
-      <!-- 絵文字ピッカートグル -->
-      <button
-        class="btn btn-ghost btn-xs {emojiPickerOpen ? 'btn-active' : ''}"
-        onclick={() => { emojiPickerOpen = !emojiPickerOpen; previewMode = false; }}
-        title="絵文字を挿入"
-      >
-        <span class="text-sm">😀</span>
-      </button>
+  <!-- アクションバー (絵文字・添付・公開範囲等) -->
+  <div class="flex items-center gap-1">
+    <!-- 絵文字ピッカートグル -->
+    <button
+      class="btn btn-ghost btn-xs {emojiPickerOpen ? 'btn-active' : ''}"
+      onclick={() => { emojiPickerOpen = !emojiPickerOpen; previewMode = false; }}
+      title="絵文字を挿入"
+    >
+      <span class="text-sm">😀</span>
+    </button>
 
-      <!-- プレビュートグル -->
-      <button
-        class="btn btn-ghost btn-xs {previewMode ? 'btn-active' : ''}"
-        onclick={() => { previewMode = !previewMode; emojiPickerOpen = false; }}
-        title="プレビュー"
-      >
-        <Eye class="w-3.5 h-3.5" aria-hidden="true" />
-      </button>
+    <!-- プレビュートグル -->
+    <button
+      class="btn btn-ghost btn-xs {previewMode ? 'btn-active' : ''}"
+      onclick={() => { previewMode = !previewMode; emojiPickerOpen = false; }}
+      title="プレビュー"
+    >
+      <Eye class="w-3.5 h-3.5" aria-hidden="true" />
+    </button>
 
-      <!-- 公開範囲 -->
-      <select
-        class="select select-bordered select-xs text-xs"
-        bind:value={visibility}
-      >
-        {#each visibilityOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.icon}</option>
-        {/each}
-      </select>
-
-      <!-- ローカル限定 -->
-      <label class="flex items-center gap-1 cursor-pointer select-none" title="ローカル限定">
-        <input
-          type="checkbox"
-          class="checkbox checkbox-xs"
-          bind:checked={localOnly}
-        />
-        <span class="text-xs text-base-content/60">L</span>
-      </label>
-
-      <!-- 文字数 -->
-      <span class="text-xs text-base-content/40 ml-1">{charCount}</span>
-    </div>
-
-    <div class="flex items-center gap-1">
-      {#if oncancel}
-        <button class="btn btn-ghost btn-xs" onclick={handleCancel} disabled={posting}>
-          キャンセル
-        </button>
+    <!-- ファイル添付ボタン -->
+    <button
+      class="btn btn-ghost btn-xs {attachedFiles.length > 0 ? 'btn-active' : ''}"
+      onclick={() => fileAreaComp?.openPicker()}
+      title="ファイルを添付"
+      disabled={posting}
+    >
+      <Paperclip class="w-3.5 h-3.5" aria-hidden="true" />
+      {#if attachedFiles.length > 0}
+        <span class="text-xs">{attachedFiles.length}</span>
       {/if}
-      <button
-        class="btn btn-primary btn-xs gap-1"
-        onclick={post}
-        disabled={!canPost}
-      >
-        {#if posting}
-          <span class="loading loading-spinner loading-xs"></span>
-        {:else}
-          <Send class="w-3 h-3" aria-hidden="true" />
-        {/if}
-        {isRenote && !text.trim() ? 'Renote' : '投稿'}
+    </button>
+
+    <!-- 公開範囲 -->
+    <select
+      class="select select-bordered select-xs text-xs"
+      bind:value={visibility}
+    >
+      {#each visibilityOptions as opt (opt.value)}
+        <option value={opt.value}>{opt.icon}</option>
+      {/each}
+    </select>
+
+    <!-- ローカル限定 -->
+    <label class="flex items-center gap-1 cursor-pointer select-none" title="ローカル限定">
+      <input
+        type="checkbox"
+        class="checkbox checkbox-xs"
+        bind:checked={localOnly}
+      />
+      <span class="text-xs text-base-content/60">L</span>
+    </label>
+
+    <!-- 文字数 -->
+    <span class="text-xs text-base-content/40 ml-1">{charCount}</span>
+  </div>
+
+  <!-- 投稿ボタン行 (横幅いっぱい) -->
+  <div class="flex items-center gap-2">
+    {#if oncancel}
+      <button class="btn btn-ghost btn-xs shrink-0" onclick={handleCancel} disabled={posting}>
+        キャンセル
       </button>
-    </div>
+    {/if}
+    <button
+      class="btn btn-primary btn-sm flex-1 gap-1"
+      onclick={post}
+      disabled={!canPost}
+    >
+      {#if posting}
+        <span class="loading loading-spinner loading-xs"></span>
+      {:else}
+        <Send class="w-3.5 h-3.5" aria-hidden="true" />
+      {/if}
+      {isRenote && !text.trim() ? 'Renote' : '投稿'}
+    </button>
   </div>
 
 </div>

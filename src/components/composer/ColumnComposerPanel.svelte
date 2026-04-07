@@ -81,6 +81,7 @@
       defaultVisibility={initialVisibility}
       defaultLocalOnly={initialLocalOnly}
       reactionDeck={config.reactionDeck}
+      columnId={config.id}
       oncomplete={onclose}
     />
   </div>

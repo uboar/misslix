@@ -53,41 +53,41 @@
   <!-- ヘッダー本体 (アクセントカラーを背景に適用) -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="flex items-center gap-1 px-2 py-1.5 min-h-9"
+    class="flex items-stretch gap-1 px-2 min-h-9"
     style="background-color: {headerBg}; color: {headerTextColor};"
     draggable="true"
     ondragstart={ondragstart}
     ondragend={ondragend}
   >
     <!-- ドラッグハンドル -->
-    <GripVertical class="w-3 h-3 shrink-0 opacity-40 cursor-grab active:cursor-grabbing" aria-hidden="true" />
+    <GripVertical class="w-3 h-3 shrink-0 opacity-40 cursor-grab active:cursor-grabbing self-center" aria-hidden="true" />
 
     <!-- チャンネルアイコン -->
     {#if config.channel === 'mergeTimeline'}
-      <Layers class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <Layers class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {:else if config.channel === 'hybridTimeline'}
-      <CircleDotDashed class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <CircleDotDashed class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {:else if config.channel === 'globalTimeline'}
-      <Globe class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <Globe class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {:else if config.channel === 'localTimeline'}
-      <Users class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <Users class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {:else if config.channel === 'channel'}
-      <Hash class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <Hash class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {:else if config.channel === 'antenna'}
-      <Radio class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <Radio class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {:else if config.channel === 'userList'}
-      <List class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <List class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {:else if config.channel === 'roleTimeline'}
-      <ShieldCheck class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <ShieldCheck class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {:else if config.channel === 'userTimeline'}
-      <UserRound class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <UserRound class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {:else}
-      <Home class="w-3.5 h-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      <Home class="w-3.5 h-3.5 shrink-0 opacity-80 self-center" aria-hidden="true" />
     {/if}
 
     <!-- タイムライン名 (クリックで折り畳みトグル) -->
     <button
-      class="flex-1 flex items-baseline gap-1 min-w-0 select-none text-left cursor-pointer"
+      class="flex-1 flex items-baseline gap-1 min-w-0 select-none text-left cursor-pointer self-center py-1.5"
       style="color: {headerTextColor};"
       title={config.customName
         ? `${config.customName} (${config.channelName})${accountLabel ? ` — ${accountLabel}` : ''}`
@@ -107,7 +107,7 @@
     <!-- 更新ボタン -->
     {#if onrefresh}
       <button
-        class="btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100"
+        class="flex items-center justify-center px-1.5 opacity-60 hover:opacity-100 transition-opacity"
         style="color: {headerTextColor};"
         onclick={onrefresh}
         aria-label="タイムラインを更新"
@@ -119,7 +119,7 @@
 
     <!-- 設定ボタン -->
     <button
-      class="btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100"
+      class="flex items-center justify-center px-1.5 opacity-60 hover:opacity-100 transition-opacity"
       style="color: {headerTextColor};"
       onclick={() => (settingsOpen = !settingsOpen)}
       aria-label="カラム設定"
@@ -130,7 +130,7 @@
 
     <!-- 折り畳みトグルボタン -->
     <button
-      class="btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100"
+      class="flex items-center justify-center px-1.5 opacity-60 hover:opacity-100 transition-opacity"
       style="color: {headerTextColor};"
       onclick={ontoggle}
       aria-label={config.collapsed ? '展開' : '折り畳み'}

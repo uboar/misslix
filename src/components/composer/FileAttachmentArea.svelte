@@ -6,9 +6,14 @@
     onchange: (files: File[]) => void;
     disabled?: boolean;
     maxFiles?: number;
+    showButton?: boolean;
   };
 
-  let { files, onchange, disabled = false, maxFiles = 16 }: Props = $props();
+  let { files, onchange, disabled = false, maxFiles = 16, showButton = true }: Props = $props();
+
+  export function openPicker() {
+    fileInputEl?.click();
+  }
 
   let fileInputEl = $state<HTMLInputElement | null>(null);
   let dragOver = $state(false);
@@ -86,6 +91,7 @@
   aria-label="ファイル添付エリア"
 >
   <!-- 添付ボタン -->
+  {#if showButton}
   <div class="flex items-center gap-2">
     <button
       type="button"
@@ -104,6 +110,7 @@
       <span class="text-xs text-primary">ドロップしてください</span>
     {/if}
   </div>
+  {/if}
 
   <!-- 添付ファイルプレビュー -->
   {#if files.length > 0}
