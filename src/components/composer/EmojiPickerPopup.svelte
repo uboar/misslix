@@ -53,18 +53,33 @@
     return emojis[name] ?? emojis[reaction] ?? null;
   }
 
-  // 検索結果 (searchQueryが空なら全件、そうでなければフィルタ)
+  // 検索結果 (searchQueryが空なら空配列、そうでなければフィルタ + 完全一致を先頭に)
   const searchResults = $derived(
     searchQuery.trim().length === 0
       ? []
-      : accountEmojis.filter((e) => {
-          const q = searchQuery.toLowerCase();
-          return (
-            e.name.toLowerCase().includes(q) ||
-            (e.aliases ?? []).some((a) => a.toLowerCase().includes(q)) ||
-            (e.category ?? '').toLowerCase().includes(q)
-          );
-        })
+      : (() => {
+          const q = searchQuery.trim().toLowerCase();
+          const filtered = accountEmojis.filter((e) => {
+            return (
+              e.name.toLowerCase().includes(q) ||
+              (e.aliases ?? []).some((a) => a.toLowerCase().includes(q)) ||
+              (e.category ?? '').toLowerCase().includes(q)
+            );
+          });
+          // 完全一致する絵文字を先頭に移動
+          const exactIndex = filtered.findIndex((e) => e.name.toLowerCase() === q);
+          if (exactIndex > 0) {
+            const exact = filtered.splice(exactIndex, 1);
+            filtered.unshift(exact[0]);
+          }
+          return filtered;
+        })()
+  );
+
+  // 完全一致する絵文字があるか (Enterキー送信判定用)
+  const exactMatch = $derived(
+    searchResults.length > 0 &&
+      searchResults[0].name.toLowerCase() === searchQuery.trim().toLowerCase()
   );
 
   const isSearching = $derived(searchQuery.trim().length > 0);
@@ -123,6 +138,9 @@
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       onclose?.();
+    } else if (e.key === 'Enter' && exactMatch) {
+      e.preventDefault();
+      handleSelect(searchResults[0].name);
     }
   }
 </script>
@@ -159,14 +177,17 @@
           一致する絵文字がありません
         </div>
       {:else}
-        <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5 pt-1">
-          検索結果 ({searchResults.length}件)
+        <div class="text-[0.6rem] text-base-content/40 mb-1 px-0.5 pt-1 flex items-center gap-1">
+          <span>検索結果 ({searchResults.length}件)</span>
+          {#if exactMatch}
+            <span class="text-primary/70">· Enterで送信</span>
+          {/if}
         </div>
         <div class="flex flex-wrap gap-0.5">
-          {#each searchResults as emoji (emoji.name)}
+          {#each searchResults as emoji, i (emoji.name)}
             <button
-              class="emoji-btn flex items-center justify-center w-8 h-8 rounded hover:bg-base-200 transition-colors duration-100"
-              title=":{emoji.name}:"
+              class="emoji-btn flex items-center justify-center w-8 h-8 rounded transition-colors duration-100 {i === 0 && exactMatch ? 'bg-primary/20 hover:bg-primary/30 ring-1 ring-primary/50' : 'hover:bg-base-200'}"
+              title="{i === 0 && exactMatch ? '↵ ' : ''}:{emoji.name}:"
               aria-label=":{emoji.name}:"
               onclick={() => handleSelect(emoji.name)}
             >
