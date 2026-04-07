@@ -5,3 +5,4 @@ dist/
 .env
 docker/setup/credentials.json
 .claude/worktrees/
+.playwright-mcp/

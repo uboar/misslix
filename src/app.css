@@ -28,6 +28,7 @@ html, body, #app {
   height: 100%;
   margin: 0;
   overflow: hidden;
+  font-family: "LINE Seed JP", sans-serif;
 }
 
 /* ── モバイルタッチ改善 ── */
