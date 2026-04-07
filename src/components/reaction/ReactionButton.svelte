@@ -10,6 +10,7 @@
     reactionDeck: string[];
     emojis: Record<string, string>;
     onreacted?: (reaction: string | null) => void;
+    timelineId?: number;
   };
 
   const {
@@ -19,6 +20,7 @@
     reactionDeck,
     emojis,
     onreacted,
+    timelineId,
   }: Props = $props();
 
   // デッキ表示状態
@@ -121,7 +123,7 @@
 
 <!-- リアクション追加ボタン -->
 <button
-  class="reaction-add-btn inline-flex items-center justify-center w-6 h-6 rounded
+  class="reaction-add-btn flex-1 inline-flex items-center justify-center h-7 rounded
     text-base-content/30 hover:text-base-content/60 hover:bg-base-200
     transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed
     {myReaction ? 'text-primary/70 hover:text-error/70 bg-primary/10 hover:bg-error/10' : ''}
@@ -155,6 +157,7 @@
     positionStyle={deckStyle}
     onselect={handleDeckSelect}
     onclose={handleDeckClose}
+    {timelineId}
   />
 {/if}
 

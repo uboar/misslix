@@ -143,9 +143,9 @@
           aria-hidden="true"
         ></span>
       {/if}
-      <span class="truncate max-w-[8rem]">
+      <span class="truncate max-w-[12rem]">
         {#if selectedAccount}
-          @{selectedAccount.userName}
+          @{selectedAccount.userName}@{selectedAccount.hostUrl.replace(/^https?:\/\//, '')}
         {:else}
           アカウント
         {/if}

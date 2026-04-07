@@ -12,15 +12,16 @@
     onselect: (reaction: string) => void;
     onclose: () => void;
     positionStyle?: string;
+    timelineId?: number;
   };
 
-  const { deck, emojis, accountEmojis, onselect, onclose, positionStyle = '' }: Props = $props();
+  const { deck, emojis, accountEmojis, onselect, onclose, positionStyle = '', timelineId }: Props = $props();
 
   let searchQuery = $state('');
   let searchInputEl = $state<HTMLInputElement | null>(null);
 
   // リアクション履歴
-  const reactionHistory = $derived(getReactionHistory());
+  const reactionHistory = $derived(getReactionHistory(timelineId));
 
   // カスタム絵文字かどうか判定 (:name: 形式)
   function isCustomEmoji(reaction: string): boolean {

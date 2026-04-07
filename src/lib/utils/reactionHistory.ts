@@ -7,31 +7,36 @@
 
 import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
 
-const STORAGE_KEY = 'reactionHistory';
+const STORAGE_KEY_PREFIX = 'reactionHistory';
 const MAX_HISTORY = 20;
+
+function storageKey(timelineId?: number): string {
+  return timelineId != null ? `${STORAGE_KEY_PREFIX}_${timelineId}` : STORAGE_KEY_PREFIX;
+}
 
 /**
  * リアクション履歴を取得する
  */
-export function getReactionHistory(): string[] {
-  return loadFromStorage<string[]>(STORAGE_KEY, []);
+export function getReactionHistory(timelineId?: number): string[] {
+  return loadFromStorage<string[]>(storageKey(timelineId), []);
 }
 
 /**
  * リアクションを履歴に追加する（先頭に挿入、重複除去、上限管理）
  */
-export function addReactionHistory(reaction: string): void {
-  const history = getReactionHistory();
+export function addReactionHistory(reaction: string, timelineId?: number): void {
+  const key = storageKey(timelineId);
+  const history = loadFromStorage<string[]>(key, []);
   const updated = [reaction, ...history.filter((r) => r !== reaction)].slice(
     0,
     MAX_HISTORY,
   );
-  saveToStorage(STORAGE_KEY, updated);
+  saveToStorage(key, updated);
 }
 
 /**
  * リアクション履歴をクリアする
  */
-export function clearReactionHistory(): void {
-  saveToStorage(STORAGE_KEY, []);
+export function clearReactionHistory(timelineId?: number): void {
+  saveToStorage(storageKey(timelineId), []);
 }

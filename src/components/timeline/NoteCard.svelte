@@ -141,14 +141,14 @@
       runtime.cli.request('notes/reactions/create', { noteId: displayNote.id, reaction }).catch((err) => {
         console.error('[NoteCard] リアクション追加失敗:', err);
       });
-      addReactionHistory(reaction);
+      addReactionHistory(reaction, config.id);
     }
   }
 
   // ReactionButton経由のリアクション完了コールバック
   function handleReacted(reaction: string | null) {
     if (reaction) {
-      addReactionHistory(reaction);
+      addReactionHistory(reaction, config.id);
     }
   }
 
@@ -366,10 +366,10 @@
 
     <!-- ツールバー (depth=0のみ) -->
     {#if depth === 0 && (runtime || effectiveRuntime)}
-      <div class="note-tabs flex items-center justify-evenly mt-1.5 pt-1 border-t border-base-300/30">
+      <div class="note-tabs flex items-stretch mt-1.5 pt-1 border-t border-base-300/30">
         <!-- リプライボタン -->
         <button
-          class="toolbar-btn inline-flex items-center justify-center w-6 h-6 rounded
+          class="toolbar-btn flex-1 inline-flex items-center justify-center h-7 rounded
             text-base-content/30 hover:text-info/70 hover:bg-info/10
             transition-all duration-150
             {composerMode === 'reply' ? 'text-info/70 bg-info/10' : ''}"
@@ -382,7 +382,7 @@
 
         <!-- リノートボタン -->
         <button
-          class="toolbar-btn inline-flex items-center justify-center w-6 h-6 rounded
+          class="toolbar-btn flex-1 inline-flex items-center justify-center h-7 rounded
             text-base-content/30 hover:text-success/70 hover:bg-success/10
             transition-all duration-150
             {renoteMenuVisible || composerMode === 'quote' ? 'text-success/70 bg-success/10' : ''}
@@ -400,38 +400,44 @@
         </button>
 
         <!-- リアクションボタン -->
-        {#if effectiveRuntime}
-          <ReactionButton
-            noteId={displayNote.id}
-            {myReaction}
-            runtime={effectiveRuntime}
-            reactionDeck={config.reactionDeck}
-            emojis={reactionEmojis}
-            onreacted={handleReacted}
-          />
-        {:else if runtime}
-          <ReactionButton
-            noteId={displayNote.id}
-            {myReaction}
-            {runtime}
-            reactionDeck={config.reactionDeck}
-            emojis={reactionEmojis}
-            onreacted={handleReacted}
-          />
-        {/if}
+        <span class="flex-1 flex items-stretch">
+          {#if effectiveRuntime}
+            <ReactionButton
+              noteId={displayNote.id}
+              {myReaction}
+              runtime={effectiveRuntime}
+              reactionDeck={config.reactionDeck}
+              emojis={reactionEmojis}
+              onreacted={handleReacted}
+              timelineId={config.id}
+            />
+          {:else if runtime}
+            <ReactionButton
+              noteId={displayNote.id}
+              {myReaction}
+              {runtime}
+              reactionDeck={config.reactionDeck}
+              emojis={reactionEmojis}
+              onreacted={handleReacted}
+              timelineId={config.id}
+            />
+          {/if}
+        </span>
 
         <!-- マージTL: ノートごとのアカウント選択ピッカー (タイムライン共通設定がない場合のみ) -->
         {#if availableRuntimes && availableRuntimes.size > 1 && timelineAccountId === undefined}
-          <ReactionAccountPicker
-            runtimes={availableRuntimes}
-            selectedAccountId={selectedReactionAccountId ?? sourceAccountId ?? config.accountId}
-            onselect={(id) => { localSelectedAccountId = id; }}
-          />
+          <span class="flex-1 flex items-stretch">
+            <ReactionAccountPicker
+              runtimes={availableRuntimes}
+              selectedAccountId={selectedReactionAccountId ?? sourceAccountId ?? config.accountId}
+              onselect={(id) => { localSelectedAccountId = id; }}
+            />
+          </span>
         {/if}
 
         <!-- その他ボタン -->
         <button
-          class="toolbar-btn inline-flex items-center justify-center w-6 h-6 rounded
+          class="toolbar-btn flex-1 inline-flex items-center justify-center h-7 rounded
             text-base-content/30 hover:text-base-content/60 hover:bg-base-200
             transition-all duration-150
             {moreMenuVisible ? 'text-base-content/60 bg-base-200' : ''}"
