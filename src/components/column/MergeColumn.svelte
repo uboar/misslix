@@ -10,6 +10,7 @@
   import ColumnHeader from './ColumnHeader.svelte';
   import MergeColumnFooter from './MergeColumnFooter.svelte';
   import MergeNoteList from '../timeline/MergeNoteList.svelte';
+  import ColumnSettings from './ColumnSettings.svelte';
   import { ChevronRight, X } from 'lucide-svelte';
 
   type Props = {
@@ -47,6 +48,9 @@
 
   // NoteList参照
   let noteList = $state<ReturnType<typeof MergeNoteList> | null>(null);
+
+  // 設定パネル
+  let settingsOpen = $state(false);
 
   // 折り畳み状態
   let collapsed = $derived(config.collapsed);
@@ -249,7 +253,7 @@
       </div>
     </div>
   {:else}
-    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} onrefresh={() => noteList?.refresh()} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} />
+    <ColumnHeader {config} onremove={handleRemove} ontoggle={handleToggle} onrefresh={() => noteList?.refresh()} ondragstart={handleDragStartWrapper} ondragend={handleDragEndWrapper} onsettingstoggle={() => (settingsOpen = !settingsOpen)} />
 
     <MergeNoteList
       bind:this={noteList}
@@ -272,6 +276,13 @@
       selectedAccountId={effectiveSelectedAccountId}
       onselect={(id) => { selectedAccountId = id; }}
     />
+
+    <!-- カラム設定パネル -->
+    {#if settingsOpen}
+      <div class="absolute inset-0 z-50 bg-base-100 overflow-y-auto flex flex-col">
+        <ColumnSettings {config} onclose={() => (settingsOpen = false)} onremove={handleRemove} />
+      </div>
+    {/if}
   {/if}
 
   <!-- リサイズハンドル -->

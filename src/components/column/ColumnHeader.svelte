@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ColumnConfig, ChannelType } from '$lib/types';
   import { accountStore } from '$lib/stores/accounts.svelte';
-  import { GripVertical, Settings, ChevronLeft, CircleDotDashed, Globe, Home, Users, Hash, Radio, List, ShieldCheck, Layers, RefreshCw, UserRound } from 'lucide-svelte';
+  import { GripVertical, Settings, Trash2, ChevronLeft, CircleDotDashed, Globe, Home, Users, Hash, Radio, List, ShieldCheck, Layers, RefreshCw, UserRound } from 'lucide-svelte';
 
   type Props = {
     config: ColumnConfig;
@@ -115,16 +115,28 @@
       </button>
     {/if}
 
-    <!-- 設定ボタン -->
-    <button
-      class="flex items-center justify-center px-1.5 opacity-60 hover:opacity-100 transition-opacity"
-      style="color: {headerTextColor};"
-      onclick={onsettingstoggle}
-      aria-label="カラム設定"
-      title="カラム設定"
-    >
-      <Settings class="w-3 h-3" aria-hidden="true" />
-    </button>
+    <!-- 設定ボタン or 削除ボタン -->
+    {#if onsettingstoggle}
+      <button
+        class="flex items-center justify-center px-1.5 opacity-60 hover:opacity-100 transition-opacity"
+        style="color: {headerTextColor};"
+        onclick={onsettingstoggle}
+        aria-label="カラム設定"
+        title="カラム設定"
+      >
+        <Settings class="w-3 h-3" aria-hidden="true" />
+      </button>
+    {:else if onremove}
+      <button
+        class="flex items-center justify-center px-1.5 opacity-60 hover:opacity-100 transition-opacity"
+        style="color: {headerTextColor};"
+        onclick={onremove}
+        aria-label="カラムを削除"
+        title="カラムを削除"
+      >
+        <Trash2 class="w-3 h-3" aria-hidden="true" />
+      </button>
+    {/if}
 
     <!-- 折り畳みトグルボタン -->
     <button

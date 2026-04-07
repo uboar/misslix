@@ -27,9 +27,10 @@
   let accountDropdownOpen = $state(false);
 
   const accountEntries = $derived(
-    Array.from(runtimes.keys())
-      .map(id => accountStore.findById(id))
+    (config.sourceColumns ?? [])
+      .map(s => accountStore.findById(s.accountId))
       .filter((a): a is NonNullable<typeof a> => !!a)
+      .filter((a, i, arr) => arr.findIndex(b => b.id === a.id) === i)
   );
 
   const selectedAccount = $derived(
