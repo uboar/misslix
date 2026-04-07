@@ -145,11 +145,7 @@
   let connections = $state<TimelineConnection[]>([]);
 
   $effect(() => {
-    if (collapsed) {
-      for (const conn of connections) conn.disconnect();
-      connections = [];
-      return;
-    }
+    if (collapsed) return;
 
     const newConnections: TimelineConnection[] = [];
 
