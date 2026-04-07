@@ -89,15 +89,12 @@
 
   // ── パネル外クリックで閉じる ──
   $effect(() => {
-    if (!composerPanelOpen && !accountDropdownOpen) return;
+    if (!composerPanelOpen) return;
     function handleClickOutside(e: MouseEvent) {
       const target = e.target as Node;
       if (composerPanelOpen && composerWrapperEl && !composerWrapperEl.contains(target) &&
           (!composerPopupEl || !composerPopupEl.contains(target))) {
         composerPanelOpen = false;
-      }
-      if (accountDropdownOpen) {
-        accountDropdownOpen = false;
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
