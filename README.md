@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/favicon.svg" alt="MissLIX" width="200" />
+</p>
+
 # MissLIX
 
 Misskey 向けのマルチアカウント・マルチカラム Web クライアントです。
