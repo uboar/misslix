@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { AccountRuntime } from '$lib/types';
-  import { Clipboard, Link2, Star, ArrowLeft, Check, X } from 'lucide-svelte';
+  import { Clipboard, Link2, Star, ArrowLeft, Trash2 } from 'lucide-svelte';
 
   type Props = {
     noteId: string;
@@ -8,10 +8,12 @@
     hostUrl: string;
     runtime: AccountRuntime;
     positionStyle: string;
+    isOwnNote: boolean;
     onclose: () => void;
+    ondeleted?: () => void;
   };
 
-  const { noteId, noteText, hostUrl, runtime, positionStyle, onclose }: Props = $props();
+  const { noteId, noteText, hostUrl, runtime, positionStyle, isOwnNote, onclose, ondeleted }: Props = $props();
 
   let busy = $state(false);
   let message = $state('');
@@ -100,6 +102,28 @@
       } else {
         message = 'クリップ追加に失敗しました';
       }
+    } finally {
+      busy = false;
+    }
+  }
+
+  // ノート削除
+  let deleteConfirm = $state(false);
+
+  async function deleteNote() {
+    if (!deleteConfirm) {
+      deleteConfirm = true;
+      return;
+    }
+    if (busy) return;
+    busy = true;
+    try {
+      await (runtime.cli as any).request('notes/delete', { noteId });
+      message = '削除しました';
+      setTimeout(() => { message = ''; onclose(); ondeleted?.(); }, 800);
+    } catch {
+      message = '削除に失敗しました';
+      deleteConfirm = false;
     } finally {
       busy = false;
     }
@@ -206,6 +230,19 @@
         <Clipboard class="w-3.5 h-3.5 shrink-0 text-base-content/40" aria-hidden="true" />
         クリップに追加
       </button>
+      {#if isOwnNote}
+        <div class="border-t border-base-300/30 my-0.5"></div>
+        <button
+          class="menu-item flex items-center gap-2 w-full px-3 py-1.5 text-xs text-left transition-colors
+            {deleteConfirm ? 'text-error hover:bg-error/10' : 'text-error/60 hover:bg-error/10 hover:text-error'}"
+          onclick={deleteNote}
+          disabled={busy}
+          role="menuitem"
+        >
+          <Trash2 class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+          {deleteConfirm ? '本当に削除しますか？' : 'ノートを削除'}
+        </button>
+      {/if}
     {/if}
   </div>
 </div>
