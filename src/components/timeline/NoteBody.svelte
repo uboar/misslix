@@ -11,12 +11,10 @@
     emojis?: Record<string, string>;
     channel?: { id: string; name: string; color: string } | null;
     hostUrl?: string;
+    cwExpanded?: boolean;
   };
 
-  let { note, config, emojis = {}, channel = null, hostUrl = '' }: Props = $props();
-
-  // CW展開状態
-  let cwExpanded = $state(config.noteDisplay.cwExpanded);
+  let { note, config, emojis = {}, channel = null, hostUrl = '', cwExpanded = $bindable(config.noteDisplay.cwExpanded) }: Props = $props();
 
   // コンテンツ折り畳み状態
   let contentExpanded = $state(false);

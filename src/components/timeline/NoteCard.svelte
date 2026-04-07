@@ -95,9 +95,13 @@
   // ミュート折り畳み状態
   let muteExpanded = $state(false);
 
-  // メディアファイル
+  // CW展開状態 (NoteBodyと共有してメディア表示制御に使用)
+  const hasCw = $derived(!!displayNote.cw);
+  let cwExpanded = $state(config.noteDisplay.cwExpanded);
+
+  // メディアファイル (CWがある場合は展開時のみ表示)
   const mediaFiles = $derived(displayNote.files ?? []);
-  const hasMedia = $derived(mediaFiles.length > 0 && !config.noteDisplay.mediaHidden);
+  const hasMedia = $derived(mediaFiles.length > 0 && !config.noteDisplay.mediaHidden && (!hasCw || cwExpanded));
 
   // リアクション
   const reactions = $derived(displayNote.reactions ?? {});
@@ -330,6 +334,7 @@
       emojis={noteEmojis}
       channel={depth === 0 && hasChannel ? noteChannel : null}
       {hostUrl}
+      bind:cwExpanded={cwExpanded}
     />
 
     <!-- 引用Renote -->

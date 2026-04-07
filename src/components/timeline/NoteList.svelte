@@ -99,9 +99,9 @@
       const newNotes = res as unknown as entities.Note[];
       hasMore = newNotes.length >= 20;
 
-      // maxNotes/bufferSize に基づいてノート数を制限
+      // maxNotes に基づいてノート数を制限
       const combined = [...notes, ...newNotes];
-      notes = combined.slice(0, config.bufferSize);
+      notes = combined.slice(0, config.maxNotes);
     } catch (e) {
       error = e instanceof Error ? e.message : '追加読み込みに失敗しました';
     } finally {
@@ -125,7 +125,7 @@
    * ストリーミング統合用: 上部に新しいノートを追加する
    */
   export function addNote(note: entities.Note) {
-    notes = [note, ...notes].slice(0, config.bufferSize);
+    notes = [note, ...notes].slice(0, config.maxNotes);
   }
 
   /**

@@ -10,10 +10,10 @@ import { getDeduplicationKey, shouldReplace } from '$lib/utils/mergeDedup';
 export class MergeNoteStore {
   notes = $state<MergedNoteWrapper[]>([]);
   private dedupMap = new Map<string, string>(); // dedupKey → note.id
-  private bufferSize: number;
+  private maxNotes: number;
 
-  constructor(bufferSize: number = 250) {
-    this.bufferSize = bufferSize;
+  constructor(maxNotes: number = 200) {
+    this.maxNotes = maxNotes;
   }
 
   /**
@@ -51,8 +51,8 @@ export class MergeNoteStore {
     this.notes.splice(insertIdx, 0, wrapper);
 
     // バッファサイズ制限
-    if (this.notes.length > this.bufferSize) {
-      const removed = this.notes.splice(this.bufferSize);
+    if (this.notes.length > this.maxNotes) {
+      const removed = this.notes.splice(this.maxNotes);
       for (const r of removed) {
         this.dedupMap.delete(r.dedupKey);
       }
@@ -108,8 +108,8 @@ export class MergeNoteStore {
     );
 
     // バッファサイズ制限
-    if (this.notes.length > this.bufferSize) {
-      const removed = this.notes.splice(this.bufferSize);
+    if (this.notes.length > this.maxNotes) {
+      const removed = this.notes.splice(this.maxNotes);
       for (const r of removed) {
         this.dedupMap.delete(r.dedupKey);
       }

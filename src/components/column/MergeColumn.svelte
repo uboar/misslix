@@ -27,7 +27,7 @@
   let { config, runtimes, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null }: Props = $props();
 
   // マージノートストア
-  const mergeStore = new MergeNoteStore(config.bufferSize);
+  const mergeStore = new MergeNoteStore(config.maxNotes);
 
   // ソースカラム定義
   const sourceColumns = $derived(config.sourceColumns ?? []);
