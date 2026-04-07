@@ -160,7 +160,7 @@
         r.status === 'fulfilled' ? r.value : []
       );
 
-      store.addNotesBulk(allItems);
+      store.addNotesBulk(allItems, true);
       hasMore = allItems.some((_, __, arr) => arr.length >= 20);
     } catch (e) {
       error = e instanceof Error ? e.message : '追加読み込みに失敗しました';

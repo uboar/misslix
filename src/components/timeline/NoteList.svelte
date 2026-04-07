@@ -99,9 +99,11 @@
       const newNotes = res as unknown as entities.Note[];
       hasMore = newNotes.length >= 20;
 
-      // maxNotes に基づいてノート数を制限
+      // 古いノートを追加しつつ maxNotes を守る (スライディングウィンドウ: 上端を削る)
       const combined = [...notes, ...newNotes];
-      notes = combined.slice(0, config.maxNotes);
+      notes = combined.length > config.maxNotes
+        ? combined.slice(combined.length - config.maxNotes)
+        : combined;
     } catch (e) {
       error = e instanceof Error ? e.message : '追加読み込みに失敗しました';
     } finally {

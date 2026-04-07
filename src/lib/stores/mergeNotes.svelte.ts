@@ -63,6 +63,7 @@ export class MergeNoteStore {
 
   /**
    * 初期ロード用: 複数ノートを一括追加後にソートする。
+   * trimFromTop=true の場合、上端(新しい側)を削って古いノートを優先保持する (fetchMore用)。
    */
   addNotesBulk(
     items: Array<{
@@ -72,6 +73,7 @@ export class MergeNoteStore {
       sourceColor: string;
       accountHostUrl: string;
     }>,
+    trimFromTop: boolean = false,
   ) {
     for (const item of items) {
       const dedupKey = getDeduplicationKey(item.note, item.accountHostUrl);
@@ -107,11 +109,20 @@ export class MergeNoteStore {
       new Date(b.note.createdAt).getTime() - new Date(a.note.createdAt).getTime()
     );
 
-    // バッファサイズ制限
+    // maxNotes 制限 (スライディングウィンドウ)
     if (this.notes.length > this.maxNotes) {
-      const removed = this.notes.splice(this.maxNotes);
-      for (const r of removed) {
-        this.dedupMap.delete(r.dedupKey);
+      if (trimFromTop) {
+        // 古いノートを優先保持: 上端(新しい側)を削る
+        const removed = this.notes.splice(0, this.notes.length - this.maxNotes);
+        for (const r of removed) {
+          this.dedupMap.delete(r.dedupKey);
+        }
+      } else {
+        // 新しいノートを優先保持: 下端(古い側)を削る
+        const removed = this.notes.splice(this.maxNotes);
+        for (const r of removed) {
+          this.dedupMap.delete(r.dedupKey);
+        }
       }
     }
   }
