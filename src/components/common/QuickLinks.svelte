@@ -18,10 +18,11 @@
   const links = $derived([
     { label: 'ホーム', path: '/' },
     { label: '通知', path: '/my/notifications' },
-    { label: 'メッセージ', path: '/my/messaging' },
+    { label: 'メッセージ', path: '/chat' },
+    { label: 'クリップ', path: '/my/clips' },
+    { label: 'ドライブ', path: '/my/drive' },
     { label: 'お気に入り', path: '/my/favorites' },
     { label: 'リスト', path: '/my/lists' },
-    { label: 'アンテナ', path: '/my/antennas' },
     { label: 'チャンネル', path: '/channels' },
     { label: '設定', path: '/settings' },
   ]);
