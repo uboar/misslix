@@ -43,7 +43,8 @@ export type ChannelType =
   | 'userList'
   | 'roleTimeline'
   | 'userTimeline'
-  | 'mergeTimeline';
+  | 'mergeTimeline'
+  | 'mergeNotificationTimeline';
 
 export type ColumnWidth = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
@@ -179,6 +180,14 @@ export type MergedNoteWrapper = {
   sourceAccountId: number;
   sourceColor: string;
   dedupKey: string;
+};
+
+/** マージ通知タイムライン用通知ラッパー */
+export type MergedNotificationWrapper = {
+  notification: entities.Notification;
+  accountId: number;
+  accountColor: string;
+  accountLabel: string;
 };
 
 // ─── ノート表示 (Phase 4) ───

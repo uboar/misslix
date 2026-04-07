@@ -49,6 +49,10 @@ export const CHANNEL_ENDPOINTS: Record<ChannelType, ChannelEndpointInfo> = {
     streamChannel: '',
     restEndpoint: '',
   },
+  mergeNotificationTimeline: {
+    streamChannel: '',
+    restEndpoint: 'i/notifications',
+  },
 };
 
 /**

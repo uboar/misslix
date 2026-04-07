@@ -6,7 +6,7 @@
   import { presetStore } from '$lib/stores/presets.svelte';
   import { showApiError } from '$lib/utils/error';
   import Modal from '../common/Modal.svelte';
-  import { ChevronRight, ChevronLeft, Check, Layers, Plus, X } from 'lucide-svelte';
+  import { ChevronRight, ChevronLeft, Check, Layers, Plus, X, Bell } from 'lucide-svelte';
 
   type Props = {
     open: boolean;
@@ -59,6 +59,7 @@
     roleTimeline: 'ロール',
     userTimeline: 'ユーザー',
     mergeTimeline: 'マージ',
+    mergeNotificationTimeline: 'マージ通知',
   };
 
   const CHANNEL_DESCRIPTIONS: Record<ChannelType, string> = {
@@ -72,6 +73,7 @@
     roleTimeline: '特定ロールのユーザーのノート',
     userTimeline: '特定ユーザーのノート一覧',
     mergeTimeline: '複数タイムラインを統合表示',
+    mergeNotificationTimeline: '全アカウントの通知を一つに集約',
   };
 
   const CHANNEL_NEEDS_ID: ChannelType[] = ['channel', 'antenna', 'userList', 'roleTimeline', 'userTimeline'];
@@ -315,6 +317,28 @@
     timelineStore.addColumn(column);
     handleClose();
   }
+
+  // マージ通知TL: カラム追加 (アカウント選択不要)
+  function handleAddMergeNotification() {
+    const column: ColumnConfig = {
+      id: Date.now(),
+      accountId: -1,
+      channel: 'mergeNotificationTimeline',
+      channelName: 'マージ通知',
+      customName: 'マージ通知',
+      color: selectedColor,
+      width: 'md',
+      maxNotes: 200,
+      bufferSize: 500,
+      collapsed: false,
+      autoCollapse: false,
+      lowRate: false,
+      reactionDeck: [],
+      noteDisplay: { ...DEFAULT_NOTE_DISPLAY },
+    };
+    timelineStore.addColumn(column);
+    handleClose();
+  }
 </script>
 
 <Modal open={open} onclose={handleClose} title="カラムを追加">
@@ -337,10 +361,10 @@
   <!-- ステップ 1: アカウント選択 -->
   {#if step === 1}
     <div class="space-y-2">
-      <!-- マージTL作成ボタン -->
+      <!-- マージTL / マージ通知TL作成ボタン -->
       {#if accountStore.accounts.length > 0}
         <button
-          class="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-primary/50 hover:border-primary hover:bg-primary/5 transition-colors text-left mb-3"
+          class="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-primary/50 hover:border-primary hover:bg-primary/5 transition-colors text-left"
           onclick={() => { step = 'merge'; }}
         >
           <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -351,6 +375,19 @@
             <p class="text-xs text-base-content/50">複数のタイムラインを統合して表示</p>
           </div>
           <ChevronRight class="w-4 h-4 text-primary/50 shrink-0" aria-hidden="true" />
+        </button>
+        <button
+          class="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-secondary/50 hover:border-secondary hover:bg-secondary/5 transition-colors text-left mb-3"
+          onclick={handleAddMergeNotification}
+        >
+          <div class="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
+            <Bell class="w-4 h-4 text-secondary" aria-hidden="true" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-secondary">マージ通知タイムライン</p>
+            <p class="text-xs text-base-content/50">全アカウントの通知を一つに集約</p>
+          </div>
+          <ChevronRight class="w-4 h-4 text-secondary/50 shrink-0" aria-hidden="true" />
         </button>
         <div class="divider text-xs text-base-content/30 my-2">または通常カラム</div>
       {/if}
