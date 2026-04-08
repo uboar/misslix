@@ -77,3 +77,11 @@ label {
 .note-reactions {
   touch-action: pan-y;
 }
+
+/* グローバルtwemojiが生成する <img class="emoji"> のサイズ制約 */
+img.emoji {
+  height: 1em;
+  width: 1em;
+  vertical-align: -0.1em;
+  display: inline;
+}

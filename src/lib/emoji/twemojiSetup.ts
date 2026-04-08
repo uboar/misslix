@@ -5,6 +5,7 @@ const TWEMOJI_OPTIONS = {
   folder: 'svg',
   ext: '.svg',
   className: 'emoji',
+  attributes: (_icon: string, _variant: string) => ({ style: 'height:1em;width:1em;vertical-align:-0.1em;display:inline;' }),
 };
 
 const SKIP_TAGS = new Set(['INPUT', 'TEXTAREA', 'SCRIPT', 'STYLE', 'IMG', 'SVG', 'CODE']);
