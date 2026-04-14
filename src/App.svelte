@@ -14,14 +14,28 @@
   import ToastContainer from './components/common/ToastContainer.svelte';
   import PwaUpdatePrompt from './components/common/PwaUpdatePrompt.svelte';
   import { timelineStore } from '$lib/stores/timelines.svelte';
+  import { composerRequestStore } from '$lib/stores/composerRequest.svelte';
   import { showToast } from '$lib/utils/error';
 
   // ── モーダル状態 ──
   let addColumnOpen = $state(false);
   let settingsOpen = $state(false);
   let postModalOpen = $state(false);
+  let postModalInitialText = $state<string | undefined>(undefined);
+  let postModalInitialAccountId = $state<number | undefined>(undefined);
   let presetModalOpen = $state(false);
   let clearConfirmOpen = $state(false);
+
+  // 「削除して編集」リクエストを監視してPostModalを開く
+  $effect(() => {
+    const req = composerRequestStore.pending;
+    if (req) {
+      postModalInitialText = req.initialText;
+      postModalInitialAccountId = req.accountId;
+      postModalOpen = true;
+      composerRequestStore.clear();
+    }
+  });
 
   function executeClearColumns() {
     timelineStore.columns = [];
@@ -171,7 +185,13 @@
   <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} {runtimes} />
   <PresetModal open={presetModalOpen} onclose={() => presetModalOpen = false} />
   <SettingsModal open={settingsOpen} onclose={() => settingsOpen = false} />
-  <PostModal open={postModalOpen} onclose={() => postModalOpen = false} {runtimes} />
+  <PostModal
+    open={postModalOpen}
+    onclose={() => { postModalOpen = false; postModalInitialText = undefined; postModalInitialAccountId = undefined; }}
+    {runtimes}
+    initialText={postModalInitialText}
+    initialAccountId={postModalInitialAccountId}
+  />
   <!-- 全クリア確認モーダル -->
   {#if clearConfirmOpen}
     <dialog class="modal modal-open">

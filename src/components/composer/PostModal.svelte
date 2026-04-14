@@ -27,9 +27,11 @@
     onclose: () => void;
     runtimes: Map<number, AccountRuntime>;
     onpost?: (results: PostResult[]) => void;
+    initialText?: string;
+    initialAccountId?: number;
   };
 
-  let { open, onclose, runtimes, onpost }: Props = $props();
+  let { open, onclose, runtimes, onpost, initialText, initialAccountId }: Props = $props();
 
   // ── フォーム状態 ──
   let text = $state('');
@@ -72,11 +74,9 @@
 
   const SETTINGS_KEY = 'composer-last-settings';
 
-  // モーダルが開いたとき: アカウント未選択で状態リセット、前回の設定を復元
+  // モーダルが開いたとき: 状態リセット、前回の設定を復元
   $effect(() => {
     if (open) {
-      // アカウント未選択 (ユーザーが明示的に選択する)
-      selectedAccountIds = new Set();
       postResults = [];
       showResults = false;
       previewMode = false;
@@ -87,6 +87,18 @@
         visibility = saved.visibility;
         localOnly = saved.localOnly;
         cwEnabled = saved.cwEnabled;
+      }
+      // 初期テキストが指定された場合はセット、なければリセット
+      if (initialText !== undefined) {
+        text = initialText;
+      } else {
+        text = '';
+      }
+      // 初期アカウントが指定された場合は事前選択
+      if (initialAccountId !== undefined) {
+        selectedAccountIds = new Set([initialAccountId]);
+      } else {
+        selectedAccountIds = new Set();
       }
     }
   });

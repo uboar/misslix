@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { AccountRuntime } from '$lib/types';
-  import { Clipboard, Link2, Star, ArrowLeft, Trash2 } from 'lucide-svelte';
+  import { Clipboard, Link2, Star, ArrowLeft, Trash2, Pencil } from 'lucide-svelte';
+  import { composerRequestStore } from '$lib/stores/composerRequest.svelte';
 
   type Props = {
     noteId: string;
@@ -9,11 +10,12 @@
     runtime: AccountRuntime;
     positionStyle: string;
     isOwnNote: boolean;
+    accountId?: number;
     onclose: () => void;
     ondeleted?: () => void;
   };
 
-  const { noteId, noteText, hostUrl, runtime, positionStyle, isOwnNote, onclose, ondeleted }: Props = $props();
+  const { noteId, noteText, hostUrl, runtime, positionStyle, isOwnNote, accountId, onclose, ondeleted }: Props = $props();
 
   let busy = $state(false);
   let message = $state('');
@@ -109,6 +111,7 @@
 
   // ノート削除
   let deleteConfirm = $state(false);
+  let deleteAndEditConfirm = $state(false);
 
   async function deleteNote() {
     if (!deleteConfirm) {
@@ -124,6 +127,27 @@
     } catch {
       message = '削除に失敗しました';
       deleteConfirm = false;
+    } finally {
+      busy = false;
+    }
+  }
+
+  // 削除して編集
+  async function deleteAndEdit() {
+    if (!deleteAndEditConfirm) {
+      deleteAndEditConfirm = true;
+      return;
+    }
+    if (busy) return;
+    busy = true;
+    try {
+      await (runtime.cli as any).request('notes/delete', { noteId });
+      composerRequestStore.open(noteText ?? '', accountId);
+      onclose();
+      ondeleted?.();
+    } catch {
+      message = '削除に失敗しました';
+      deleteAndEditConfirm = false;
     } finally {
       busy = false;
     }
@@ -232,6 +256,16 @@
       </button>
       {#if isOwnNote}
         <div class="border-t border-base-300/30 my-0.5"></div>
+        <button
+          class="menu-item flex items-center gap-2 w-full px-3 py-1.5 text-xs text-left transition-colors
+            {deleteAndEditConfirm ? 'text-warning hover:bg-warning/10' : 'text-base-content/60 hover:bg-base-200'}"
+          onclick={deleteAndEdit}
+          disabled={busy || !noteText}
+          role="menuitem"
+        >
+          <Pencil class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+          {deleteAndEditConfirm ? '本当に削除して編集しますか？' : '削除して編集'}
+        </button>
         <button
           class="menu-item flex items-center gap-2 w-full px-3 py-1.5 text-xs text-left transition-colors
             {deleteConfirm ? 'text-error hover:bg-error/10' : 'text-error/60 hover:bg-error/10 hover:text-error'}"

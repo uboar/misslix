@@ -504,6 +504,7 @@
           runtime={(effectiveRuntime ?? runtime)!}
           positionStyle={moreMenuStyle}
           {isOwnNote}
+          accountId={sourceAccountId ?? (config.accountId >= 0 ? config.accountId : undefined)}
           onclose={() => { moreMenuVisible = false; }}
           ondeleted={() => { deleted = true; }}
         />
