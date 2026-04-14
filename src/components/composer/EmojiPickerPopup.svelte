@@ -3,6 +3,7 @@
   import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
   import { getReactionHistory, addReactionHistory } from '$lib/utils/reactionHistory';
   import { unicodeEmojiGroups, allUnicodeEmojis } from '$lib/emoji/unicodeEmojiData';
+  import { searchCustomEmojis, searchUnicodeEmojis } from '$lib/emoji/search';
 
   type EmojiDetailed = entities.EmojiDetailed;
 
@@ -17,6 +18,8 @@
     onselect: (name: string) => void;
     /** 閉じる時コールバック */
     onclose?: () => void;
+    /** タイムラインID (履歴をタイムライン別に管理する場合) */
+    timelineId?: number;
   };
 
   const {
@@ -25,6 +28,7 @@
     emojis = {},
     onselect,
     onclose,
+    timelineId,
   }: Props = $props();
 
   let searchQuery = $state('');
@@ -41,7 +45,7 @@
   let scrollEl = $state<HTMLDivElement | null>(null);
 
   // リアクション履歴
-  const reactionHistory = $derived(getReactionHistory());
+  const reactionHistory = $derived(getReactionHistory(timelineId));
 
   // カスタム絵文字かどうか判定 (:name: 形式)
   function isCustomEmoji(reaction: string): boolean {
@@ -59,40 +63,11 @@
     return emojis[name] ?? emojis[reaction] ?? null;
   }
 
-  // カスタム絵文字の検索結果
-  const customSearchResults = $derived(
-    searchQuery.trim().length === 0
-      ? []
-      : (() => {
-          const q = searchQuery.trim().toLowerCase();
-          const filtered = accountEmojis.filter((e) => {
-            return (
-              e.name.toLowerCase().includes(q) ||
-              (e.aliases ?? []).some((a) => a.toLowerCase().includes(q)) ||
-              (e.category ?? '').toLowerCase().includes(q)
-            );
-          });
-          // 完全一致する絵文字を先頭に移動
-          const exactIndex = filtered.findIndex((e) => e.name.toLowerCase() === q);
-          if (exactIndex > 0) {
-            const exact = filtered.splice(exactIndex, 1);
-            filtered.unshift(exact[0]);
-          }
-          return filtered;
-        })()
-  );
+  // カスタム絵文字の検索結果 (完全一致優先)
+  const customSearchResults = $derived(searchCustomEmojis(searchQuery, accountEmojis));
 
-  // Unicode絵文字の検索結果
-  const unicodeSearchResults = $derived(
-    searchQuery.trim().length === 0
-      ? []
-      : (() => {
-          const q = searchQuery.trim().toLowerCase();
-          return allUnicodeEmojis
-            .filter((e) => e.name.includes(q) || e.slug.includes(q))
-            .slice(0, 50);
-        })()
-  );
+  // Unicode絵文字の検索結果 (完全一致優先、上限50件)
+  const unicodeSearchResults = $derived(searchUnicodeEmojis(searchQuery, allUnicodeEmojis));
 
   // 後方互換: searchResults は customSearchResults を指す (既存ロジック用)
   const searchResults = $derived(customSearchResults);
@@ -116,30 +91,30 @@
 
   function handleSelect(name: string) {
     // 履歴に追加 (:name: 形式で保存)
-    addReactionHistory(`:${name}:`);
+    addReactionHistory(`:${name}:`, timelineId);
     onselect(name);
   }
 
   function handleUnicodeSelect(char: string) {
     // Unicode絵文字は文字そのままで保存・送信
-    addReactionHistory(char);
+    addReactionHistory(char, timelineId);
     onselect(char);
   }
 
   function handleDeckSelect(reaction: string) {
     const name = isCustomEmoji(reaction) ? getCustomEmojiName(reaction) : reaction;
-    addReactionHistory(isCustomEmoji(reaction) ? reaction : `:${reaction}:`);
+    addReactionHistory(isCustomEmoji(reaction) ? reaction : `:${reaction}:`, timelineId);
     onselect(name);
   }
 
   function handleHistorySelect(reaction: string) {
     if (isCustomEmoji(reaction)) {
       const name = getCustomEmojiName(reaction);
-      addReactionHistory(reaction);
+      addReactionHistory(reaction, timelineId);
       onselect(name);
     } else {
       // Unicode絵文字は名前として渡す (テキストに挿入)
-      addReactionHistory(reaction);
+      addReactionHistory(reaction, timelineId);
       onselect(reaction);
     }
   }
