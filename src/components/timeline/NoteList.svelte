@@ -267,6 +267,23 @@
     return () => el.removeEventListener('touchmove', handleTouchMove);
   });
 
+  // 水平スクロールをColumnContainerに転送する (縦スクロールに吸われるのを防ぐ)
+  function handleWheel(e: WheelEvent) {
+    // 主に水平方向のスクロールなら親のColumnContainerに転送する
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      e.preventDefault();
+      const columnContainer = (e.currentTarget as HTMLElement).closest('.column-container') as HTMLElement | null;
+      columnContainer?.scrollBy({ left: e.deltaX, behavior: 'auto' });
+    }
+  }
+
+  $effect(() => {
+    const el = scrollContainer;
+    if (!el) return;
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  });
+
   // スクロールイベント処理 (無限スクロール)
   function handleScroll(e: Event) {
     const el = e.currentTarget as HTMLDivElement;
