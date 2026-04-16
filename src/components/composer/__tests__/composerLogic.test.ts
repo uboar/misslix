@@ -53,6 +53,7 @@ function makeRuntime(cli: APIClient): AccountRuntime {
     emojis: [],
     busy: false,
     userId: 'test-user-id',
+    hostUrl: 'https://example.com',
   };
 }
 

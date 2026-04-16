@@ -29,6 +29,7 @@ export type AccountRuntime = {
   emojis: EmojiDetailed[];
   busy: boolean;
   userId: string;
+  hostUrl: string;
 };
 
 // ─── カラム ───

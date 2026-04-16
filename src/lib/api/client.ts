@@ -72,6 +72,7 @@ export async function initAccountRuntime(account: Account): Promise<AccountRunti
     emojis,
     busy: false,
     userId,
+    hostUrl: account.hostUrl.startsWith('http') ? account.hostUrl : `https://${account.hostUrl}`,
   };
 
   // mainチャンネルの通知リスナー (アカウントごとに1回のみ)

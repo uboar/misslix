@@ -96,6 +96,33 @@
     return '';
   }
 
+  /** renote通知のとき、Renote元の元ノート (note.renote) のテキストプレビューを返す */
+  function getRenoteSourcePreview(n: Notification): string {
+    if ((n.type === 'renote' || n.type === 'renote:grouped') && 'note' in n && n.note) {
+      const renote = n.note as entities.Note & { renote?: entities.Note };
+      const source = renote.renote;
+      if (source) {
+        const text = source.text ?? '';
+        return text.length > 60 ? text.slice(0, 60) + '…' : text;
+      }
+    }
+    return '';
+  }
+
+  /** 通知タイプに応じてMisskeyのURL (外部リンク) を返す */
+  function getNotificationLink(n: Notification): string | null {
+    const base = runtime.hostUrl;
+    if ('note' in n && n.note) {
+      const note = n.note as entities.Note;
+      return `${base}/notes/${note.id}`;
+    }
+    if ('user' in n && n.user) {
+      const u = n.user as entities.UserLite;
+      return `${base}/@${u.username}`;
+    }
+    return null;
+  }
+
   function getReaction(n: Notification): string {
     if (n.type === 'reaction' && 'reaction' in n) {
       return (n as { reaction: string }).reaction ?? '';
@@ -240,14 +267,21 @@
   const meta = $derived(getNotificationMeta(notification.type));
   const user = $derived(getNotificationUser(notification));
   const notePreview = $derived(getNotePreview(notification));
+  const renoteSourcePreview = $derived(getRenoteSourcePreview(notification));
   const reaction = $derived(getReaction(notification));
   const groupedReactions = $derived(getGroupedReactions(notification));
   const groupedUsers = $derived(getGroupedRenoteUsers(notification));
   const appNotif = $derived(getAppNotification(notification));
   const noteReactionEmojis = $derived(getNoteReactionEmojis(notification));
+  const notifLink = $derived(getNotificationLink(notification));
 </script>
 
-<li class="flex gap-2 px-3 py-2 hover:bg-base-100 transition-colors">
+<li class="flex gap-2 px-3 py-2 hover:bg-base-100 transition-colors {notifLink ? 'cursor-pointer' : ''}"
+  role={notifLink ? 'link' : undefined}
+  tabindex={notifLink ? 0 : undefined}
+  onclick={() => notifLink && window.open(notifLink, '_blank', 'noopener,noreferrer')}
+  onkeydown={(e) => { if (notifLink && (e.key === 'Enter' || e.key === ' ')) window.open(notifLink, '_blank', 'noopener,noreferrer'); }}
+>
   <!-- 種別アイコン -->
   <div class="flex flex-col items-center shrink-0 gap-1 pt-0.5">
     {#if appNotif?.icon}
@@ -377,6 +411,13 @@
       <p class="text-xs text-base-content/50 mt-0.5 line-clamp-2 break-all">
         {notePreview}
       </p>
+    {/if}
+
+    <!-- Renote元のノートプレビュー -->
+    {#if renoteSourcePreview}
+      <div class="mt-1 pl-2 border-l-2 border-base-content/20">
+        <p class="text-xs text-base-content/40 line-clamp-2 break-all">{renoteSourcePreview}</p>
+      </div>
     {/if}
 
     <!-- 日時 -->

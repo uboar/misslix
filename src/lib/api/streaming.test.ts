@@ -50,6 +50,7 @@ function makeRuntime(mockStream: ReturnType<typeof makeStreamMock>['mockStream']
     emojis: [],
     busy: false,
     userId: 'test-user-id',
+    hostUrl: 'https://example.com',
   };
 }
 
