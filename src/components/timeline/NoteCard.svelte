@@ -4,6 +4,7 @@
   import { settingsStore } from '$lib/stores/settings.svelte';
   import { checkMute } from '$lib/utils/mute';
   import { formatShortTime } from '$lib/utils/date';
+  import { getTimeTick } from '$lib/utils/timeTick.svelte';
   import { addReactionHistory } from '$lib/utils/reactionHistory';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
   import NoteCard from './NoteCard.svelte';
@@ -129,7 +130,7 @@
   // リプライ表示
   const hasReply = $derived(!!displayNote.reply && depth < maxDepth);
 
-  const createdAt = $derived(formatShortTime(displayNote.createdAt));
+  const createdAt = $derived((getTimeTick(), formatShortTime(displayNote.createdAt)));
 
   // 既存リアクションバッジクリック → トグル
   function handleReact(reaction: string) {

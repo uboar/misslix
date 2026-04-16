@@ -5,6 +5,7 @@
   import EmojiRenderer from '$lib/emoji/EmojiRenderer.svelte';
   import { getEmojiMap } from '$lib/emoji/cache';
   import { formatRelativeTime } from '$lib/utils/date';
+  import { getTimeTick } from '$lib/utils/timeTick.svelte';
   import MfmRenderer from '$lib/mfm/MfmRenderer.svelte';
   import {
     UserPlus, UserCheck, AtSign, Reply, Repeat2, Star, Quote, BarChart2, Bell,
@@ -422,7 +423,7 @@
 
     <!-- 日時 -->
     <time class="text-[10px] text-base-content/30 mt-0.5 block">
-      {formatRelativeTime(notification.createdAt)}
+      {(getTimeTick(), formatRelativeTime(notification.createdAt))}
     </time>
   </div>
 </li>
