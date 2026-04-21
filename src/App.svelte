@@ -16,6 +16,7 @@
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import { composerRequestStore } from '$lib/stores/composerRequest.svelte';
   import { showToast } from '$lib/utils/error';
+  import { applyRootFontSize } from '$lib/utils/fontSize';
 
   // ── モーダル状態 ──
   let addColumnOpen = $state(false);
@@ -131,6 +132,10 @@
       }
       root.setAttribute('data-theme', theme);
     }
+  });
+
+  $effect(() => {
+    applyRootFontSize(settingsStore.settings.fontSize);
   });
 
   // 初期化実行

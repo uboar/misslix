@@ -39,10 +39,17 @@ describe('migrateSettings', () => {
     const stored = { theme: 'light' }; // missing many fields
     const result = migrateSettings(stored);
     expect(result.theme).toBe('light');
+    expect(result.fontSize).toBe('md');
     expect(result.muteUsers).toEqual([]);
     expect(result.muteWords).toEqual([]);
     expect(result.mediaDisplayMode).toBe('grid');
     expect(result.notificationBuffer).toBe(100);
+  });
+
+  it('falls back to default fontSize for invalid values', () => {
+    const stored = { ...DEFAULT_SETTINGS, fontSize: 'huge' };
+    const result = migrateSettings(stored);
+    expect(result.fontSize).toBe('md');
   });
 
   it('ignores unknown fields', () => {

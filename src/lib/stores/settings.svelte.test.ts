@@ -19,10 +19,11 @@ describe('SettingsStore', () => {
   });
 
   it('restores settings from localStorage', async () => {
-    const saved = { ...DEFAULT_SETTINGS, theme: 'light', emojiSpace: false };
+    const saved = { ...DEFAULT_SETTINGS, theme: 'light', fontSize: 'lg', emojiSpace: false };
     localStorage.setItem('misslix:settings', JSON.stringify(saved));
     const store = await getStore();
     expect(store.settings.theme).toBe('light');
+    expect(store.settings.fontSize).toBe('lg');
     expect(store.settings.emojiSpace).toBe(false);
   });
 
@@ -75,5 +76,13 @@ describe('SettingsStore', () => {
     localStorage.setItem('misslix:settings', JSON.stringify(saved));
     const store = await getStore();
     expect(store.settings.mediaDisplayMode).toBe('carousel');
+  });
+
+  it('fontSize can be updated and persisted', async () => {
+    const store = await getStore();
+    store.update({ fontSize: 'xl' });
+    expect(store.settings.fontSize).toBe('xl');
+    const persisted = JSON.parse(localStorage.getItem('misslix:settings')!);
+    expect(persisted.fontSize).toBe('xl');
   });
 });

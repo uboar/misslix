@@ -140,10 +140,12 @@ export type ComposerSettings = {
 // ─── 設定 ───
 
 export type MediaDisplayMode = 'grid' | 'carousel';
+export type FontSizePreset = 'sm' | 'md' | 'lg' | 'xl';
 
 export type SettingsType = {
   theme: string;
   customThemeJson: string;
+  fontSize: FontSizePreset;
   emojiSpace: boolean;
   virtualScroll: boolean;
   autoFetch: boolean;
@@ -156,6 +158,7 @@ export type SettingsType = {
 export const DEFAULT_SETTINGS: SettingsType = {
   theme: 'dark',
   customThemeJson: '',
+  fontSize: 'md',
   emojiSpace: true,
   virtualScroll: true,
   autoFetch: true,

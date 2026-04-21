@@ -1,5 +1,6 @@
 import type { Account, ColumnConfig, ColumnPreset, MergeSourceDef, NoteDisplayConfig, SettingsType, TimelineFetchOptions } from '$lib/types';
 import { DEFAULT_NOTE_DISPLAY, DEFAULT_SETTINGS, DEFAULT_FETCH_OPTIONS } from '$lib/types';
+import { isFontSizePreset } from './fontSize';
 
 /**
  * Settings: 既存データに不足フィールドがあればデフォルト値で補完する。
@@ -12,9 +13,16 @@ export function migrateSettings(raw: unknown): SettingsType {
   const stored = raw as Record<string, unknown>;
   const result = { ...DEFAULT_SETTINGS } as Record<string, unknown>;
   for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof SettingsType)[]) {
-    if (key in stored && stored[key] !== undefined) {
-      result[key] = stored[key];
+    if (!(key in stored) || stored[key] === undefined) continue;
+
+    if (key === 'fontSize') {
+      if (typeof stored[key] === 'string' && isFontSizePreset(stored[key])) {
+        result[key] = stored[key];
+      }
+      continue;
     }
+
+    result[key] = stored[key];
   }
   return result as SettingsType;
 }

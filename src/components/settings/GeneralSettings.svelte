@@ -1,5 +1,6 @@
 <script lang="ts">
   import { settingsStore } from '$lib/stores/settings.svelte';
+  import { FONT_SIZE_OPTIONS, isFontSizePreset } from '$lib/utils/fontSize';
   import { Info } from 'lucide-svelte';
 
   const BUILTIN_THEMES = [
@@ -75,6 +76,13 @@
 
   function onEmojiSpaceChange(e: Event) {
     settingsStore.update({ emojiSpace: (e.target as HTMLInputElement).checked });
+  }
+
+  function onFontSizeChange(e: Event) {
+    const value = (e.target as HTMLSelectElement).value;
+    if (isFontSizePreset(value)) {
+      settingsStore.update({ fontSize: value });
+    }
   }
 
   function onVirtualScrollChange(e: Event) {
@@ -216,6 +224,26 @@
         onchange={onMediaDisplayModeChange}
       />
     </label>
+  </div>
+
+  <div class="form-control">
+    <label class="label" for="font-size-select">
+      <span class="label-text font-medium">文字サイズ</span>
+      <span class="label-text-alt text-base-content/50">アプリ全体</span>
+    </label>
+    <select
+      id="font-size-select"
+      class="select select-bordered w-full"
+      value={settings.fontSize}
+      onchange={onFontSizeChange}
+    >
+      {#each FONT_SIZE_OPTIONS as option (option.value)}
+        <option value={option.value}>{option.label} ({option.size})</option>
+      {/each}
+    </select>
+    <div class="label">
+      <span class="label-text-alt text-base-content/50">本文・ボタンなどの文字サイズに反映されます。</span>
+    </div>
   </div>
 
   <div class="divider my-2"></div>
