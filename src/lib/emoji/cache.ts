@@ -2,6 +2,9 @@ import type { entities } from 'misskey-js';
 
 type EmojiDetailed = entities.EmojiDetailed;
 
+const emojiMapCache = new WeakMap<EmojiDetailed[], Record<string, string>>();
+const EMPTY_EMOJI_MAP = Object.freeze({}) as Record<string, string>;
+
 /**
  * EmojiDetailed[] を { name: url } のマップに変換する
  */
@@ -9,12 +12,22 @@ export function getEmojiMap(
   _hostUrl: string,
   emojis: EmojiDetailed[],
 ): Record<string, string> {
+  if (emojis.length === 0) {
+    return EMPTY_EMOJI_MAP;
+  }
+
+  const cached = emojiMapCache.get(emojis);
+  if (cached) {
+    return cached;
+  }
+
   const map: Record<string, string> = {};
   for (const emoji of emojis) {
     if (emoji.name && emoji.url) {
       map[emoji.name] = emoji.url;
     }
   }
+  emojiMapCache.set(emojis, map);
   return map;
 }
 

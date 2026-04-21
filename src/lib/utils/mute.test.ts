@@ -109,6 +109,12 @@ describe('checkMute', () => {
   });
 
   describe('ワードミュート', () => {
+    it('同じミュート設定を複数回使っても安定して判定できる', () => {
+      const muteWords = ['hello'];
+      expect(checkMute(makeNote({ text: 'hello there' }), [], muteWords)).not.toBeNull();
+      expect(checkMute(makeNote({ text: 'safe content' }), [], muteWords)).toBeNull();
+    });
+
     it('ノートテキストに含まれるワードを検出する', () => {
       const note = makeNote({ text: 'This contains a badword here' });
       const result = checkMute(note, [], ['badword']);

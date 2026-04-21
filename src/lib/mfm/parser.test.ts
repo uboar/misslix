@@ -2,6 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { parseMfm, parseMfmPlain } from './parser';
 
 describe('parseMfm', () => {
+  it('同じテキストはキャッシュされたAST参照を返す', () => {
+    const first = parseMfm('cache test');
+    const second = parseMfm('cache test');
+    expect(second).toBe(first);
+  });
+
   it('プレーンテキストをパースしてテキストノードの配列を返す', () => {
     const result = parseMfm('Hello world');
     expect(Array.isArray(result)).toBe(true);
@@ -59,6 +65,12 @@ describe('parseMfm', () => {
 });
 
 describe('parseMfmPlain', () => {
+  it('同じテキストはキャッシュされたAST参照を返す', () => {
+    const first = parseMfmPlain(':cached:');
+    const second = parseMfmPlain(':cached:');
+    expect(second).toBe(first);
+  });
+
   it('プレーンテキストをパースしてノードの配列を返す', () => {
     const result = parseMfmPlain('Hello world');
     expect(Array.isArray(result)).toBe(true);

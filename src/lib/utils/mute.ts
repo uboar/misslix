@@ -7,6 +7,39 @@
 
 import type { entities } from 'misskey-js';
 
+const muteUserSetCache = new WeakMap<string[], Set<string>>();
+const muteWordRegexCache = new WeakMap<string[], Array<{ pattern: string; regex: RegExp }>>();
+
+function getMuteUserSet(muteUsers: string[]): Set<string> {
+  const cached = muteUserSetCache.get(muteUsers);
+  if (cached) {
+    return cached;
+  }
+
+  const userSet = new Set(muteUsers);
+  muteUserSetCache.set(muteUsers, userSet);
+  return userSet;
+}
+
+function getMuteWordRegexes(muteWords: string[]): Array<{ pattern: string; regex: RegExp }> {
+  const cached = muteWordRegexCache.get(muteWords);
+  if (cached) {
+    return cached;
+  }
+
+  const regexes: Array<{ pattern: string; regex: RegExp }> = [];
+  for (const wordPattern of muteWords) {
+    try {
+      regexes.push({ pattern: wordPattern, regex: new RegExp(wordPattern) });
+    } catch {
+      // 無効な正規表現は無視する
+    }
+  }
+
+  muteWordRegexCache.set(muteWords, regexes);
+  return regexes;
+}
+
 /**
  * ユーザーの識別子を "username@host" 形式で返す。
  * ローカルユーザー (host が null) の場合は "username@" を返す。
@@ -38,16 +71,18 @@ export function checkMute(
   muteUsers: string[],
   muteWords: string[],
 ): string | null {
+  const muteUserSet = getMuteUserSet(muteUsers);
+
   // ユーザーミュートチェック (ノート投稿者)
   const userIdentifier = getUserIdentifier(note.user);
-  if (muteUsers.includes(userIdentifier)) {
+  if (muteUserSet.has(userIdentifier)) {
     return `ミュートユーザー: ${userIdentifier}`;
   }
 
   // ユーザーミュートチェック (Renote元)
   if (note.renote) {
     const renoteUserIdentifier = getUserIdentifier(note.renote.user);
-    if (muteUsers.includes(renoteUserIdentifier)) {
+    if (muteUserSet.has(renoteUserIdentifier)) {
       return `ミュートユーザー: ${renoteUserIdentifier}`;
     }
   }
@@ -57,17 +92,9 @@ export function checkMute(
   const renoteText = note.renote ? getNoteText(note.renote) : '';
   const fullText = [noteText, renoteText].filter(Boolean).join(' ');
 
-  for (const wordPattern of muteWords) {
-    let regex: RegExp;
-    try {
-      regex = new RegExp(wordPattern);
-    } catch {
-      // 無効な正規表現は無視する
-      continue;
-    }
-
+  for (const { pattern, regex } of getMuteWordRegexes(muteWords)) {
     if (fullText && regex.test(fullText)) {
-      return `ミュートワード: (${wordPattern})`;
+      return `ミュートワード: (${pattern})`;
     }
   }
 

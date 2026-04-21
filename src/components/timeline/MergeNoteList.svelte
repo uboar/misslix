@@ -5,6 +5,7 @@
   import { settingsStore } from '$lib/stores/settings.svelte';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import { CHANNEL_ENDPOINTS } from '$lib/api/endpoints';
+  import { getEmojiMap } from '$lib/emoji/cache';
   import type { entities } from 'misskey-js';
   import NoteCard from './NoteCard.svelte';
   import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
@@ -36,6 +37,27 @@
   let scrollContainer = $state<HTMLDivElement | null>(null);
 
   const sourceColumns = $derived(config.sourceColumns ?? []);
+  const emptyEmojiMap: Record<string, string> = {};
+
+  const sourceHostUrls = $derived.by(() => {
+    const urls = new Map<number, string>();
+    for (const source of sourceColumns) {
+      urls.set(source.accountId, accountStore.findById(source.accountId)?.hostUrl ?? '');
+    }
+    return urls;
+  });
+
+  const sourceEmojiMaps = $derived.by(() => {
+    const maps = new Map<number, Record<string, string>>();
+    for (const source of sourceColumns) {
+      const runtime = runtimes.get(source.accountId);
+      maps.set(
+        source.accountId,
+        runtime ? getEmojiMap(runtime.hostUrl, runtime.emojis) : emptyEmojiMap,
+      );
+    }
+    return maps;
+  });
 
   function getSourceLabel(source: MergeSourceDef): string {
     const account = accountStore.findById(source.accountId);
@@ -45,15 +67,6 @@
 
   function getAccountHostUrl(source: MergeSourceDef): string {
     return accountStore.findById(source.accountId)?.hostUrl ?? '';
-  }
-
-  // ソースごとのカスタム絵文字マップ (レンダリング用)
-  function getEmojiMapForSource(source: MergeSourceDef): Record<string, string> {
-    const runtime = runtimes.get(source.accountId);
-    if (!runtime) return {};
-    return Object.fromEntries(
-      runtime.emojis.map(e => [e.name, e.url ?? ''])
-    );
   }
 
   // 初期ノート取得 (全ソースから並列)
@@ -254,16 +267,12 @@
 
   // NoteCardのhostUrl解決: sourceAccountIdに紐づくアカウントのhostUrl
   function getHostUrlForNote(sourceAccountId: number): string {
-    return accountStore.findById(sourceAccountId)?.hostUrl ?? '';
+    return sourceHostUrls.get(sourceAccountId) ?? '';
   }
 
   // NoteCardの絵文字マップ: sourceAccountIdのランタイムから取得
   function getEmojiMapForNote(sourceAccountId: number): Record<string, string> {
-    const runtime = runtimes.get(sourceAccountId);
-    if (!runtime) return {};
-    return Object.fromEntries(
-      runtime.emojis.map(e => [e.name, e.url ?? ''])
-    );
+    return sourceEmojiMaps.get(sourceAccountId) ?? emptyEmojiMap;
   }
 </script>
 

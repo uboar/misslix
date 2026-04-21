@@ -131,6 +131,7 @@
   const hasReply = $derived(!!displayNote.reply && depth < maxDepth);
 
   const createdAt = $derived((getTimeTick(), formatShortTime(displayNote.createdAt)));
+  const virtualScrollEnabled = $derived(settingsStore.settings.virtualScroll && depth === 0);
 
   // 既存リアクションバッジクリック → トグル
   function handleReact(reaction: string) {
@@ -251,6 +252,7 @@
 <article
   class="note-card group relative px-3 py-2.5 border-b border-base-300/60
     hover:bg-base-200/40 transition-colors duration-100 cursor-default"
+  class:virtualized={virtualScrollEnabled}
   data-note-id={note.id}
   aria-label="ノート by {displayNote.user.username}"
 >
@@ -553,6 +555,13 @@
 {/if}
 
 <style>
+  @supports (content-visibility: auto) {
+    .note-card.virtualized {
+      content-visibility: auto;
+      contain-intrinsic-size: 360px;
+    }
+  }
+
   /* 引用Renote内はカードのボーダーを非表示 */
   .quote-block :global(.note-card) {
     border-bottom: none;

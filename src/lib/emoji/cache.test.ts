@@ -64,6 +64,13 @@ describe('getEmojiMap', () => {
     expect(result['test']).toBe('https://cdn.example.com/test.png');
   });
 
+  it('同じ配列インスタンスに対しては同じマップ参照を返す', () => {
+    const emojis = [makeEmoji('cached', 'https://example.com/cached.png')];
+    const first = getEmojiMap('https://example.com', emojis);
+    const second = getEmojiMap('https://example.com', emojis);
+    expect(second).toBe(first);
+  });
+
   it('同名の絵文字が複数ある場合は後の値で上書きされる', () => {
     const emojis = [
       makeEmoji('dup', 'https://example.com/first.png'),

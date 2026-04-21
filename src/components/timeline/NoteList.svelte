@@ -5,6 +5,7 @@
   import { CHANNEL_ENDPOINTS, FETCH_OPTION_SUPPORT } from '$lib/api/endpoints';
   import { settingsStore } from '$lib/stores/settings.svelte';
   import { accountStore } from '$lib/stores/accounts.svelte';
+  import { getEmojiMap } from '$lib/emoji/cache';
   import NoteCard from './NoteCard.svelte';
   import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
   import { AlertCircle, AlignJustify, RefreshCw } from 'lucide-svelte';
@@ -36,11 +37,7 @@
   let scrollContainer = $state<HTMLDivElement | null>(null);
 
   // カスタム絵文字マップ (accountのemojisから変換)
-  const emojiMap = $derived(
-    Object.fromEntries(
-      account.emojis.map(e => [e.name, e.url ?? ''])
-    ) as Record<string, string>
-  );
+  const emojiMap = $derived(getEmojiMap(account.hostUrl, account.emojis));
 
   // チャンネルエンドポイント情報
   const endpointInfo = $derived(CHANNEL_ENDPOINTS[config.channel]);
