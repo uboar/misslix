@@ -76,6 +76,35 @@ describe('TimelineStore', () => {
     expect(store.columns[0].channelName).toBe('Home');
   });
 
+  it('updateColumn() keeps customWidth when width preset is unchanged', async () => {
+    const store = await getStore();
+    store.addColumn(makeColumn({ id: 1, customWidth: 420 }));
+
+    store.updateColumn(1, { color: '#ff0000' });
+
+    expect(store.columns[0].customWidth).toBe(420);
+  });
+
+  it('updateColumn() clears customWidth when width preset changes', async () => {
+    const store = await getStore();
+    store.addColumn(makeColumn({ id: 1, width: 'md', customWidth: 420 }));
+
+    store.updateColumn(1, { width: 'lg' });
+
+    expect(store.columns[0].width).toBe('lg');
+    expect(store.columns[0].customWidth).toBeUndefined();
+  });
+
+  it('updateColumn() keeps explicitly provided customWidth when width preset changes', async () => {
+    const store = await getStore();
+    store.addColumn(makeColumn({ id: 1, width: 'md', customWidth: 420 }));
+
+    store.updateColumn(1, { width: 'lg', customWidth: 600 });
+
+    expect(store.columns[0].width).toBe('lg');
+    expect(store.columns[0].customWidth).toBe(600);
+  });
+
   it('moveColumn() swaps positions and persists', async () => {
     const store = await getStore();
     store.addColumn(makeColumn({ id: 1, channelName: 'A' }));

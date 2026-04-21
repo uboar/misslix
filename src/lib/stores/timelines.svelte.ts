@@ -32,7 +32,17 @@ class TimelineStore {
   updateColumn(id: number, partial: Partial<ColumnConfig>) {
     const idx = this.columns.findIndex((c) => c.id === id);
     if (idx !== -1) {
-      this.columns[idx] = { ...this.columns[idx], ...partial };
+      const current = this.columns[idx];
+      const widthChanged = partial.width !== undefined && partial.width !== current.width;
+      const customWidthProvided = Object.prototype.hasOwnProperty.call(partial, 'customWidth');
+      const next = { ...current, ...partial };
+
+      // 幅プリセットを変更した場合は、明示指定がない限りドラッグ幅を解除してプリセットを反映する。
+      if (widthChanged && !customWidthProvided) {
+        next.customWidth = undefined;
+      }
+
+      this.columns[idx] = next;
       this.persist();
     }
   }

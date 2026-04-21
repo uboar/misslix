@@ -75,6 +75,20 @@
     return emojis[name] ?? emojis[reaction] ?? null;
   }
 
+  function getWidthOptionLabel(value: ColumnWidth): string {
+    return WIDTH_OPTIONS.find((opt) => opt.value === value)?.label ?? value;
+  }
+
+  function getWidthHint(currentCustomWidth: number | undefined, draftWidth: ColumnWidth, savedWidth: ColumnWidth): string | null {
+    if (currentCustomWidth == null) return null;
+    if (draftWidth !== savedWidth) {
+      return `保存するとドラッグ調整(${currentCustomWidth}px)を解除し、${getWidthOptionLabel(draftWidth)} を適用します。`;
+    }
+    return `現在はドラッグ調整の ${currentCustomWidth}px が優先されています。幅を変更して保存するとプリセット幅に戻ります。`;
+  }
+
+  const widthHint = $derived(getWidthHint(config.customWidth, width, config.width));
+
   function save() {
     const reactionDeck = parsedDeck;
 
@@ -141,6 +155,11 @@
           <option value={opt.value}>{opt.label}</option>
         {/each}
       </select>
+      {#if widthHint}
+        <div class="label pt-1">
+          <span class="label-text-alt text-base-content/60">{widthHint}</span>
+        </div>
+      {/if}
     </div>
 
     <div class="form-control">
