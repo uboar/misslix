@@ -4,6 +4,7 @@
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import { connectTimeline } from '$lib/api/streaming';
   import type { NoteUpdatedData } from '$lib/api/streaming';
+  import { refreshRuntimeNotifications } from '$lib/api/client';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import ColumnHeader from './ColumnHeader.svelte';
   import ColumnSettings from './ColumnSettings.svelte';
@@ -229,6 +230,7 @@
         bind:this={noteList}
         account={runtime}
         {config}
+        onrefreshnotifications={() => refreshRuntimeNotifications(runtime)}
         onnotesloaded={(noteIds) => {
           // 初期ノートのリアクション更新を購読
           for (const id of noteIds) {

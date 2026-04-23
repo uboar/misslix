@@ -15,9 +15,10 @@
     account: AccountRuntime;
     config: ColumnConfig;
     onnotesloaded?: (noteIds: string[]) => void;
+    onrefreshnotifications?: () => Promise<void>;
   };
 
-  let { account, config, onnotesloaded }: Props = $props();
+  let { account, config, onnotesloaded, onrefreshnotifications }: Props = $props();
 
   // ミュート設定
   const muteUsers = $derived(settingsStore.settings.muteUsers);
@@ -124,7 +125,10 @@
     isRefreshing = true;
     notes = [];
     hasMore = true;
-    await fetchInitial();
+    await Promise.allSettled([
+      fetchInitial(),
+      onrefreshnotifications?.(),
+    ]);
     isRefreshing = false;
   }
 

@@ -5,6 +5,7 @@
   import { timelineStore } from '$lib/stores/timelines.svelte';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import { connectTimeline } from '$lib/api/streaming';
+  import { refreshRuntimeNotifications } from '$lib/api/client';
   import type { TimelineConnection, NoteUpdatedData } from '$lib/api/streaming';
   import { MergeNoteStore } from '$lib/stores/mergeNotes.svelte';
   import ColumnHeader from './ColumnHeader.svelte';
@@ -141,6 +142,19 @@
     return accountStore.findById(source.accountId)?.hostUrl ?? '';
   }
 
+  async function refreshSourceNotifications() {
+    const refreshed = new Set<number>();
+    await Promise.allSettled(
+      sourceColumns.map(async (source) => {
+        if (refreshed.has(source.accountId)) return;
+        refreshed.add(source.accountId);
+        const runtime = runtimes.get(source.accountId);
+        if (!runtime) return;
+        await refreshRuntimeNotifications(runtime);
+      }),
+    );
+  }
+
   // ─── ストリーミング接続管理 ───
   let connections = $state<TimelineConnection[]>([]);
 
@@ -260,6 +274,7 @@
       {config}
       {runtimes}
       timelineAccountId={effectiveSelectedAccountId}
+      onrefreshnotifications={refreshSourceNotifications}
       onnotesloaded={(noteIds) => {
         for (const conn of connections) {
           for (const id of noteIds) {

@@ -17,9 +17,10 @@
     runtimes: Map<number, AccountRuntime>;
     onnotesloaded?: (noteIds: string[]) => void;
     timelineAccountId?: number;
+    onrefreshnotifications?: () => Promise<void>;
   };
 
-  let { store, config, runtimes, onnotesloaded, timelineAccountId }: Props = $props();
+  let { store, config, runtimes, onnotesloaded, timelineAccountId, onrefreshnotifications }: Props = $props();
 
   const muteUsers = $derived(settingsStore.settings.muteUsers);
   const muteWords = $derived(settingsStore.settings.muteWords);
@@ -191,7 +192,10 @@
     store.clear();
     oldestPerSource = new Map();
     hasMore = true;
-    await fetchInitial();
+    await Promise.allSettled([
+      fetchInitial(),
+      onrefreshnotifications?.(),
+    ]);
     isRefreshing = false;
   }
 
