@@ -227,6 +227,19 @@ describe('connectTimeline', () => {
     expect(onNoteUpdated).toHaveBeenCalledWith(eventData);
   });
 
+  it('pollVoted の noteUpdated もそのまま中継する', () => {
+    const runtime = makeRuntime(mockSetup.mockStream);
+    const config = makeColumnConfig();
+    const onNoteUpdated = vi.fn();
+
+    connectTimeline(runtime, config, { onNote: vi.fn(), onNoteUpdated });
+
+    const eventData = { id: 'note1', type: 'pollVoted' as const, body: { choice: 1, userId: 'user1' } };
+    mockSetup.mockStream.emit('noteUpdated', eventData);
+
+    expect(onNoteUpdated).toHaveBeenCalledWith(eventData);
+  });
+
   it('disconnect() を呼ぶと stream.off で noteUpdated リスナーが解除される', () => {
     const runtime = makeRuntime(mockSetup.mockStream);
     const config = makeColumnConfig();

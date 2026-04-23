@@ -10,9 +10,10 @@
     insertEmojiAtCursor,
     extractImageFilesFromClipboard,
   } from './composerLogic';
+  import { buildPostPoll, type PollDurationUnit } from '$lib/utils/poll';
   import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
   import type { entities } from 'misskey-js';
-  import { MessageSquare, Repeat2, Eye, Send, Paperclip } from 'lucide-svelte';
+  import { MessageSquare, Repeat2, Eye, Send, Paperclip, BarChart3, Plus, Trash2 } from 'lucide-svelte';
 
   type Note = entities.Note;
 
@@ -68,6 +69,12 @@
   let previewMode = $state(false);
   let emojiPickerOpen = $state(false);
   let attachedFiles = $state<File[]>([]);
+  let pollEnabled = $state(false);
+  let pollChoices = $state<string[]>(['', '']);
+  let pollMultiple = $state(false);
+  let pollExpires = $state(true);
+  let pollDurationValue = $state(1);
+  let pollDurationUnit = $state<PollDurationUnit>('days');
 
   let textareaEl = $state<HTMLTextAreaElement | null>(null);
   let fileAreaComp = $state<FileAttachmentArea | null>(null);
@@ -93,13 +100,24 @@
     return result;
   });
 
+  const pollPayload = $derived.by(() => buildPostPoll({
+    enabled: pollEnabled,
+    choices: pollChoices,
+    multiple: pollMultiple,
+    expires: pollExpires,
+    durationValue: pollDurationValue,
+    durationUnit: pollDurationUnit,
+  }));
+  const pollIsValid = $derived(!pollEnabled || !!pollPayload);
+
   // ── モード判定 ──
   const isReply = $derived(!!replyId);
   const isRenote = $derived(!!renoteId);
 
   // ── 送信可能判定 ──
   const canPost = $derived(
-    (text.trim().length > 0 || (isRenote && !text.trim()) || attachedFiles.length > 0) &&
+    (text.trim().length > 0 || (isRenote && !text.trim()) || attachedFiles.length > 0 || !!pollPayload) &&
+    pollIsValid &&
     !posting
   );
 
@@ -141,6 +159,7 @@
         renoteId: renoteId ?? null,
         channelId: channelId ?? null,
         fileIds: fileIds.length > 0 ? fileIds : undefined,
+        poll: pollPayload,
       });
 
       // 成功: 設定を保存してリセット (visibility/localOnly/cwEnabled は引き継ぐ)
@@ -150,6 +169,12 @@
       previewMode = false;
       emojiPickerOpen = false;
       attachedFiles = [];
+      pollEnabled = false;
+      pollChoices = ['', ''];
+      pollMultiple = false;
+      pollExpires = true;
+      pollDurationValue = 1;
+      pollDurationUnit = 'days';
       oncomplete?.();
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -180,8 +205,28 @@
     previewMode = false;
     emojiPickerOpen = false;
     attachedFiles = [];
+    pollEnabled = false;
+    pollChoices = ['', ''];
+    pollMultiple = false;
+    pollExpires = true;
+    pollDurationValue = 1;
+    pollDurationUnit = 'days';
     error = '';
     oncancel?.();
+  }
+
+  function updatePollChoice(index: number, value: string) {
+    pollChoices = pollChoices.map((choice, i) => i === index ? value : choice);
+  }
+
+  function addPollChoice() {
+    if (pollChoices.length >= 6) return;
+    pollChoices = [...pollChoices, ''];
+  }
+
+  function removePollChoice(index: number) {
+    if (pollChoices.length <= 2) return;
+    pollChoices = pollChoices.filter((_, i) => i !== index);
   }
 
   // ── 引用/リプライ対象の本文を短縮表示 ──
@@ -286,6 +331,70 @@
   {#if error}
     <p class="text-xs text-error">{error}</p>
   {/if}
+
+  <div class="rounded-md border border-base-300/70 bg-base-100/70 p-2">
+    <div class="mb-2 flex items-center justify-between gap-2">
+      <label class="flex items-center gap-2 cursor-pointer select-none">
+        <input type="checkbox" class="checkbox checkbox-xs checkbox-primary" bind:checked={pollEnabled} />
+        <span class="inline-flex items-center gap-1 text-xs text-base-content/70">
+          <BarChart3 class="w-3.5 h-3.5" aria-hidden="true" />
+          投票
+        </span>
+      </label>
+      {#if pollEnabled}
+        <button class="btn btn-ghost btn-xs btn-square" onclick={addPollChoice} disabled={pollChoices.length >= 6} aria-label="選択肢追加">
+          <Plus class="w-3.5 h-3.5" aria-hidden="true" />
+        </button>
+      {/if}
+    </div>
+
+    {#if pollEnabled}
+      <div class="flex flex-col gap-2">
+        {#each pollChoices as choice, index (index)}
+          <div class="flex items-center gap-2">
+            <input
+              type="text"
+              class="input input-bordered input-xs flex-1 text-xs"
+              placeholder={`選択肢 ${index + 1}`}
+              value={choice}
+              oninput={(e) => updatePollChoice(index, (e.currentTarget as HTMLInputElement).value)}
+            />
+            <button
+              class="btn btn-ghost btn-xs btn-square"
+              onclick={() => removePollChoice(index)}
+              disabled={pollChoices.length <= 2}
+              aria-label="選択肢を削除"
+            >
+              <Trash2 class="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        {/each}
+
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-1 cursor-pointer select-none">
+            <input type="checkbox" class="checkbox checkbox-xs" bind:checked={pollMultiple} />
+            <span class="text-xs text-base-content/60">複数</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer select-none">
+            <input type="checkbox" class="checkbox checkbox-xs" bind:checked={pollExpires} />
+            <span class="text-xs text-base-content/60">期限</span>
+          </label>
+          {#if pollExpires}
+            <input type="number" min="1" class="input input-bordered input-xs w-16" bind:value={pollDurationValue} />
+            <select class="select select-bordered select-xs" bind:value={pollDurationUnit}>
+              <option value="minutes">分</option>
+              <option value="hours">時間</option>
+              <option value="days">日</option>
+            </select>
+          {/if}
+        </div>
+
+        {#if !pollIsValid}
+          <p class="text-xs text-error">投票は2件以上必要です。</p>
+        {/if}
+      </div>
+    {/if}
+  </div>
 
   <!-- アクションバー (絵文字・添付・公開範囲等) -->
   <div class="flex items-center gap-1">

@@ -12,8 +12,9 @@
     insertEmojiAtCursor,
     extractImageFilesFromClipboard,
   } from './composerLogic';
+  import { buildPostPoll, type PollDurationUnit } from '$lib/utils/poll';
   import { loadFromStorage, saveToStorage } from '$lib/utils/storage';
-  import { Check, X, Eye, Send } from 'lucide-svelte';
+  import { Check, X, Eye, Send, BarChart3, Plus, Trash2 } from 'lucide-svelte';
 
   type PostResult = {
     accountId: number;
@@ -45,6 +46,12 @@
   let emojiPickerAccountId = $state<number | null>(null);
   let posting = $state(false);
   let attachedFiles = $state<File[]>([]);
+  let pollEnabled = $state(false);
+  let pollChoices = $state<string[]>(['', '']);
+  let pollMultiple = $state(false);
+  let pollExpires = $state(true);
+  let pollDurationValue = $state(1);
+  let pollDurationUnit = $state<PollDurationUnit>('days');
   let postResults = $state<PostResult[]>([]);
   let showResults = $state(false);
 
@@ -72,6 +79,16 @@
     return result;
   });
 
+  const pollPayload = $derived.by(() => buildPostPoll({
+    enabled: pollEnabled,
+    choices: pollChoices,
+    multiple: pollMultiple,
+    expires: pollExpires,
+    durationValue: pollDurationValue,
+    durationUnit: pollDurationUnit,
+  }));
+  const pollIsValid = $derived(!pollEnabled || !!pollPayload);
+
   const SETTINGS_KEY = 'composer-last-settings';
 
   // モーダルが開いたとき: 状態リセット、前回の設定を復元
@@ -94,6 +111,12 @@
       } else {
         text = '';
       }
+      pollEnabled = false;
+      pollChoices = ['', ''];
+      pollMultiple = false;
+      pollExpires = true;
+      pollDurationValue = 1;
+      pollDurationUnit = 'days';
       // 初期アカウントが指定された場合は事前選択
       if (initialAccountId !== undefined) {
         selectedAccountIds = new Set([initialAccountId]);
@@ -135,6 +158,20 @@
     }
   }
 
+  function updatePollChoice(index: number, value: string) {
+    pollChoices = pollChoices.map((choice, i) => i === index ? value : choice);
+  }
+
+  function addPollChoice() {
+    if (pollChoices.length >= 6) return;
+    pollChoices = [...pollChoices, ''];
+  }
+
+  function removePollChoice(index: number) {
+    if (pollChoices.length <= 2) return;
+    pollChoices = pollChoices.filter((_, i) => i !== index);
+  }
+
   // 絵文字ピッカーで使うアカウントID (未選択なら最初の利用可能アカウント)
   const effectiveEmojiAccountId = $derived(
     emojiPickerAccountId != null && availableAccounts.some((a) => a.id === emojiPickerAccountId)
@@ -165,8 +202,8 @@
   });
 
   async function post() {
-    if (!text.trim() && !cwEnabled) return;
-    if (selectedAccountIds.size === 0) return;
+    if (selectedAccountIds.size === 0 || !pollIsValid) return;
+    if (!text.trim() && !cwEnabled && attachedFiles.length === 0 && !pollPayload) return;
 
     posting = true;
     postResults = [];
@@ -192,6 +229,7 @@
           visibility,
           localOnly,
           fileIds: fileIds.length > 0 ? fileIds : undefined,
+          poll: pollPayload,
         });
         return account;
       })
@@ -231,6 +269,12 @@
     localOnly = false;
     previewMode = false;
     emojiPickerOpen = false;
+    pollEnabled = false;
+    pollChoices = ['', ''];
+    pollMultiple = false;
+    pollExpires = true;
+    pollDurationValue = 1;
+    pollDurationUnit = 'days';
     postResults = [];
     showResults = false;
     attachedFiles = [];
@@ -252,8 +296,9 @@
   }
 
   const canPost = $derived(
-    (text.trim().length > 0 || (cwEnabled && cwText.trim().length > 0) || attachedFiles.length > 0) &&
+    (text.trim().length > 0 || (cwEnabled && cwText.trim().length > 0) || attachedFiles.length > 0 || !!pollPayload) &&
     selectedAccountIds.size > 0 &&
+    pollIsValid &&
     !posting
   );
 </script>
@@ -327,6 +372,71 @@
       />
     {/if}
 
+    <div class="rounded-lg border border-base-300/70 bg-base-200/30 p-3">
+      <div class="mb-2 flex items-center justify-between gap-2">
+        <label class="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" bind:checked={pollEnabled} />
+          <span class="inline-flex items-center gap-1 text-sm font-semibold text-base-content/80">
+            <BarChart3 class="w-4 h-4" aria-hidden="true" />
+            投票を付ける
+          </span>
+        </label>
+        {#if pollEnabled}
+          <button class="btn btn-ghost btn-xs gap-1" onclick={addPollChoice} disabled={pollChoices.length >= 6}>
+            <Plus class="w-3.5 h-3.5" aria-hidden="true" />
+            選択肢追加
+          </button>
+        {/if}
+      </div>
+
+      {#if pollEnabled}
+        <div class="flex flex-col gap-2">
+          {#each pollChoices as choice, index (index)}
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                class="input input-bordered input-sm flex-1 text-sm"
+                placeholder={`選択肢 ${index + 1}`}
+                value={choice}
+                oninput={(e) => updatePollChoice(index, (e.currentTarget as HTMLInputElement).value)}
+              />
+              <button
+                class="btn btn-ghost btn-sm btn-square"
+                onclick={() => removePollChoice(index)}
+                disabled={pollChoices.length <= 2}
+                aria-label="選択肢を削除"
+              >
+                <Trash2 class="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+          {/each}
+
+          <div class="flex flex-wrap items-center gap-3">
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" class="checkbox checkbox-xs" bind:checked={pollMultiple} />
+              <span class="text-xs text-base-content/70">複数選択可</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" class="checkbox checkbox-xs" bind:checked={pollExpires} />
+              <span class="text-xs text-base-content/70">期限あり</span>
+            </label>
+            {#if pollExpires}
+              <input type="number" min="1" class="input input-bordered input-xs w-20" bind:value={pollDurationValue} />
+              <select class="select select-bordered select-xs" bind:value={pollDurationUnit}>
+                <option value="minutes">分</option>
+                <option value="hours">時間</option>
+                <option value="days">日</option>
+              </select>
+            {/if}
+          </div>
+
+          {#if !pollIsValid}
+            <p class="text-xs text-error">投票は空でない選択肢を2件以上入力してください。</p>
+          {/if}
+        </div>
+      {/if}
+    </div>
+
     <!-- テキストエリア / プレビュー切替 -->
     <div class="flex items-center justify-between">
       <span class="text-xs text-base-content/50">{charCount} 文字</span>
@@ -385,6 +495,16 @@
           <MfmRenderer text={text} emojis={previewEmojis} />
         {:else}
           <span class="text-base-content/40 italic">プレビューするテキストを入力してください</span>
+        {/if}
+        {#if pollPayload}
+          <div class="mt-3 rounded border border-base-300/70 bg-base-100 p-2">
+            <p class="mb-1 text-xs text-base-content/60">投票プレビュー</p>
+            <div class="flex flex-col gap-1">
+              {#each pollPayload.choices as choice, index (choice)}
+                <div class="rounded border border-base-300/60 px-2 py-1 text-xs">{index + 1}. {choice}</div>
+              {/each}
+            </div>
+          </div>
         {/if}
       </div>
     {:else}

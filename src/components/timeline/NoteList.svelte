@@ -6,6 +6,7 @@
   import { settingsStore } from '$lib/stores/settings.svelte';
   import { accountStore } from '$lib/stores/accounts.svelte';
   import { getEmojiMap } from '$lib/emoji/cache';
+  import { applyPollVoteToPoll } from '$lib/utils/poll';
   import NoteCard from './NoteCard.svelte';
   import LoadingSpinner from '$components/common/LoadingSpinner.svelte';
   import { AlertCircle, AlignJustify, RefreshCw } from 'lucide-svelte';
@@ -213,6 +214,28 @@
       } else {
         return { ...n, renote: { ...actualNote, reactions: updatedReactions, myReaction } };
       }
+    });
+  }
+
+  export function applyPollVote(
+    noteId: string,
+    choice: number,
+    userId: string,
+  ) {
+    notes = notes.map((n) => {
+      const target = n.id === noteId ? n : (n.renote && n.renote.id === noteId ? n : null);
+      if (!target) return n;
+
+      const actualNote = n.id === noteId ? n : n.renote!;
+      if (!actualNote.poll) return n;
+
+      const updatedPoll = applyPollVoteToPoll(actualNote.poll, choice, isCurrentUser(userId));
+
+      if (n.id === noteId) {
+        return { ...n, poll: updatedPoll };
+      }
+
+      return { ...n, renote: { ...actualNote, poll: updatedPoll } };
     });
   }
 

@@ -145,6 +145,9 @@
         } else if (data.type === 'unreacted') {
           const body = data.body as { reaction: string; userId: string };
           noteList?.applyUnreaction(data.id, body.reaction, body.userId);
+        } else if (data.type === 'pollVoted') {
+          const body = data.body as { choice: number; userId: string };
+          noteList?.applyPollVote(data.id, body.choice, body.userId);
         }
       },
     });

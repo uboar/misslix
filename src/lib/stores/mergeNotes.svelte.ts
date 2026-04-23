@@ -6,6 +6,7 @@
 import type { entities } from 'misskey-js';
 import type { MergedNoteWrapper } from '$lib/types';
 import { getDeduplicationKey, shouldReplace } from '$lib/utils/mergeDedup';
+import { applyPollVoteToPoll } from '$lib/utils/poll';
 
 export class MergeNoteStore {
   notes = $state<MergedNoteWrapper[]>([]);
@@ -195,6 +196,30 @@ export class MergeNoteStore {
       } else {
         return { ...w, note: { ...n, renote: { ...actualNote, reactions: updatedReactions, myReaction } } };
       }
+    });
+  }
+
+  applyPollVote(
+    noteId: string,
+    choice: number,
+    userId: string,
+    accountUserIds: string[],
+  ) {
+    this.notes = this.notes.map((w) => {
+      const n = w.note;
+      const target = n.id === noteId ? n : (n.renote && n.renote.id === noteId ? n : null);
+      if (!target) return w;
+
+      const actualNote = n.id === noteId ? n : n.renote!;
+      if (!actualNote.poll) return w;
+
+      const updatedPoll = applyPollVoteToPoll(actualNote.poll, choice, accountUserIds.includes(userId));
+
+      if (n.id === noteId) {
+        return { ...w, note: { ...n, poll: updatedPoll } };
+      }
+
+      return { ...w, note: { ...n, renote: { ...actualNote, poll: updatedPoll } } };
     });
   }
 

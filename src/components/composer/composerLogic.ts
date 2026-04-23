@@ -6,7 +6,7 @@
  */
 
 import type { api } from 'misskey-js';
-import type { Account, AccountRuntime, Visibility } from '$lib/types';
+import type { Account, AccountRuntime, PostPoll, Visibility } from '$lib/types';
 import { getRemainingCooldown, recordPost, isMisskeyIo } from '$lib/utils/rateLimit';
 
 type APIClient = api.APIClient;
@@ -22,6 +22,7 @@ export type PostParams = {
   renoteId?: string | null;
   channelId?: string | null;
   fileIds?: string[];
+  poll?: PostPoll | null;
 };
 
 // ─── アカウント選択 ───
@@ -78,10 +79,12 @@ export function canPost(
   selectedCount: number,
   renoteId?: string | null,
   fileCount = 0,
+  hasPoll = false,
 ): boolean {
   if (selectedCount === 0) return false;
   if (renoteId) return true;
   if (fileCount > 0) return true;
+  if (hasPoll) return true;
   return text.trim().length > 0;
 }
 
@@ -112,6 +115,9 @@ export async function postNote(cli: APIClient, params: PostParams): Promise<unkn
   }
   if (params.fileIds && params.fileIds.length > 0) {
     body.fileIds = params.fileIds;
+  }
+  if (params.poll) {
+    body.poll = params.poll;
   }
 
   return (cli as any).request('notes/create', body);

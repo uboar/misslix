@@ -224,3 +224,17 @@ export type NoteWrapper = entities.Note & {
   reply?: NoteWrapper;
   reactionEmojis?: Record<string, string>;
 };
+
+export type NotePoll = NonNullable<entities.Note['poll']>;
+export type NotePollChoice = NotePoll['choices'][number];
+
+/**
+ * `notes/create` の poll payload に合わせた投稿用投票型。
+ * misskey-js の型定義に合わせて `choices` / `multiple` / `expiresAt` / `expiredAfter` を扱う。
+ */
+export type PostPoll = {
+  choices: string[];
+  multiple?: boolean;
+  expiresAt?: number | null;
+  expiredAfter?: number | null;
+};

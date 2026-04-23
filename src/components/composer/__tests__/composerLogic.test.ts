@@ -169,12 +169,20 @@ describe('canPost', () => {
     expect(canPost('', 1, null, 1)).toBe(true);
   });
 
+  it('テキストが空でも poll があれば true', () => {
+    expect(canPost('', 1, null, 0, true)).toBe(true);
+  });
+
   it('テキストが空で fileCount 0 なら false', () => {
     expect(canPost('', 1, null, 0)).toBe(false);
   });
 
   it('選択アカウント 0 でも fileCount > 0 なら false (アカウント必須)', () => {
     expect(canPost('', 0, null, 3)).toBe(false);
+  });
+
+  it('選択アカウント 0 では poll があっても false', () => {
+    expect(canPost('', 0, null, 0, true)).toBe(false);
   });
 });
 
@@ -256,6 +264,30 @@ describe('postNote', () => {
     expect(cli.request).toHaveBeenCalledWith(
       'notes/create',
       expect.objectContaining({ renoteId: 'note_renote_456' }),
+    );
+  });
+
+  it('poll が設定されているとき poll パラメータが含まれる', async () => {
+    await postNote(cli, {
+      text: '',
+      visibility: 'public',
+      localOnly: false,
+      poll: {
+        choices: ['A', 'B'],
+        multiple: true,
+        expiredAfter: 3_600_000,
+      },
+    });
+
+    expect(cli.request).toHaveBeenCalledWith(
+      'notes/create',
+      expect.objectContaining({
+        poll: {
+          choices: ['A', 'B'],
+          multiple: true,
+          expiredAfter: 3_600_000,
+        },
+      }),
     );
   });
 

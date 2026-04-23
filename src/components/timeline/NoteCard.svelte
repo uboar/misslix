@@ -10,6 +10,7 @@
   import NoteCard from './NoteCard.svelte';
   import NoteUser from './NoteUser.svelte';
   import NoteBody from './NoteBody.svelte';
+  import NotePoll from './NotePoll.svelte';
   import NoteMedia from './NoteMedia.svelte';
   import NoteReactions from './NoteReactions.svelte';
   import ReactionButton from '$components/reaction/ReactionButton.svelte';
@@ -103,6 +104,7 @@
   // メディアファイル (CWがある場合は展開時のみ表示)
   const mediaFiles = $derived(displayNote.files ?? []);
   const hasMedia = $derived(mediaFiles.length > 0 && !config.noteDisplay.mediaHidden && (!hasCw || cwExpanded));
+  const poll = $derived(displayNote.poll ?? null);
 
   // リアクション
   const reactions = $derived(displayNote.reactions ?? {});
@@ -347,6 +349,10 @@
       {hostUrl}
       bind:cwExpanded={cwExpanded}
     />
+
+    {#if poll}
+      <NotePoll noteId={displayNote.id} {poll} runtime={effectiveRuntime ?? runtime} />
+    {/if}
 
     <!-- 引用Renote -->
     {#if isQuote && note.renote && depth < maxDepth}

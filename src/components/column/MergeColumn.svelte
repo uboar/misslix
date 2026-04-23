@@ -182,6 +182,9 @@
           } else if (data.type === 'unreacted') {
             const body = data.body as { reaction: string; userId: string };
             mergeStore.applyUnreaction(data.id, body.reaction, body.userId, accountUserIds);
+          } else if (data.type === 'pollVoted') {
+            const body = data.body as { choice: number; userId: string };
+            mergeStore.applyPollVote(data.id, body.choice, body.userId, accountUserIds);
           }
         },
       });
