@@ -372,71 +372,6 @@
       />
     {/if}
 
-    <div class="rounded-lg border border-base-300/70 bg-base-200/30 p-3">
-      <div class="mb-2 flex items-center justify-between gap-2">
-        <label class="flex items-center gap-2 cursor-pointer select-none">
-          <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" bind:checked={pollEnabled} />
-          <span class="inline-flex items-center gap-1 text-sm font-semibold text-base-content/80">
-            <BarChart3 class="w-4 h-4" aria-hidden="true" />
-            投票を付ける
-          </span>
-        </label>
-        {#if pollEnabled}
-          <button class="btn btn-ghost btn-xs gap-1" onclick={addPollChoice} disabled={pollChoices.length >= 6}>
-            <Plus class="w-3.5 h-3.5" aria-hidden="true" />
-            選択肢追加
-          </button>
-        {/if}
-      </div>
-
-      {#if pollEnabled}
-        <div class="flex flex-col gap-2">
-          {#each pollChoices as choice, index (index)}
-            <div class="flex items-center gap-2">
-              <input
-                type="text"
-                class="input input-bordered input-sm flex-1 text-sm"
-                placeholder={`選択肢 ${index + 1}`}
-                value={choice}
-                oninput={(e) => updatePollChoice(index, (e.currentTarget as HTMLInputElement).value)}
-              />
-              <button
-                class="btn btn-ghost btn-sm btn-square"
-                onclick={() => removePollChoice(index)}
-                disabled={pollChoices.length <= 2}
-                aria-label="選択肢を削除"
-              >
-                <Trash2 class="w-4 h-4" aria-hidden="true" />
-              </button>
-            </div>
-          {/each}
-
-          <div class="flex flex-wrap items-center gap-3">
-            <label class="flex items-center gap-1.5 cursor-pointer select-none">
-              <input type="checkbox" class="checkbox checkbox-xs" bind:checked={pollMultiple} />
-              <span class="text-xs text-base-content/70">複数選択可</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer select-none">
-              <input type="checkbox" class="checkbox checkbox-xs" bind:checked={pollExpires} />
-              <span class="text-xs text-base-content/70">期限あり</span>
-            </label>
-            {#if pollExpires}
-              <input type="number" min="1" class="input input-bordered input-xs w-20" bind:value={pollDurationValue} />
-              <select class="select select-bordered select-xs" bind:value={pollDurationUnit}>
-                <option value="minutes">分</option>
-                <option value="hours">時間</option>
-                <option value="days">日</option>
-              </select>
-            {/if}
-          </div>
-
-          {#if !pollIsValid}
-            <p class="text-xs text-error">投票は空でない選択肢を2件以上入力してください。</p>
-          {/if}
-        </div>
-      {/if}
-    </div>
-
     <!-- テキストエリア / プレビュー切替 -->
     <div class="flex items-center justify-between">
       <span class="text-xs text-base-content/50">{charCount} 文字</span>
@@ -539,6 +474,17 @@
         </select>
       </div>
 
+      <button
+        type="button"
+        class="btn btn-ghost btn-xs gap-1 {pollEnabled ? 'btn-primary btn-active' : ''}"
+        onclick={() => { pollEnabled = !pollEnabled; }}
+        aria-pressed={pollEnabled}
+        title="投票を付ける"
+      >
+        <BarChart3 class="w-3.5 h-3.5" aria-hidden="true" />
+        <span>投票</span>
+      </button>
+
       <label class="flex items-center gap-1.5 cursor-pointer select-none">
         <input
           type="checkbox"
@@ -548,6 +494,62 @@
         <span class="text-xs text-base-content/70">ローカル限定</span>
       </label>
     </div>
+
+    {#if pollEnabled}
+      <div class="rounded-lg border border-base-300/70 bg-base-200/30 p-3">
+        <div class="mb-2 flex justify-end">
+          <button class="btn btn-ghost btn-xs gap-1" onclick={addPollChoice} disabled={pollChoices.length >= 6}>
+            <Plus class="w-3.5 h-3.5" aria-hidden="true" />
+            選択肢追加
+          </button>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          {#each pollChoices as choice, index (index)}
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                class="input input-bordered input-sm flex-1 text-sm"
+                placeholder={`選択肢 ${index + 1}`}
+                value={choice}
+                oninput={(e) => updatePollChoice(index, (e.currentTarget as HTMLInputElement).value)}
+              />
+              <button
+                class="btn btn-ghost btn-sm btn-square"
+                onclick={() => removePollChoice(index)}
+                disabled={pollChoices.length <= 2}
+                aria-label="選択肢を削除"
+              >
+                <Trash2 class="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+          {/each}
+
+          <div class="flex flex-wrap items-center gap-3">
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" class="checkbox checkbox-xs" bind:checked={pollMultiple} />
+              <span class="text-xs text-base-content/70">複数選択可</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" class="checkbox checkbox-xs" bind:checked={pollExpires} />
+              <span class="text-xs text-base-content/70">期限あり</span>
+            </label>
+            {#if pollExpires}
+              <input type="number" min="1" class="input input-bordered input-xs w-20" bind:value={pollDurationValue} />
+              <select class="select select-bordered select-xs" bind:value={pollDurationUnit}>
+                <option value="minutes">分</option>
+                <option value="hours">時間</option>
+                <option value="days">日</option>
+              </select>
+            {/if}
+          </div>
+
+          {#if !pollIsValid}
+            <p class="text-xs text-error">投票は空でない選択肢を2件以上入力してください。</p>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <!-- 投稿結果 (一部失敗時) -->
     {#if showResults && postResults.length > 0}

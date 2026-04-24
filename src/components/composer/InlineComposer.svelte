@@ -332,23 +332,82 @@
     <p class="text-xs text-error">{error}</p>
   {/if}
 
-  <div class="rounded-md border border-base-300/70 bg-base-100/70 p-2">
-    <div class="mb-2 flex items-center justify-between gap-2">
-      <label class="flex items-center gap-2 cursor-pointer select-none">
-        <input type="checkbox" class="checkbox checkbox-xs checkbox-primary" bind:checked={pollEnabled} />
-        <span class="inline-flex items-center gap-1 text-xs text-base-content/70">
-          <BarChart3 class="w-3.5 h-3.5" aria-hidden="true" />
-          投票
-        </span>
-      </label>
-      {#if pollEnabled}
+  <!-- アクションバー (絵文字・添付・公開範囲等) -->
+  <div class="flex items-center gap-1">
+    <!-- 絵文字ピッカートグル -->
+    <button
+      class="btn btn-ghost btn-xs {emojiPickerOpen ? 'btn-active' : ''}"
+      onclick={() => { emojiPickerOpen = !emojiPickerOpen; previewMode = false; }}
+      title="絵文字を挿入"
+    >
+      <span class="text-sm">😀</span>
+    </button>
+
+    <!-- プレビュートグル -->
+    <button
+      class="btn btn-ghost btn-xs {previewMode ? 'btn-active' : ''}"
+      onclick={() => { previewMode = !previewMode; emojiPickerOpen = false; }}
+      title="プレビュー"
+    >
+      <Eye class="w-3.5 h-3.5" aria-hidden="true" />
+    </button>
+
+    <!-- ファイル添付ボタン -->
+    <button
+      class="btn btn-ghost btn-xs {attachedFiles.length > 0 ? 'btn-active' : ''}"
+      onclick={() => fileAreaComp?.openPicker()}
+      title="ファイルを添付"
+      disabled={posting}
+    >
+      <Paperclip class="w-3.5 h-3.5" aria-hidden="true" />
+      {#if attachedFiles.length > 0}
+        <span class="text-xs">{attachedFiles.length}</span>
+      {/if}
+    </button>
+
+    <!-- 公開範囲 -->
+    <select
+      class="select select-bordered select-xs text-xs"
+      bind:value={visibility}
+    >
+      {#each VISIBILITY_OPTIONS as opt (opt.value)}
+        <option value={opt.value}>{opt.icon}</option>
+      {/each}
+    </select>
+
+    <!-- 投票 -->
+    <button
+      type="button"
+      class="btn btn-ghost btn-xs btn-square {pollEnabled ? 'btn-primary btn-active' : ''}"
+      onclick={() => { pollEnabled = !pollEnabled; }}
+      aria-pressed={pollEnabled}
+      title="投票"
+    >
+      <BarChart3 class="w-3.5 h-3.5" aria-hidden="true" />
+    </button>
+
+    <!-- ローカル限定 -->
+    <label class="flex items-center gap-1 cursor-pointer select-none" title="ローカル限定">
+      <input
+        type="checkbox"
+        class="checkbox checkbox-xs"
+        bind:checked={localOnly}
+      />
+      <span class="text-xs text-base-content/60">L</span>
+    </label>
+
+    <!-- 文字数 -->
+    <span class="text-xs text-base-content/40 ml-1">{charCount}</span>
+  </div>
+
+  {#if pollEnabled}
+    <div class="rounded-md border border-base-300/70 bg-base-100/70 p-2">
+      <div class="mb-2 flex justify-end">
         <button class="btn btn-ghost btn-xs btn-square" onclick={addPollChoice} disabled={pollChoices.length >= 6} aria-label="選択肢追加">
           <Plus class="w-3.5 h-3.5" aria-hidden="true" />
         </button>
-      {/if}
-    </div>
+      </div>
 
-    {#if pollEnabled}
       <div class="flex flex-col gap-2">
         {#each pollChoices as choice, index (index)}
           <div class="flex items-center gap-2">
@@ -393,65 +452,8 @@
           <p class="text-xs text-error">投票は2件以上必要です。</p>
         {/if}
       </div>
-    {/if}
-  </div>
-
-  <!-- アクションバー (絵文字・添付・公開範囲等) -->
-  <div class="flex items-center gap-1">
-    <!-- 絵文字ピッカートグル -->
-    <button
-      class="btn btn-ghost btn-xs {emojiPickerOpen ? 'btn-active' : ''}"
-      onclick={() => { emojiPickerOpen = !emojiPickerOpen; previewMode = false; }}
-      title="絵文字を挿入"
-    >
-      <span class="text-sm">😀</span>
-    </button>
-
-    <!-- プレビュートグル -->
-    <button
-      class="btn btn-ghost btn-xs {previewMode ? 'btn-active' : ''}"
-      onclick={() => { previewMode = !previewMode; emojiPickerOpen = false; }}
-      title="プレビュー"
-    >
-      <Eye class="w-3.5 h-3.5" aria-hidden="true" />
-    </button>
-
-    <!-- ファイル添付ボタン -->
-    <button
-      class="btn btn-ghost btn-xs {attachedFiles.length > 0 ? 'btn-active' : ''}"
-      onclick={() => fileAreaComp?.openPicker()}
-      title="ファイルを添付"
-      disabled={posting}
-    >
-      <Paperclip class="w-3.5 h-3.5" aria-hidden="true" />
-      {#if attachedFiles.length > 0}
-        <span class="text-xs">{attachedFiles.length}</span>
-      {/if}
-    </button>
-
-    <!-- 公開範囲 -->
-    <select
-      class="select select-bordered select-xs text-xs"
-      bind:value={visibility}
-    >
-      {#each VISIBILITY_OPTIONS as opt (opt.value)}
-        <option value={opt.value}>{opt.icon}</option>
-      {/each}
-    </select>
-
-    <!-- ローカル限定 -->
-    <label class="flex items-center gap-1 cursor-pointer select-none" title="ローカル限定">
-      <input
-        type="checkbox"
-        class="checkbox checkbox-xs"
-        bind:checked={localOnly}
-      />
-      <span class="text-xs text-base-content/60">L</span>
-    </label>
-
-    <!-- 文字数 -->
-    <span class="text-xs text-base-content/40 ml-1">{charCount}</span>
-  </div>
+    </div>
+  {/if}
 
   <!-- 投稿ボタン行 (横幅いっぱい) -->
   <div class="flex items-center gap-2">
