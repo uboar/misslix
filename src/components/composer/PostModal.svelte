@@ -474,17 +474,6 @@
         </select>
       </div>
 
-      <button
-        type="button"
-        class="btn btn-ghost btn-xs gap-1 {pollEnabled ? 'btn-primary btn-active' : ''}"
-        onclick={() => { pollEnabled = !pollEnabled; }}
-        aria-pressed={pollEnabled}
-        title="投票を付ける"
-      >
-        <BarChart3 class="w-3.5 h-3.5" aria-hidden="true" />
-        <span>投票</span>
-      </button>
-
       <label class="flex items-center gap-1.5 cursor-pointer select-none">
         <input
           type="checkbox"
@@ -571,7 +560,18 @@
     {/if}
 
     <!-- アクションボタン -->
-    <div class="flex justify-end gap-2 mt-1">
+    <div class="flex items-center justify-between gap-2 mt-1">
+      <button
+        type="button"
+        class="btn btn-ghost btn-xs btn-square {pollEnabled ? 'btn-primary btn-active' : ''}"
+        onclick={() => { pollEnabled = !pollEnabled; }}
+        aria-label="投票を付ける"
+        aria-pressed={pollEnabled}
+        title="投票を付ける"
+      >
+        <BarChart3 class="w-3.5 h-3.5" aria-hidden="true" />
+      </button>
+
       <button
         class="btn btn-primary gap-1.5"
         onclick={post}

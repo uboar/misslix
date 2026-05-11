@@ -380,8 +380,9 @@
       type="button"
       class="btn btn-ghost btn-xs btn-square {pollEnabled ? 'btn-primary btn-active' : ''}"
       onclick={() => { pollEnabled = !pollEnabled; }}
+      aria-label="投票を付ける"
       aria-pressed={pollEnabled}
-      title="投票"
+      title="投票を付ける"
     >
       <BarChart3 class="w-3.5 h-3.5" aria-hidden="true" />
     </button>
