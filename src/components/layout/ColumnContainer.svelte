@@ -11,9 +11,10 @@
     onadd?: () => void;
     runtimes?: Map<number, AccountRuntime>;
     onpost?: () => void;
+    refreshTrigger?: number;
   };
 
-  let { onadd, runtimes = new Map(), onpost }: Props = $props();
+  let { onadd, runtimes = new Map(), onpost, refreshTrigger = 0 }: Props = $props();
 
   let columns = $derived(timelineStore.columns);
 
@@ -129,6 +130,7 @@
             ondragleave={(e) => handleDragLeave(index, e)}
             ondrop={(e) => handleDrop(index, e)}
             dropIndicator={dragFromIndex === index ? null : indicator}
+            {refreshTrigger}
           />
         {:else if config.channel === 'mergeNotificationTimeline'}
           <MergeNotificationColumn
@@ -162,6 +164,7 @@
             ondragleave={(e) => handleDragLeave(index, e)}
             ondrop={(e) => handleDrop(index, e)}
             dropIndicator={dragFromIndex === index ? null : indicator}
+            {refreshTrigger}
           />
         {/if}
 

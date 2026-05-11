@@ -26,6 +26,7 @@
   let postModalInitialAccountId = $state<number | undefined>(undefined);
   let presetModalOpen = $state(false);
   let clearConfirmOpen = $state(false);
+  let timelineRefreshTrigger = $state(0);
 
   // 「削除して編集」リクエストを監視してPostModalを開く
   $effect(() => {
@@ -43,6 +44,10 @@
     timelineStore.persist();
     showToast('全カラムをクリアしました', 'info');
     clearConfirmOpen = false;
+  }
+
+  function refreshVisibleTimelines() {
+    timelineRefreshTrigger += 1;
   }
 
   // ── ランタイム管理 ──
@@ -176,7 +181,7 @@
       <span class="loading loading-spinner loading-lg text-primary"></span>
     </main>
   {:else}
-    <ColumnContainer onadd={() => addColumnOpen = true} {runtimes} onpost={() => postModalOpen = true} />
+    <ColumnContainer onadd={() => addColumnOpen = true} {runtimes} onpost={() => postModalOpen = true} refreshTrigger={timelineRefreshTrigger} />
   {/if}
 
   <SpeedDial
@@ -185,6 +190,7 @@
     onsettings={() => settingsOpen = true}
     onpreset={() => presetModalOpen = true}
     onclearcolumns={() => clearConfirmOpen = true}
+    onreload={refreshVisibleTimelines}
   />
 
   <AddColumnModal open={addColumnOpen} onclose={() => addColumnOpen = false} {runtimes} />

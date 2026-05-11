@@ -22,9 +22,10 @@
     ondragleave?: (e: DragEvent) => void;
     ondrop?: (e: DragEvent) => void;
     dropIndicator?: 'left' | 'right' | null;
+    refreshTrigger?: number;
   };
 
-  let { config, runtime, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null }: Props = $props();
+  let { config, runtime, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null, refreshTrigger = 0 }: Props = $props();
 
   // アカウント情報 (ColumnFooterのリンク集に使用)
   let account = $derived(accountStore.findById(config.accountId));
@@ -230,6 +231,7 @@
         bind:this={noteList}
         account={runtime}
         {config}
+        {refreshTrigger}
         onrefreshnotifications={() => refreshRuntimeNotifications(runtime)}
         onnotesloaded={(noteIds) => {
           // 初期ノートのリアクション更新を購読

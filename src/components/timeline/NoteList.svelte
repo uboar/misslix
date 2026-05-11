@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import type { entities } from 'misskey-js';
   import type { AccountRuntime, ColumnConfig } from '$lib/types';
   import { CHANNEL_ENDPOINTS, FETCH_OPTION_SUPPORT } from '$lib/api/endpoints';
@@ -16,9 +16,10 @@
     config: ColumnConfig;
     onnotesloaded?: (noteIds: string[]) => void;
     onrefreshnotifications?: () => Promise<void>;
+    refreshTrigger?: number;
   };
 
-  let { account, config, onnotesloaded, onrefreshnotifications }: Props = $props();
+  let { account, config, onnotesloaded, onrefreshnotifications, refreshTrigger = 0 }: Props = $props();
 
   // ミュート設定
   const muteUsers = $derived(settingsStore.settings.muteUsers);
@@ -34,6 +35,7 @@
   let error = $state<string | null>(null);
   let hasMore = $state(true);
   let isRefreshing = $state(false);
+  let handledRefreshTrigger = untrack(() => refreshTrigger);
 
   // スクロールコンテナ参照
   let scrollContainer = $state<HTMLDivElement | null>(null);
@@ -306,6 +308,14 @@
     if (!el) return;
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
+  });
+
+  $effect(() => {
+    if (refreshTrigger <= 0 || refreshTrigger === handledRefreshTrigger) return;
+    handledRefreshTrigger = refreshTrigger;
+    untrack(() => {
+      void refresh();
+    });
   });
 
   // スクロールイベント処理 (無限スクロール)

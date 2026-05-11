@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import type { AccountRuntime, ColumnConfig, MergeSourceDef } from '$lib/types';
   import type { MergeNoteStore } from '$lib/stores/mergeNotes.svelte';
   import { settingsStore } from '$lib/stores/settings.svelte';
@@ -18,9 +18,10 @@
     onnotesloaded?: (noteIds: string[]) => void;
     timelineAccountId?: number;
     onrefreshnotifications?: () => Promise<void>;
+    refreshTrigger?: number;
   };
 
-  let { store, config, runtimes, onnotesloaded, timelineAccountId, onrefreshnotifications }: Props = $props();
+  let { store, config, runtimes, onnotesloaded, timelineAccountId, onrefreshnotifications, refreshTrigger = 0 }: Props = $props();
 
   const muteUsers = $derived(settingsStore.settings.muteUsers);
   const muteWords = $derived(settingsStore.settings.muteWords);
@@ -30,6 +31,7 @@
   let error = $state<string | null>(null);
   let hasMore = $state(true);
   let isRefreshing = $state(false);
+  let handledRefreshTrigger = untrack(() => refreshTrigger);
 
   // ソースごとの最古ノートIDを追跡 (無限スクロール用)
   let oldestPerSource = $state<Map<number, string>>(new Map());
@@ -258,6 +260,14 @@
     if (!el) return;
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
+  });
+
+  $effect(() => {
+    if (refreshTrigger <= 0 || refreshTrigger === handledRefreshTrigger) return;
+    handledRefreshTrigger = refreshTrigger;
+    untrack(() => {
+      void refresh();
+    });
   });
 
   // スクロールイベント (無限スクロール)

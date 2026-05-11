@@ -23,9 +23,10 @@
     ondragleave?: (e: DragEvent) => void;
     ondrop?: (e: DragEvent) => void;
     dropIndicator?: 'left' | 'right' | null;
+    refreshTrigger?: number;
   };
 
-  let { config, runtimes, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null }: Props = $props();
+  let { config, runtimes, ondragstart, ondragend, ondragover, ondragleave, ondrop, dropIndicator = null, refreshTrigger = 0 }: Props = $props();
 
   // マージノートストア
   const mergeStore = new MergeNoteStore(config.maxNotes);
@@ -273,6 +274,7 @@
       store={mergeStore}
       {config}
       {runtimes}
+      {refreshTrigger}
       timelineAccountId={effectiveSelectedAccountId}
       onrefreshnotifications={refreshSourceNotifications}
       onnotesloaded={(noteIds) => {

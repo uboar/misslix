@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plus, Settings, Trash2, Save, Columns2 } from 'lucide-svelte';
+  import { Plus, Settings, Trash2, Save, Columns2, RefreshCw } from 'lucide-svelte';
 
   type Props = {
     onpost?: () => void;
@@ -7,9 +7,10 @@
     onsettings?: () => void;
     onpreset?: () => void;
     onclearcolumns?: () => void;
+    onreload?: () => void;
   };
 
-  let { onpost, onadd, onsettings, onpreset, onclearcolumns }: Props = $props();
+  let { onpost, onadd, onsettings, onpreset, onclearcolumns, onreload }: Props = $props();
 
   let open = $state(false);
 
@@ -39,7 +40,7 @@
 
 <!-- Speed Dial -->
 <!-- flex-col-reverse のため、HTML上の先頭が視覚的に最下部 (FAB寄り) になる -->
-<!-- 視覚順: 設定 / 全クリア / プリセット / カラム追加 / 投稿 / [FAB] -->
+<!-- 視覚順: 設定 / 全クリア / プリセット / カラム追加 / 再読み込み / 投稿 / [FAB] -->
 <div class="fixed bottom-6 right-6 z-50 flex flex-col-reverse items-end gap-3">
   {#if open}
     <!-- 設定 (視覚的に最上部) -->
@@ -87,6 +88,18 @@
         aria-label="カラムを追加"
       >
         <Columns2 class="w-4 h-4" aria-hidden="true" />
+      </button>
+    </div>
+
+    <!-- 再読み込み -->
+    <div class="flex items-center gap-2">
+      <span class="bg-base-300 text-base-content text-xs px-2 py-1 rounded-lg shadow whitespace-nowrap select-none">再読み込み</span>
+      <button
+        class="btn btn-circle btn-sm btn-ghost bg-base-200 shadow"
+        onclick={() => handleAction(onreload)}
+        aria-label="表示中のタイムラインを再読み込み"
+      >
+        <RefreshCw class="w-4 h-4" aria-hidden="true" />
       </button>
     </div>
 
